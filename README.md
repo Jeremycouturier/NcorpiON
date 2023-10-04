@@ -6,7 +6,7 @@ NcorpiON is an N-body software dedicated to the simulation of collisional and fr
 ## Features
 
 - Written in C
-- Four built_in modules for mutual interactions :
+- Four built-in modules for mutual interactions :
       - Brute-force O(N^2) method
       - Barnes-Hut O(N ln N) tree code
       - Mesh O(N) algorithm
@@ -21,18 +21,25 @@ NcorpiON is an N-body software dedicated to the simulation of collisional and fr
 
 You can install NcorpiON with the git command
 
-      - git clone
+      git clone
     
 Later on, you can update NcorpiON by running
 
-      - git pull
+      git pull
 
-To run a simulation, first update the file src/parameters.h and then :
+To run a simulation, first update the file src/parameters.h
 
-      - Without producing an animation :
-      - Producing an animation :
+Then to run a simulation and to produce an animation
 
- 
+      ./ncorpion.sh number_of_images_to_be_produced path_where_to_produce_them
+      cd path_where_to_produce_them/gif && ffmpeg -i %d.png -vf palettegen palette.png && ffmpeg -framerate 25 -i "%d.png" -i palette.png -lavfi paletteuse ncorpion.gif && ffmpeg -framerate 25 -i "%d.png" -i palette.png -lavfi paletteuse ncorpion.mp4 
+
+To run the simulation without producing an animation
+
+      make clean && make && make clean && ./ncorpion
+      
+
+
 ## Documentation
 
 The full documentation of NcorpiON is available at <https://ncorpion.com>
