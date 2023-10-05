@@ -1,0 +1,1 @@
+ffmpeg -i %d.png -vf palettegen palette.png && ffmpeg -framerate 25 -i "%d.png" -i palette.png -lavfi paletteuse ncorpion.gif && ffmpeg -framerate 25 -i "%d.png" -i palette.png -lavfi paletteuse ncorpion.mp4

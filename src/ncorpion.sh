@@ -1,1 +1,1 @@
-make clean && make && make clean && ./ncorpion && ./image_creation.sh $1 $2 && sleep 30 && cd $2gif && ffmpeg -i %d.png -vf palettegen palette.png && ffmpeg -framerate 25 -i "%d.png" -i palette.png -lavfi paletteuse ncorpion.gif && ffmpeg -framerate 25 -i "%d.png" -i palette.png -lavfi paletteuse ncorpion.mp4
+make clean && make && make clean && ./ncorpion && mkdir -p $2gif && ./image_creation.sh $1 $2
