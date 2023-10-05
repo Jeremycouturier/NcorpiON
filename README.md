@@ -63,7 +63,7 @@ If you use this code or parts of this code for results presented in a scientific
 
 ## Contributors
 
-- Jérémy Couturier, University of Rochester, <jeremycouturier@rochester.edu>
+- Jérémy Couturier, University of Rochester, <https://jeremycouturier.com>
 
 NcorpiON is open source and you are encouraged to contribute to it 
 
