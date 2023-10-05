@@ -21,11 +21,11 @@ NcorpiON is an N-body software dedicated to the simulation of collisional and fr
 
 You can install NcorpiON with the git command
 
- git clone git@github.com:Jeremycouturier/NcorpiON.git
-      
+	git clone git@github.com:Jeremycouturier/NcorpiON.git
+	
 or if you prefer, you can simply download the repository to your computer. If you install NcorpiON through git, you can later on get updates by running
 
- git pull
+	git pull	
 
 
 ## Simulation
@@ -34,20 +34,20 @@ To simulate a system, first update the file src/parameters.h accordingly (see <h
 
 Then to run the simulation and to produce an animation, run
 
- ./ncorpion.sh number_of_images_to_be_produced path_where_to_produce_them && cd path_where_to_produce_them/gif && ./ncorpion_animation.sh
+	./ncorpion.sh number_of_images_to_be_produced path_where_to_produce_them && cd path_where_to_produce_them/gif && ./ncorpion_animation.sh
 
 To run the simulation without producing an animation, run
 
- make clean && make && make clean && ./ncorpion
-      
+	make clean && make && make clean && ./ncorpion
+	
 Note that the production of animations requires ffmpeg to be installed on your system. Run
 
- sudo apt-get update && sudo apt-get install ffmpeg
-      
+	sudo apt-get update && sudo apt-get install ffmpeg
+	
 on Debian based distros and
 
- sudo dnf update && sudo dnf install ffmpeg
-      
+	sudo dnf update && sudo dnf install ffmpeg
+	
 or Red Hat based distros
 
 
