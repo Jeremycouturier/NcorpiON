@@ -12,7 +12,7 @@ NcorpiON is an N-body software dedicated to the simulation of collisional and fr
 - Mesh O(N) algorithm
 - FalcON O(N) Fast Multipole Method
 - A built-in fragmentation model that can realistically handle violent collisions
-- A python add-on to produce animated gifs of the simulations
+- A python add-on to produce animations of the simulations
 - Requires only a C compiler (e.g. gcc) to run
 - Completely open source. All features are available in the public github repository.
 
@@ -21,7 +21,7 @@ NcorpiON is an N-body software dedicated to the simulation of collisional and fr
 
 You can install NcorpiON with the git command
 
-      git clone git@github.com:Jeremycouturier/NcorpiON_code.git
+      git clone git@github.com:Jeremycouturier/NcorpiON.git
     
 Later on, you can update NcorpiON by running
 
@@ -29,12 +29,11 @@ Later on, you can update NcorpiON by running
 
 To run a simulation, first update the file src/parameters.h
 
-Then to run a simulation and to produce an animation
+Then to run a simulation and to produce an animation, install ffmpeg on your system and run
 
-      ./ncorpion.sh number_of_images_to_be_produced path_where_to_produce_them
-      cd path_where_to_produce_them/gif && ffmpeg -i %d.png -vf palettegen palette.png && ffmpeg -framerate 25 -i "%d.png" -i palette.png -lavfi paletteuse ncorpion.gif && ffmpeg -framerate 25 -i "%d.png" -i palette.png -lavfi paletteuse ncorpion.mp4 
+      ./ncorpion.sh number_of_images_to_be_produced path_where_to_produce_them && cd path_where_to_produce_them/gif && ncorpion_animation.sh
 
-To run the simulation without producing an animation
+To run the simulation without producing an animation, run
 
       make clean && make && make clean && ./ncorpion
 
