@@ -27,11 +27,14 @@ or if you prefer, you can simply download the repository to your computer. If yo
 
       git pull
 
+
+## Simulation
+
 To simulate a system, first update the file src/parameters.h accordingly (see <https://ncorpion.com/#setup> for details)
 
 Then to run the simulation and to produce an animation, run
 
-      ./ncorpion.sh number_of_images_to_be_produced path_where_to_produce_them && cd path_where_to_produce_them/gif && ncorpion_animation.sh
+      ./ncorpion.sh number_of_images_to_be_produced path_where_to_produce_them && cd path_where_to_produce_them/gif && ./ncorpion_animation.sh
 
 To run the simulation without producing an animation, run
 
