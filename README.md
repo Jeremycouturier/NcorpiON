@@ -23,11 +23,11 @@ You can install NcorpiON with the ```git``` command
 
 	git clone git@github.com:Jeremycouturier/NcorpiON.git
 	
-or if you prefer, you can simply download the repository to your computer. If you install NcorpiON through git, you can later on get updates by running
+or if you prefer, you can simply download the repository to your computer. If you install NcorpiON through ```git```, you can later on get updates by running
 
 	git pull	
 
-Note that the production of animations requires ffmpeg to be installed on your system. Run
+Note that the production of animations requires ```ffmpeg``` to be installed on your system. Run
 
 	sudo apt-get update && sudo apt-get install ffmpeg
 	
@@ -40,13 +40,20 @@ on Red Hat based distros.
 
 ## Simulation
 
-To simulate a system, first update the file src/parameters.h accordingly (see <https://ncorpion.com/#setup> for details)
+To run a simulation, you need to update the file ```src/parameters.h``` accordingly (see <https://ncorpion.com/#setup> for details)
 
-Then to run the simulation and to produce an animation, run
+In order to simulate and to produce an animation, first run
 
-	./ncorpion.sh number_of_images_to_be_produced path_where_to_produce_them && cd path_where_to_produce_them/gif && ./ncorpion_animation.sh
+	./ncorpion.sh number_of_images_to_be_produced some_path
+	
+This will run the simulation and create the images of the animation. The number of images depends on the duration of the simulation and the
+frequency of outputs. Then, once all images have been produced, assemble the animation with
 
-To run the simulation without producing an animation, run
+	cd some_path/gif && ./ncorpion_animation.sh
+	
+This will return two files ```ncorpion.mp4``` and ```ncorpion.gif``` in ```some_path/gif```
+
+In order to simulate without producing any animation, run
 
 	make clean && make && make clean && ./ncorpion
 
