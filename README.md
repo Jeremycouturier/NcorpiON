@@ -23,9 +23,8 @@ You can install NcorpiON with the ```git``` command
 
 	git clone git@github.com:Jeremycouturier/NcorpiON.git
 	
-or if you prefer, you can simply download the repository to your computer. If you install NcorpiON through ```git```, you can later on get updates by running
-
-	git pull	
+or if you prefer, you can simply download the repository to your computer. If you install NcorpiON through ```git```, you can later on get updates
+by running ```git pull```
 
 Note that the production of animations requires ```ffmpeg``` to be installed on your system. Run
 
