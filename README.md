@@ -22,8 +22,8 @@ NcorpiON is an N-body software dedicated to the simulation of collisional and fr
 You can install NcorpiON with the git command
 
       git clone git@github.com:Jeremycouturier/NcorpiON.git
-    
-Later on, you can update NcorpiON by running
+      
+or if you prefer, you can simply download the repository on your computer. If you install NcorpiON through git, you can later on get updates by running
 
       git pull
 
