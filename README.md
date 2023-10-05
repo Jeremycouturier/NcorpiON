@@ -27,6 +27,16 @@ or if you prefer, you can simply download the repository to your computer. If yo
 
 	git pull	
 
+Note that the production of animations requires ffmpeg to be installed on your system. Run
+
+	sudo apt-get update && sudo apt-get install ffmpeg
+	
+on Debian based distros and
+
+	sudo dnf update && sudo dnf install ffmpeg
+	
+on Red Hat based distros.
+
 
 ## Simulation
 
@@ -39,16 +49,6 @@ Then to run the simulation and to produce an animation, run
 To run the simulation without producing an animation, run
 
 	make clean && make && make clean && ./ncorpion
-	
-Note that the production of animations requires ffmpeg to be installed on your system. Run
-
-	sudo apt-get update && sudo apt-get install ffmpeg
-	
-on Debian based distros and
-
-	sudo dnf update && sudo dnf install ffmpeg
-	
-or Red Hat based distros
 
 
 ## Documentation
