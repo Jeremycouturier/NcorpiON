@@ -39,7 +39,7 @@ on Red Hat based distros to install it.
 
 ## Simulation
 
-To run a simulation, you need to update the file ```src/parameters.h``` accordingly(see <https://ncorpion.com/#setup> for details)
+To run a simulation, you need to update the file ```src/parameters.h``` (see <https://ncorpion.com/#setup> for details)
 
 In order to simulate and to produce an animation, first run
 
