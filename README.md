@@ -21,7 +21,7 @@ NcorpiON is an N-body software dedicated to the simulation of collisional and fr
 
 You can install NcorpiON with the git command
 
-      git clone
+      git clone git@github.com:Jeremycouturier/NcorpiON_code.git
     
 Later on, you can update NcorpiON by running
 
@@ -37,7 +37,6 @@ Then to run a simulation and to produce an animation
 To run the simulation without producing an animation
 
       make clean && make && make clean && ./ncorpion
-      
 
 
 ## Documentation
@@ -53,7 +52,6 @@ If you use this code or parts of this code for results presented in a scientific
 ## Contributors
 
 - Jérémy Couturier, University of Rochester, <jeremycouturier@rochester.edu>
-
 
 NcorpiON is open source and you are encouraged to contribute to it 
 
