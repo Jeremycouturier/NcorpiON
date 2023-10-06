@@ -45,9 +45,9 @@ In order to simulate and to produce an animation, first run
 
 	./ncorpion.sh number_of_images some_path
 	
-where the path ```some_path``` is the same as given in ```src/parameters.h``` This will run the simulation and create the images of the animation.
+where the path ```some_path``` is the same as given in ```src/parameters.h```. This will run the simulation and create the images of the animation.
 The number of images depends on the length of the simulation and on the
-frequency of outputs chosen in the file ```src/parameters.h``` Then, once all images have been produced, assemble the animation with
+frequency of outputs chosen in the file ```src/parameters.h```. Then, once all the images have been produced, assemble the animation with
 
 	cd some_path/gif && ./ncorpion_animation.sh
 	
