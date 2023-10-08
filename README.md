@@ -1,6 +1,6 @@
 # Welcome to Ncorpi$\mathcal{O}$N
 
-Ncorpi$\mathcal{O}$N is an N-body software dedicated to the simulation of collisional and fragmenting systems. It is very fast and can realistically handle fragmentations
+Ncorpi $\mathcal{O}$ N is an N-body software dedicated to the simulation of collisional and fragmenting systems. It is very fast and can realistically handle fragmentations
 
 
 ## Features
@@ -8,7 +8,7 @@ Ncorpi$\mathcal{O}$N is an N-body software dedicated to the simulation of collis
 - Written in C
 - Four built-in modules for mutual interactions, namely
 - Brute-force $\mathcal{O}(N^2)$ method
-- Barnes-Hut $\mathcal{O}(N ln N)$ tree code
+- Barnes-Hut $\mathcal{O}(N \ln N)$ tree code
 - Mesh $\mathcal{O}(N)$ algorithm
 - FalcON $\mathcal{O}(N)$ Fast Multipole Method
 - A built-in fragmentation model that can realistically handle violent collisions
