@@ -68,8 +68,7 @@
 /******** Parameters relative to the mesh-grid algorithm ********/
 /****************************************************************/
 
-/******** Parameters relative to collision detection with the mesh algorithm ********/
-#define collision_cube_min 50.0      //Minimal sidelength of the cube centered on the Earth where collisions are looked for, for the minimal size we allow for the mesh-size
+#define collision_cube_min 80.0      //Minimal sidelength of the mesh-grid centered on the Earth. The mesh-size will never be less than collision_cube_min/collision_cube_cells
 #define collision_cube_cells 1024    //The number of mesh cells per dimension of the collision cube. Must be even. For 16+ GiB of RAM (resp. 8 or 4 GiB), choose ~1000 (resp. ~800 or ~500)
 #define how_many_neighbours 16.0     //The desired expected number of neighbours for a moonlet
 
@@ -86,7 +85,7 @@
                                      //The computational time depends a lot on this threshold. Suggested values are s ~ 26 if p = 3 and s ~ 80 if p = 6, but should be tweaked by the user.
 #define root_sidelength 80.0         //Sidelength of the root cell. Must be machine representable. Particles outside of the root cell only feel Earth's gravity and do not affect others
 #define level_max 25                 //The maximum allowed number of levels in the tree. Root is at level 0 and a cell at level level_max - 1 is never divided.
-#define child_multipole_threshold 1  //If number of particules/number of children is at most this threshold then the multipole moments of a cell are computed directly from the particules.
+#define child_multipole_threshold 1  //If number of particles/number of children is at most this threshold then the multipole moments of a cell are computed directly from the particles.
                                      //Otherwise, they are computed from that of the children
 
 /******** Parameters relative to mutual gravity computation with falcON algorithm ********/
@@ -131,7 +130,7 @@
                                      //then the collision results in a full fragmentation.                             
 #define pq_min_max {-1,3,-1,1}       //Extremal integer values for p_k and q_k to determine the position of the tail fragments with respect to the largest fragment.
                                      //Must define a rectangle containing exactly N_tilde points with integer coordinates. More precisely, if pq_min_max = {a,b,c,d},
-                                     //then we must have N_tilde = (b-a+1)(d-c+1). See PDF draft for details                                 
+                                     //then we must have N_tilde = (b-a+1)(d-c+1). See NcorpiON's paper for details
                                      
 
 
@@ -143,7 +142,6 @@
 #define seed_bool                0   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, then the seed is the number of seconds since 01/01/1970
 #define J2_bool                  1   //Determines if the contribution from the symmetrical equatorial bulge is taken into account in the simulation
 #define Sun_bool                 0   //Determines if the perturbations from the Sun are taken into account in the simulation
-#define disk_bool                0   //Determines if the perturbations from the inner fluid disk are taken into account in the simulation
 #define collision_bool           1   //Determines if the moonlets are able to collide
 #define mutual_bool              1   //Determines if there are mutual gravitational interactions between the moonlets.
                                      

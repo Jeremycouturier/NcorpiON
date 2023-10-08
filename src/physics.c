@@ -80,11 +80,6 @@ void vector_field(struct moonlet * moonlets){
                   }
                   
                   
-                  /******** Contribution from the inner fluid disk ********/
-                  if (disk_bool){
-                  
-                  }
-                  
                   /******** Mutual gravitational interactions with the brute-force O(N^2) algorithm ********/
                   if (mutual_bool && (brute_force_bool || force_naive_bool)){
                         for (p=0; p < k; p++){
