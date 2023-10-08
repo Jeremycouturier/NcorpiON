@@ -34,7 +34,7 @@ on Debian based distros or
 
 	sudo dnf update && sudo dnf install ffmpeg
 	
-on Red Hat based distros to install it.
+on Red Hat based distros to install it. You will also need python with matplotlib and numpy for the animations.
 
 
 ## Simulation
