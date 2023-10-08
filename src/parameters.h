@@ -34,8 +34,6 @@
 #define Mearth 1.0                   //Mass of the Earth (or central mass) is the unit of mass
 #define G 39.47841760435743          //Gravitational constant is set to 4*pi^2, so that the unit of time is the surface orbital period
 #define density 0.1448               //The density of the moonlets (3344 kg/m^3) in Mearth/Rearth^3.
-#define density_earth 0.238764       //The density of the Earth    (5514 kg/m^3) in Mearth/Rearth^3.
-#define Rroche 2.9                   //The Roche radius
 #define Tearth 3.4076                //Earth's sideral period in units of the surface orbital period. Must be larger than 1. Today value is 17.038
 
 
@@ -60,8 +58,8 @@
 #define low_dumping_threshold 2.0    //Moonlets falling below this threshold (in Earth radii) are dumped from the simulation (collision with the Earth or disruption by tidal forces)
 #define high_dumping_threshold 200.0 //Moonlets going  beyond this threshold (in Earth radii) are dumped from the simulation (assumed unbounded)
 #define max_ids_per_node 173         //The maximum number of ids in each node of the unrolled linked lists (chains). Choose such that sizeof(struct chain) be a multiple of the cache line
-#define softening_parameter 0.00     //The softening parameter for mutual gravitational interations, in units of the sum of the radii.
-#define seed 778345128               //The seed used for random number generation. Does not matter if seed_bool is 0.
+#define softening_parameter 0.0      //The softening parameter for mutual gravitational interations, in units of the sum of the radii.
+#define seed 778345128               //The seed used for random number generation. Unimportant if seed_bool is 0.
 #define switch_to_brute_force 512    //Threshold for N below which the program switches to the brute-force method for mutual interactions. Does not matter if brute_force_bool is 1
 
 

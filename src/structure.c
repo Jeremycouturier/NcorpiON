@@ -241,10 +241,10 @@ struct moonlet * populate(typ M, typ dR){
             omega = rdm(0.0, 2.0*M_PI);
             Omega = rdm(0.0, 2.0*M_PI);
             rad = rdm((1.0-sqrt(3.0)*radius_stddev)*mean_rad, (1.0+sqrt(3.0)*radius_stddev)*mean_rad);
-            *(moonlets+k)=init(a, e, i, nu, omega, Omega, rad);
+            *(moonlets+k) = init(a, e, i, nu, omega, Omega, rad);
       }
-      for (k=N_0; k<N_max; k++){                                       //Filling the unused cells of the moonlet array with whatever
-            *(moonlets+k)=init(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+      for (k=N_0; k<N_max; k++){ //Filling the unused cells of the moonlet array with whatever
+            *(moonlets+k) = init(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
       }
       
       return moonlets;

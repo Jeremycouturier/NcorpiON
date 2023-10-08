@@ -13,7 +13,7 @@ NcorpiON is an N-body software dedicated to the simulation of collisional and fr
 - FalcON $\mathcal{O}(N)$ Fast Multipole Method
 - A built-in fragmentation model that can realistically handle violent collisions
 - A python add-on to produce animations of the simulations
-- Requires only a C compiler (e.g. gcc) to run
+- Requires only a C compiler (e.g. ```gcc```) to run
 - Completely open source. All features are available in the public github repository.
 
 
