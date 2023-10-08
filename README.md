@@ -1,4 +1,4 @@
-# Welcome to $\text{Ncorpi}\mathcal{O}\text{N}$
+# Welcome to NcorpiON
 
 NcorpiON is an N-body software dedicated to the simulation of collisional and fragmenting systems. It is very fast and can realistically handle fragmentations
 
@@ -8,9 +8,9 @@ NcorpiON is an N-body software dedicated to the simulation of collisional and fr
 - Written in C
 - Four built-in modules for mutual interactions, namely
 - Brute-force $\mathcal{O}(N^2)$ method
-- Barnes-Hut $O(N ln N)$ tree code
-- Mesh $O(N)$ algorithm
-- FalcON $O(N)$ Fast Multipole Method
+- Barnes-Hut $\mathcal{O}(N ln N)$ tree code
+- Mesh $\mathcal{O}(N)$ algorithm
+- FalcON $\mathcal{O}(N)$ Fast Multipole Method
 - A built-in fragmentation model that can realistically handle violent collisions
 - A python add-on to produce animations of the simulations
 - Requires only a C compiler (e.g. gcc) to run
