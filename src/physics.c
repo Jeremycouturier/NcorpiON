@@ -568,7 +568,6 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       if (m_check < frag_threshold && m_tilde >= 0.1 * M){
             merger(moonlets, a ,b);
             merger_count++;
-            catastrophicity(m_tilde,M);
             return;
       }
       
@@ -613,7 +612,6 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             lose_moonlet(b);
             *(did_collide+a) = 1;
             super_catastrophic_count++;
-            catastrophicity(m_tilde,M);
             
             /******** To be removed later ********/
             /*typ angular_momentum_loss[3];
@@ -744,7 +742,6 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             *(did_collide+a) = 1;
             *(did_collide+b) = 1;
             half_fragmentation_count++;
-            catastrophicity(m_tilde,M);
             return;
       }
       
@@ -938,7 +935,6 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
                   (moonlets+id[n+1]) -> radius = R_tilde_2;
             }
             full_fragmentation_count++;
-            catastrophicity(m_tilde, M);
             return;
       }
 }

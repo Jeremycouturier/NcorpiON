@@ -49,7 +49,7 @@ where the path ```some_path``` is the same as given in ```src/parameters.h```. T
 The number of images depends on the length of the simulation and on the
 frequency of outputs chosen in the file ```src/parameters.h```. Then, once all the images have been produced, assemble the animation with
 
-	cd some_path/gif && ./ncorpion_animation.sh
+	./ncorpion_animation.sh some_path
 	
 This will return two files ```ncorpion.mp4``` and ```ncorpion.gif``` in ```some_path/gif```
 
@@ -67,7 +67,7 @@ The full documentation of NcorpiON is available at <https://ncorpion.com>
 
 ## Acknowledgments
 
-If you use this code or parts of this code for results presented in a scientific publication, please cite NcorpiON.
+If you use this code in a scientific publication, please cite NcorpiON.
 
 
 ## Contributors

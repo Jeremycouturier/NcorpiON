@@ -31,17 +31,21 @@ i = open(pathi,    "r")
 R = open(pathrad,  "r")
 S = open(pathstat, "r")
 
+
 def g(e):
       return 4.0*e*(1.0-e)
 
+
 def P2costheta(theta):
       return 0.5*(3.0*np.cos(theta)**2-1.0)
+
 
 def draw_orbit(rad, xx, yy, linewidth, color, npoints): #draws a circle of radius rad at (xx, yy)
       tps=np.linspace(0.0,2.0*m.pi,npoints)
       x=rad*np.cos(tps)+xx
       y=rad*np.sin(tps)+yy
       py.plot(x,y,linestyle="-",color=color, linewidth=linewidth)
+
       
 def draw_oblate_Earth(rad, sideral_period): #The sideral period is given in units of the surface orbital period
       eps_20 = -5.0/6.0/(sideral_period**2)
@@ -50,33 +54,6 @@ def draw_oblate_Earth(rad, sideral_period): #The sideral period is given in unit
       y=rad*np.cos(tps)*(1.0+eps_20*P2costheta(tps))
       py.plot(x,y,linestyle="-",color="grey", linewidth=4.0)
 
-
-
-def plot_t(t): # plots the nth moonlets (the first is indexed 0) after t timestep
-      ref_radius=0.14142 #Radius of moonlets plotted with a size ref_size
-      ref_size=1000
-      for p in range(nmoonlet):
-            if (a[t,p]>0.0):
-                  radius=R[t,p]
-                  
-                  #py.scatter(x_axis[t-1,p],y_axis[t-1,p], s=(radius/default_radius)**2*default_size, facecolors='none', edgecolors=z_axis[t-1,p], cmap=brg, marker="o", linewidths=None)
-                  eccentricity = z_axis[t,p]
-                  if (eccentricity < 0.5):
-                        color = (0.0,g(eccentricity),g(eccentricity+0.5))
-                  else:
-                        color = (g(eccentricity-0.5),g(eccentricity),0.0)
-                  #py.scatter(x_axis[t,p],y_axis[t,p], s=ref_size*(radius/ref_radius)**2, facecolors='none', edgecolors=color, marker="o", linewidths=None)
-                  X = x_axis[t,p]
-                  Y = y_axis[t,p]
-                  if (X <= a_max+0.2 and Y <= asini_max+0.2):
-                        if (radius >= 0.08):
-                              draw_orbit(radius, X, Y, 1.5, color, 100)
-                        elif (radius >= 0.02):
-                              draw_orbit(radius, X, Y, 1, color, 20)
-                        elif (radius >= 0.001):
-                              draw_orbit(radius, X, Y, 1, color, 10)
-                        else:
-                              py.plot(X, Y, marker=",", color=color)
 
 def artisanal_colorbar(bottom,top,left,right):
 
@@ -87,8 +64,6 @@ def artisanal_colorbar(bottom,top,left,right):
                   color = (0.0,0.0,g(ecc[p]))
             else:
                   color = (g(ecc[p]-0.5),0.0,g(ecc[p]))
-            #py.scatter(where_to_plot[p],y, s=1, color=color, marker="o", linewidths=None)
-            #py.plot(where_to_plot[p],y,linestyle="-",color=color, linewidth=1)
             py.plot([left,right], [where_to_plot[p],where_to_plot[p]], '-', color=color, linewidth=1)
       py.text(a_max*0.915,0.5*(bottom+top),r"$e$", color="black", fontsize=25)
       py.plot([left,left],[bottom,top],'-',color='black',linewidth=1)
@@ -98,6 +73,7 @@ def artisanal_colorbar(bottom,top,left,right):
       py.text(a_max*0.963,asini_min+0.04*(asini_max-asini_min),r"$0$", fontsize=15)
       py.text(a_max*0.963,asini_max-0.06*(asini_max-asini_min),r"$1$", fontsize=15)
       py.text(a_max*0.963,0.5*(bottom+top),r"$1/2$", fontsize=15)
+
       
 def draw_moonlet(sma, ecc, inc, rad, p, maxR, largest_index):
       radius = rad[p]
@@ -111,8 +87,8 @@ def draw_moonlet(sma, ecc, inc, rad, p, maxR, largest_index):
             color = (g(eccentricity-0.5), 0.0, g(eccentricity))
       else:
             color = 'green'
-      X = sma[p]
-      Y = X * m.sin(inc[p])
+      X = sma[p] * m.cos(inc[p])
+      Y = sma[p] * m.sin(inc[p])
       if (X <= a_max+0.2 and Y <= asini_max+0.2):
             if (radius >= 0.08):
                   draw_orbit(radius, X, Y, 1.5, color, 100)
@@ -123,6 +99,7 @@ def draw_moonlet(sma, ecc, inc, rad, p, maxR, largest_index):
             else:
                   py.plot(X, Y, marker=",", color=color)
       return (maxR, largest_index)
+
       
 def make_image(sma, ecc, inc, rad, sta, q):
       draw_oblate_Earth(1.0,sideral_period)
@@ -142,7 +119,7 @@ def make_image(sma, ecc, inc, rad, sta, q):
       py.ylim([asini_min,asini_max])
       py.xticks(fontsize=15)
       py.yticks(fontsize=15)
-      py.xlabel(r"$a$ (Earth radii)", fontsize=25)
+      py.xlabel(r"$a\,\cos i$ (Earth radii)", fontsize=25)
       py.ylabel(r"$a\,\sin i$ (Earth radii)", fontsize=25)
       figure = py.gcf() ##get current figure
       figure.set_size_inches(16, 9)

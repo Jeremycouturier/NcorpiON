@@ -288,7 +288,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       /******** If the simulation progressed by at least 0.1%, we display useful informations ********/
       if (progressed){
             printf("                  N = %d\n",how_many_moonlets);
-            printf("                  largest moonlet id = %d\n",largest_id);
+            printf("                  largest id = %d\n",largest_id);
             printf("                  Total moonlet mass = %.8lf Mearth\n", total_mass);
             printf("                  Largest moonlet radius = %.8lf Rearth\n", maxR);
             if (collision_bool){
@@ -702,17 +702,6 @@ int integration(typ t){
       printf("progress = %.1lf %%\n", 100.0);
       printf("total number of timestep performed : %d\n",iter);
       
-      if (collision_bool && fragmentation_bool){
-            printf("probability density of m_tilde/M = [");
-            for (int i=0; i<cata_pdf_discrete; i++){
-                  printf("%ld",*(catastrophic_pdf+i));
-                  if (i < cata_pdf_discrete-1){
-                        printf(",");
-                  }
-            }
-            printf("]\n");
-      }
-      
       
       /******** Deallocating the array of moonlets ********/
       free(moonlets);
@@ -831,17 +820,6 @@ int integration_brute_force(typ t){
       printf("standard deviation = %.13lf\n", stdd);
       free(time_per_timestep);
       time_per_timestep = NULL;
-      
-      if (collision_bool && fragmentation_bool){
-            printf("probability density of m_tilde/M = [");
-            for (int i=0; i<cata_pdf_discrete; i++){
-                  printf("%ld",*(catastrophic_pdf+i));
-                  if (i < cata_pdf_discrete-1){
-                        printf(",");
-                  }
-            }
-            printf("]\n");
-      }
       
       
       /******** Deallocating the array of moonlets ********/
@@ -1004,18 +982,6 @@ int integration_tree(typ t){
       }
       printf("progress = %.1lf %%\n", 100.0);
       printf("total number of timestep performed : %d\n",iter);
-
-      
-      if (collision_bool && fragmentation_bool){
-            printf("probability density of m_tilde/M = [");
-            for (int i=0; i<cata_pdf_discrete; i++){
-                  printf("%ld",*(catastrophic_pdf+i));
-                  if (i < cata_pdf_discrete-1){
-                        printf(",");
-                  }
-            }
-            printf("]\n");
-      }
       
       
       /******** Deallocating the array of moonlets ********/
@@ -1183,17 +1149,6 @@ int integration_mesh(typ t){
       free(time_per_timestep);
       time_per_timestep = NULL;
       
-      if (collision_bool && fragmentation_bool){
-            printf("probability density of m_tilde/M = [");
-            for (int i=0; i<cata_pdf_discrete; i++){
-                  printf("%ld",*(catastrophic_pdf+i));
-                  if (i < cata_pdf_discrete-1){
-                        printf(",");
-                  }
-            }
-            printf("]\n");
-      }
-      
       
       /******** Deallocating the array of moonlets ********/
       free(moonlets);
@@ -1313,17 +1268,6 @@ int integration_brute_force_SABA1(typ t){
       printf("standard deviation = %.13lf\n", stdd);
       free(time_per_timestep);
       time_per_timestep = NULL;
-      
-      if (collision_bool && fragmentation_bool){
-            printf("probability density of m_tilde/M = [");
-            for (int i=0; i<cata_pdf_discrete; i++){
-                  printf("%ld",*(catastrophic_pdf+i));
-                  if (i < cata_pdf_discrete-1){
-                        printf(",");
-                  }
-            }
-            printf("]\n");
-      }
       
       
       /******** Deallocating the array of moonlets ********/

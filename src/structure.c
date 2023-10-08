@@ -13,11 +13,6 @@
 
 /******** Declaring external array ********/
 struct moonlet * xx;
-struct moonlet * k1;
-struct moonlet * k2;
-struct moonlet * k3;
-struct moonlet * k4;
-struct moonlet * mid_point_speed;
 int * exists;
 struct chain ** hash;
 int * modified_cells;
@@ -27,7 +22,6 @@ int * free_indexes;
 struct pair * pairs;
 struct moonlet * three_largest;
 int * three_largest_indexes;
-int * catastrophic_pdf;
 typ * tam_loss;
 typ * approach;
 int * did_collide;
@@ -373,13 +367,6 @@ void array_initialization(){
       *(three_largest_indexes+2) = 0;
       
       
-      if (collision_bool && fragmentation_bool){
-            catastrophic_pdf = (int *)malloc(cata_pdf_discrete * sizeof(int));
-            for (p = 0; p < cata_pdf_discrete; p++){
-                  *(catastrophic_pdf+p) = 0;
-            }
-      }
-      
       if (collision_bool){
             approach = (typ *)malloc(6 * sizeof(typ));
             did_collide = (int *)malloc(N_max * sizeof(int));
@@ -430,10 +417,6 @@ void deallocation(){
       }
       free(three_largest_indexes);
       three_largest_indexes = NULL;
-      if (collision_bool && fragmentation_bool){
-            free(catastrophic_pdf);
-            catastrophic_pdf = NULL;
-      }
       if (collision_bool){
             free(approach);
             approach = NULL;
@@ -882,26 +865,6 @@ int maximum(typ i, typ j, typ k){
             return 2;
       }
 }
-
-void catastrophicity(typ m_tilde, typ M){
-
-      /******** Determines the catastrophicity of the collision (defined as m_tilde/m) ********/
-      /******** and fills the arrays catastrophic_pdf accordingly                      ********/
-      
-      
-      /******** To be removed later ********/
-      if (m_tilde < 0.0 || m_tilde > M){
-            fprintf(stderr, "Error : m_tilde is negative or larger than M. m_tilde/M = %.13lf.\n",m_tilde/M);
-            abort();
-      }
-      
-      int index = (int) integral(((typ) cata_pdf_discrete)*m_tilde/M);
-      (*(catastrophic_pdf+index))++;
-      
-}
-
-
-
 
 
 

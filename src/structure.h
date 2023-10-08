@@ -37,7 +37,6 @@ extern struct moonlet * xx;
 
 /******** Global arrays ********/
 extern int * exists;                          //The kth cell contains 1 if *(moonlets+k) contains a moonlet, and zero else
-extern struct chain * to_be_added_fluid_disk; //Array of ids of moonlets that need to be put in the inner fluid disk at the end of the timestep
 extern int * free_indexes;                    //Arrays of ids of non-existant moonlets
 
 
@@ -94,7 +93,6 @@ extern int half_fragmentation_count;      //Number of collisions such that eject
 extern int full_fragmentation_count;      //Number of collisions such that ejected mass / N_tilde > frag_threshold
 extern int merger_count;                  //Number of collisions having resulted in a merger, that is, such that ejected mass < frag_threshold
 extern int collision_count;               //Number of collisions so far
-extern int * catastrophic_pdf;            //Probability density function of the catastrophicity of collisions
 extern int * did_collide;                 //The k^th cell contains 1 if moonlet k did collide during that timestep, and 0 otherwise
 
 /******** Global array of output files ********/
@@ -167,10 +165,6 @@ void lose_moonlet(int a);
 
 
 int maximum(typ i, typ j, typ k);
-
-
-void catastrophicity(typ m_tilde, typ M);
-
 
 
 #endif

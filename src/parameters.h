@@ -3,9 +3,9 @@
 
 
 
-/*************************************/
-/******** Redefining keywords ********/
-/*************************************/
+/*****************************************************************************************/
+/******** Redefining keywords. Do not touch if you are fine with double precision ********/
+/*****************************************************************************************/
 
 #define typ double                   //Renaming double as typ. Define typ as long double (resp. float) for quadruple precision (resp. simple precision)
 #define bigint long int              //Renaming long int as bigint. If sizeof(int) == sizeof(long int) == 4 on your system, then define bigint as long long int instead
@@ -17,9 +17,10 @@
 
 
 
-/*************************************************************************************************************/
-/******** Defining the path where data have to be output. Does not matter if write_to_files_bool is 0 ********/
-/*************************************************************************************************************/
+/*********************************************************************************************************/
+/******** Defining the path where data have to be output. Unimportant if write_to_files_bool is 0 ********/
+/******** Put / at the end of the path                                                            ********/
+/*********************************************************************************************************/
 
 #define path "/run/media/jeremy/Windows/Users/miste/linux/Moon/dump2/"
 
@@ -29,8 +30,8 @@
 /******** Defining some physical constants ********/
 /**************************************************/
 
-#define Rearth 1.0                   //Radius of the Earth is the unit of length
-#define Mearth 1.0                   //Mass of the Earth is the unit of mass
+#define Rearth 1.0                   //Radius of the Earth (or central mass) is the unit of length
+#define Mearth 1.0                   //Mass of the Earth (or central mass) is the unit of mass
 #define G 39.47841760435743          //Gravitational constant is set to 4*pi^2, so that the unit of time is the surface orbital period
 #define density 0.1448               //The density of the moonlets (3344 kg/m^3) in Mearth/Rearth^3.
 #define density_earth 0.238764       //The density of the Earth    (5514 kg/m^3) in Mearth/Rearth^3.
@@ -43,25 +44,25 @@
 /******** Parameters relative to the simulation ********/
 /*******************************************************/
 
-#define N_max 100000                 //The maximum number of moonlets the simulation can handle
-#define N_0 8000                     //The initial number of moonlets. Must be less than or equal to N_max.
+#define N_max 10000                  //The maximum number of moonlets the simulation can handle
+#define N_0 1000                     //The initial number of moonlets. Must be less than or equal to N_max.
 #define M_0 0.02214                  //Total (expected) moonlet mass at t=0
-#define t_end 8192.0                 //Total simulation time (in surface orbital period)
+#define t_end 512.0                  //Total simulation time (in surface orbital period)
 #define time_step 0.0078125          //Timestep of the simulation.
-#define output_step 256              //Output occurs every output_step timestep. Matters only if write_to_files_bool is 1
+#define output_step 128              //Output occurs every output_step timestep. Matters only if write_to_files_bool is 1
 #define radius_stddev 0.57           //Standard deviation of moonlet's radii at t=0 (drawn uniformly), in units of the mean radius. Must be less than 1/sqrt(3) to prevent negative radius
 #define eccentricity_min 0.0         //Minimal eccentricity             for a moonlet at t=0
-#define eccentricity_max 0.4         //Maximal eccentricity             for a moonlet at t=0
+#define eccentricity_max 0.2         //Maximal eccentricity             for a moonlet at t=0
 #define sma_min 2.9                  //Minimal semi-major axis          for a moonlet at t=0
 #define sma_max 14.0                 //Maximal semi-major axis          for a moonlet at t=0
 #define inclination_min 0.0          //Minimal inclination (in radians) for a moonlet at t=0
 #define inclination_max 0.174533     //Maximal inclination (in radians) for a moonlet at t=0
-#define low_dumping_threshold 1.8    //Moonlets falling below this threshold (in Earth radii) are dumped from the simulation (collision with the Earth or disruption by tidal forces)
+#define low_dumping_threshold 2.0    //Moonlets falling below this threshold (in Earth radii) are dumped from the simulation (collision with the Earth or disruption by tidal forces)
 #define high_dumping_threshold 200.0 //Moonlets going  beyond this threshold (in Earth radii) are dumped from the simulation (assumed unbounded)
 #define max_ids_per_node 173         //The maximum number of ids in each node of the unrolled linked lists (chains). Choose such that sizeof(struct chain) be a multiple of the cache line
 #define softening_parameter 0.00     //The softening parameter for mutual gravitational interations, in units of the sum of the radii.
 #define seed 778345128               //The seed used for random number generation. Does not matter if seed_bool is 0.
-#define switch_to_brute_force 1024   //Threshold for N below which the program switches to the brute-force method for mutual interactions. Does not matter if brute_force_bool is 1
+#define switch_to_brute_force 512    //Threshold for N below which the program switches to the brute-force method for mutual interactions. Does not matter if brute_force_bool is 1
 
 
 
@@ -129,8 +130,7 @@
 #define k_parameter 0.2              //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
 #define frag_threshold 0.000000005   //Ejected mass threshold below which the collision results in a merger. If the ejected mass is above that threshold but the mass of the second
                                      //largest fragment is below, then the tail is reunited into a single moonlet. If the mass of the second largest fragment is above that threshold
-                                     //then the collision results in a full fragmentation.
-#define cata_pdf_discrete 1000       //Discretization, or number of points, of the probability density function mesuring the catastrophicity of collisions                                     
+                                     //then the collision results in a full fragmentation.                             
 #define pq_min_max {-1,3,-1,1}       //Extremal integer values for p_k and q_k to determine the position of the tail fragments with respect to the largest fragment.
                                      //Must define a rectangle containing exactly N_tilde points with integer coordinates. More precisely, if pq_min_max = {a,b,c,d},
                                      //then we must have N_tilde = (b-a+1)(d-c+1). See PDF draft for details                                 
@@ -142,7 +142,6 @@
 /****************************************/
 
 #define write_to_files_bool      1   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal   
-#define moonlet_spawning_bool    0   //Determines if moonlets spawn from the inner fluid disk
 #define seed_bool                0   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, then the seed is the number of seconds since 01/01/1970
 #define J2_bool                  1   //Determines if the contribution from the symmetrical equatorial bulge is taken into account in the simulation
 #define Sun_bool                 0   //Determines if the perturbations from the Sun are taken into account in the simulation
