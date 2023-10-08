@@ -1,6 +1,6 @@
 # Welcome to Ncorpi$\mathcal{O}$N
 
-Ncorpi$\!\!\mathcal{O}\!\!$N is an N-body software dedicated to the simulation of collisional and fragmenting systems. It is very fast and can realistically handle fragmentations
+Ncorpi $\!\!\mathcal{O}\!\!$ N is an N-body software dedicated to the simulation of collisional and fragmenting systems. It is very fast and can realistically handle fragmentations
 
 
 ## Features
