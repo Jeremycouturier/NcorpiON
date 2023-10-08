@@ -16,120 +16,6 @@ FILE ** files;
 
 struct node * FlatTree;
 
-int runge_kutta_4(struct moonlet * X, typ dt, void (*F)(struct moonlet *)){                                        
-
-      /******** Performs one iteration with time step dt of a fourth-order Runge-Kutta method ********/
-      /******** F is the vector field such that dX/dt=F(X)                                    ********/
-      
-
-      int i;
-
-      /******** xx=X ********/
-      for(i=0; i<=largest_id; i++){            
-            if(*(exists+i)){ //Checking whether or not there is a moonlet in the ith cell of the moonlet array
-                  *(xx+i) = *(X+i);
-            }
-      }
-
-      /******** xx=F(X)=dX/dt ********/
-      (*F)(xx);
-      
-      for(i=0; i<=largest_id; i++){
-            if(*(exists+i)){
-            
-                  /******** k1=dt*F(X) ********/
-                  (k1+i) -> x  = dt * (xx+i) -> x ;
-                  (k1+i) -> y  = dt * (xx+i) -> y ;
-                  (k1+i) -> z  = dt * (xx+i) -> z ;
-                  (k1+i) -> vx = dt * (xx+i) -> vx;
-                  (k1+i) -> vy = dt * (xx+i) -> vy;
-                  (k1+i) -> vz = dt * (xx+i) -> vz;
-                  
-                  /******** xx=X+k1/2 ********/
-                  (xx+i) -> x  = (X+i) -> x  + 0.5 * (k1+i) -> x ;
-                  (xx+i) -> y  = (X+i) -> y  + 0.5 * (k1+i) -> y ;
-                  (xx+i) -> z  = (X+i) -> z  + 0.5 * (k1+i) -> z ;
-                  (xx+i) -> vx = (X+i) -> vx + 0.5 * (k1+i) -> vx;
-                  (xx+i) -> vy = (X+i) -> vy + 0.5 * (k1+i) -> vy;
-                  (xx+i) -> vz = (X+i) -> vz + 0.5 * (k1+i) -> vz;
-            }
-      }
-      
-      /******** xx=F(X+k1/2) ********/
-      (*F)(xx);
-      
-      for(i=0; i<=largest_id; i++){
-            if(*(exists+i)){
-            
-                  /******** k2=dt*F(X+k1/2) ********/
-                  (k2+i) -> x  = dt * (xx+i) -> x ;
-                  (k2+i) -> y  = dt * (xx+i) -> y ;
-                  (k2+i) -> z  = dt * (xx+i) -> z ;
-                  (k2+i) -> vx = dt * (xx+i) -> vx;
-                  (k2+i) -> vy = dt * (xx+i) -> vy;
-                  (k2+i) -> vz = dt * (xx+i) -> vz;
-                  
-                  /******** xx=X+k2/2 ********/
-                  (xx+i) -> x  = (X+i) -> x  + 0.5 * (k2+i) -> x ;
-                  (xx+i) -> y  = (X+i) -> y  + 0.5 * (k2+i) -> y ;
-                  (xx+i) -> z  = (X+i) -> z  + 0.5 * (k2+i) -> z ;
-                  (xx+i) -> vx = (X+i) -> vx + 0.5 * (k2+i) -> vx;
-                  (xx+i) -> vy = (X+i) -> vy + 0.5 * (k2+i) -> vy;
-                  (xx+i) -> vz = (X+i) -> vz + 0.5 * (k2+i) -> vz;
-            }
-      }
-      
-      /******** xx=F(X+k2/2) ********/
-      (*F)(xx);
-      
-      for(i=0; i<=largest_id; i++){
-            if(*(exists+i)){
-                  
-                  /******** k3=dt*F(X+k2/2) ********/
-                  (k3+i) -> x  = dt * (xx+i) -> x ;
-                  (k3+i) -> y  = dt * (xx+i) -> y ;
-                  (k3+i) -> z  = dt * (xx+i) -> z ;
-                  (k3+i) -> vx = dt * (xx+i) -> vx;
-                  (k3+i) -> vy = dt * (xx+i) -> vy;
-                  (k3+i) -> vz = dt * (xx+i) -> vz;
-                  
-                  /******** xx=X+k3 ********/
-                  (xx+i) -> x  = (X+i) -> x  + (k3+i) -> x ;
-                  (xx+i) -> y  = (X+i) -> y  + (k3+i) -> y ;
-                  (xx+i) -> z  = (X+i) -> z  + (k3+i) -> z ;
-                  (xx+i) -> vx = (X+i) -> vx + (k3+i) -> vx;
-                  (xx+i) -> vy = (X+i) -> vy + (k3+i) -> vy;
-                  (xx+i) -> vz = (X+i) -> vz + (k3+i) -> vz;
-            }
-      }
-      
-      /******** xx=F(X+k3) ********/
-      (*F)(xx);      
-      
-      for(i=0; i<=largest_id; i++){
-            if(*(exists+i)){
-            
-                  /******** k4=dt*F(X+k3) ********/
-                  (k4+i) -> x  = dt * (xx+i) -> x ;
-                  (k4+i) -> y  = dt * (xx+i) -> y ;
-                  (k4+i) -> z  = dt * (xx+i) -> z ;
-                  (k4+i) -> vx = dt * (xx+i) -> vx;
-                  (k4+i) -> vy = dt * (xx+i) -> vy;
-                  (k4+i) -> vz = dt * (xx+i) -> vz;
-                  
-                  /******** X_(n+1)=X_n+(1/6)(k1 + 2k2 + 2k3 + k4) --> See https://en.wikipedia.org/wiki/Runge-Kutta_methods#Derivation_of_the_Runge-Kutta_fourth-order_method ********/
-                  (X+i) -> x  += ((k1+i) -> x  + 2.0 * (k2+i) -> x  + 2.0 * (k3+i) -> x  + (k4+i) -> x)  /6.0;
-                  (X+i) -> y  += ((k1+i) -> y  + 2.0 * (k2+i) -> y  + 2.0 * (k3+i) -> y  + (k4+i) -> y)  /6.0;
-                  (X+i) -> z  += ((k1+i) -> z  + 2.0 * (k2+i) -> z  + 2.0 * (k3+i) -> z  + (k4+i) -> z)  /6.0;
-                  (X+i) -> vx += ((k1+i) -> vx + 2.0 * (k2+i) -> vx + 2.0 * (k3+i) -> vx + (k4+i) -> vx) /6.0;
-                  (X+i) -> vy += ((k1+i) -> vy + 2.0 * (k2+i) -> vy + 2.0 * (k3+i) -> vy + (k4+i) -> vy) /6.0;
-                  (X+i) -> vz += ((k1+i) -> vz + 2.0 * (k2+i) -> vz + 2.0 * (k3+i) -> vz + (k4+i) -> vz) /6.0;
-            }
-      }
-
-      return 0;
-}
-
 
 void kick(struct moonlet * X, void (*F)(struct moonlet *)){
 
@@ -176,62 +62,6 @@ void drift(struct moonlet * X){
                   (X+i) -> z += timestep * (X+i) -> vz;
             }
       }
-}
-
-
-int leapfrog(struct moonlet * X, typ dt, void (*F)(struct moonlet *)){
-
-      /******** Performs one iteration with time step dt of a leapfrog method ********/
-      /******** F is the vector field such that dX/dt=F(X)                    ********/
-      
-      
-      int i;
-      
-      
-      for(i=0; i<=largest_id; i++){            
-            if(*(exists+i)){ //Checking whether or not there is a moonlet in the ith cell of the moonlet array
-            
-                  /******** xx=X ********/
-                  *(xx+i) = *(X+i);
-            }
-      }     
-      
-      /******** xx=F(X)=dX/dt ********/
-      (*F)(xx);      
-      
-      for(i=0; i<=largest_id; i++){            
-            if(*(exists+i)){ //Checking whether or not there is a moonlet in the ith cell of the moonlet array
-                  
-                  /******** V_{k+1/2} = V_k + a_k*dt/2 ********/
-                  (mid_point_speed+i) -> vx = (X+i) -> vx + 0.5*dt * (xx+i) -> vx;
-                  (mid_point_speed+i) -> vy = (X+i) -> vy + 0.5*dt * (xx+i) -> vy;
-                  (mid_point_speed+i) -> vz = (X+i) -> vz + 0.5*dt * (xx+i) -> vz;
-                  /******** X_{k+1} = X_k + V_{k+1/2}*dt ********/
-                  (X+i) -> x += dt * (mid_point_speed+i) -> vx;
-                  (X+i) -> y += dt * (mid_point_speed+i) -> vy;
-                  (X+i) -> z += dt * (mid_point_speed+i) -> vz;
-                  /******** xx=X ********/
-                  (xx+i) -> x  = (X+i) -> x ;
-                  (xx+i) -> y  = (X+i) -> y ;
-                  (xx+i) -> z  = (X+i) -> z ;
-            }
-      }      
-      
-      /******** xx=F(X)=dX/dt ********/
-      (*F)(xx);         
-      
-      for(i=0; i<=largest_id; i++){            
-            if(*(exists+i)){ //Checking whether or not there is a moonlet in the ith cell of the moonlet array
-            
-                  /******** V_{k+1} =  V_{k+1/2} + a_{k+1}*dt/2 ********/
-                  (X+i) -> vx = (mid_point_speed+i) -> vx + 0.5*dt * (xx+i) -> vx;
-                  (X+i) -> vy = (mid_point_speed+i) -> vy + 0.5*dt * (xx+i) -> vy;
-                  (X+i) -> vz = (mid_point_speed+i) -> vz + 0.5*dt * (xx+i) -> vz;
-            }
-      }
-      
-      return 0;
-
 }
 
 
@@ -332,102 +162,6 @@ void file_closing(){
       files=NULL;
 
 }
-
-
-//void display(struct moonlet * moonlets, typ * aei){
-
-      /******** Outputs the moonlets to the output files                                                                      ********/
-      /******** The output occurs on 11 files named x.txt, y.txt, ... vz.txt, radius.txt, a.txt, e.txt, i.txt and stat.txt    ********/
-      /******** x.txt to vz.txt contain the cartesian coordinates, while a.txt, e.txt and i.txt contains the orbital elements ********/
-      /******** In each file, a time step is printed on a single line. For example, the third line of e.txt contains the      ********/
-      /******** eccentricities of the N_max moonlets. If the j^th moonlet did not exist at the n^th output, then the j^th     ********/
-      /******** column of the n^th line contains 0. The columns of stat.txt are time, total number of moonlets, cumulative    ********/
-      /******** number of collisions, radius of the largest moonlet and total mass of the moonlets                            ********/      
-
-      
-      /*FILE * filex;
-      FILE * filey;
-      FILE * filez;
-      FILE * filevx;
-      FILE * filevy;
-      FILE * filevz;
-      FILE * filerad;
-      FILE * filea;
-      FILE * filee;
-      FILE * filei;
-      FILE * filestat;
-
-  
-      filex  = *files;
-      filey  = *(files+1);
-      filez  = *(files+2);
-      filevx = *(files+3);
-      filevy = *(files+4);
-      filevz = *(files+5);
-      filerad= *(files+6);
-      filea = *(files+7);
-      filee = *(files+8);
-      filei = *(files+9);
-      filestat= *(files+10);
-
-      
-      int p;
-      typ X,Y,Z,vX,vY,vZ,m,R;
-      typ total_mass = 0.0;
-      typ maxR = 0.0;
-      for (p = 0; p < N_max; p++){
-            if(*(exists+p)){
-                  cart2aei(moonlets, p, aei);
-                  X  = (moonlets+p)->      x;
-                  Y  = (moonlets+p)->      y;
-                  Z  = (moonlets+p)->      z;
-                  vX = (moonlets+p)->     vx;
-                  vY = (moonlets+p)->     vy;
-                  vZ = (moonlets+p)->     vz;
-                  m  = (moonlets+p)->   mass;
-                  R  = (moonlets+p)-> radius;
-                  fprintf(filex,   "%.13lf ",        X);
-                  fprintf(filey,   "%.13lf ",        Y);
-                  fprintf(filez,   "%.13lf ",        Z);
-                  fprintf(filevx,  "%.13lf ",       vX);
-                  fprintf(filevy,  "%.13lf ",       vY);
-                  fprintf(filevz,  "%.13lf ",       vZ);
-                  fprintf(filerad, "%.13lf ",        R);
-                  fprintf(filea,   "%.13lf ",     *aei);
-                  fprintf(filee,   "%.13lf ", *(aei+1));
-                  fprintf(filei,   "%.13lf ", *(aei+2));
-                  total_mass += m;
-                  if (R > maxR){
-                        maxR = R;
-                  }
-            }
-            else{
-                  fprintf(filex,  "%d ", 0);
-                  fprintf(filey,  "%d ", 0);
-                  fprintf(filez,  "%d ", 0);
-                  fprintf(filevx, "%d ", 0);
-                  fprintf(filevy, "%d ", 0);
-                  fprintf(filevz, "%d ", 0);
-                  fprintf(filerad,"%d ", 0);
-                  fprintf(filea,  "%d ", 0);
-                  fprintf(filee,  "%d ", 0);
-                  fprintf(filei,  "%d ", 0);
-            }
-      }
-      fprintf(filestat, "%.13lf %d %d %.13lf %.13lf", time_elapsed, how_many_moonlets, collision_count, maxR, total_mass);
-      fprintf(filex,   "0\n");
-      fprintf(filey,   "0\n");
-      fprintf(filez,   "0\n");
-      fprintf(filevx,  "0\n");
-      fprintf(filevy,  "0\n");
-      fprintf(filevz,  "0\n");
-      fprintf(filerad, "0\n");
-      fprintf(filea,   "0\n");
-      fprintf(filee,   "0\n");
-      fprintf(filei,   "0\n");
-      fprintf(filestat, "\n");  
-
-}*/
 
 
 void display(struct moonlet * moonlets, typ * aei){
@@ -542,21 +276,6 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   R = (moonlets+j) -> radius;
                   if (X*X+Y*Y+Z*Z < low_dumping_threshold*low_dumping_threshold || X*X+Y*Y+Z*Z > high_dumping_threshold*high_dumping_threshold){
                         lose_moonlet(j);
-                        
-                        /******** To be removed later ********/
-                        /*typ angular_momentum_loss[3];
-                        vX=(moonlets+j)-> vx;
-                        vY=(moonlets+j)-> vy;
-                        vZ=(moonlets+j)-> vz;
-                        m=(moonlets+j)-> mass;
-                        cross_product(m*X,m*Y,m*Z,vX,vY,vZ,angular_momentum_loss);
-                        *tam_loss+=angular_momentum_loss[0];
-                        *(tam_loss+1)+=angular_momentum_loss[1];
-                        *(tam_loss+2)+=angular_momentum_loss[2];*/
-                        
-                        if (moonlet_spawning_bool && X*X+Y*Y+Z*Z < low_dumping_threshold*low_dumping_threshold){
-                              add(j, &to_be_added_fluid_disk);
-                        }
                   }
                   if (R > maxR){
                         maxR = R;
@@ -596,50 +315,6 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
             how_many_cells = 0;
             cell_id = 0;
             tensor_free();
-      }
-      
-      if (moonlet_spawning_bool){
-            
-            /******** Updating the time elapsed since the last moonlet spawning ********/
-            time_since_last_spawn += timestep;
-            
-            /******** Taking care of the moonlets that merged with the inner fluid disk ********/
-            while (to_be_added_fluid_disk->how_many > 0){
-                  index = (to_be_added_fluid_disk->ids)[to_be_added_fluid_disk->how_many - 1];
-                  m = (moonlets+index) -> mass; //Retrieving the mass of the moonlet that merged with the inner fluid disk
-                  inner_fluid_mass+=m;          //Updating the mass of the inner fluid disk accordingly
-                  to_be_added_fluid_disk = partial_delete(to_be_added_fluid_disk);
-            }
-            
-            /******** Taking care of the mass that was lost by the inner fluid disk due to viscous spreading onto the Earth ********/
-            typ dm = inner_disk_mass_factor*inner_fluid_mass*inner_fluid_mass*inner_fluid_mass*timestep;
-            inner_fluid_mass-=dm;
-            
-            /******** Taking care of a potential moonlet spawning ********/
-            if (time_since_last_spawn >= moonlet_spawn_dt){
-                  time_since_last_spawn -= moonlet_spawn_dt;
-                  m = spawned_mass_factor*inner_fluid_mass*inner_fluid_mass*inner_fluid_mass/Mearth/Mearth; //Retrieving the mass   of the spawned moonlet
-                  R = Rearth*spawned_radius_factor*inner_fluid_mass/Mearth;                                 //Retrieving the radius of the spawned moonlet
-                  index = get_free_index(0); //Retrieving the index of where to store that moonlet
-                  (moonlets+index)->y = 0.0;
-                  (moonlets+index)->z = 0.0;
-                  (moonlets+index)->vx = 0.0;
-                  (moonlets+index)->vz = 0.0;
-                  (moonlets+index)->x = Rroche;
-                  (moonlets+index)->vy = sqrt(G*Mearth/Rroche);
-                  if (J2_bool){ //Using the geometric elliptical elements instead of the osculating ones in case of an oblate Earth. See Greenberg (1981)
-                        (moonlets+index)->vy *= 1.0+0.75*J2*Rearth*Rearth/(Rroche*Rroche); //Correcting the speed to achieve a circular orbit for the spawned moonlet.
-                  }
-                  (moonlets+index)->mass = m;
-                  (moonlets+index)->radius = R;
-                  inner_fluid_mass -= m; //Removing the mass of the spawned moonlet from the inner fluid disk
-            }
-            
-            /******** If the simulation progressed by at least 0.1%, we display useful informations ********/
-            if (progressed){
-                  printf("                  Mass of the inner fluid disk = %.6lf\n",inner_fluid_mass);
-            }
-            
       }
       
       /******** Reinitializing the array did_collide ********/
@@ -685,30 +360,6 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       if (!brute_force_bool && !force_naive_bool && how_many_moonlets < switch_to_brute_force){
             force_naive_bool = 1;
       }
-      
-      /******** To be removed later ********/
-      /*if (progressed){
-            typ total_angular_momentum[3] = {0.0,0.0,0.0};
-            typ angular_momentum[3];
-            for (j=0; j<=largest_id; j++){
-                  if (*(exists+j)){
-                        X  = (moonlets+j)->      x;
-                        Y  = (moonlets+j)->      y;
-                        Z  = (moonlets+j)->      z;
-                        vX = (moonlets+j)->     vx;
-                        vY = (moonlets+j)->     vy;
-                        vZ = (moonlets+j)->     vz;
-                        m  = (moonlets+j)->   mass;
-                        cross_product(m*X,m*Y,m*Z,vX,vY,vZ,angular_momentum);
-                        total_angular_momentum[0]+=angular_momentum[0];
-                        total_angular_momentum[1]+=angular_momentum[1];
-                        total_angular_momentum[2]+=angular_momentum[2];
-                  }
-            }
-            typ tamX = total_angular_momentum[0]+(*tam_loss), tamY = total_angular_momentum[1]+(*(tam_loss+1)), tamZ = total_angular_momentum[2]+(*(tam_loss+2));
-            typ tam = sqrt(tamX*tamX + tamY*tamY + tamZ*tamZ); //Norm of the total angular momentum
-            printf("                  Total angular momentum = %.13lf\n", tam);
-      }*/
       
       /******** Reordering the array moonlets ********/
       if (how_many_moonlets < 9*largest_id/10 && largest_id > 50){
@@ -1685,30 +1336,6 @@ int integration_brute_force_SABA1(typ t){
        
       return 0;
 }
-
-void flattree_check(){
-
-      int i, j;
-      int a;
-      int how_many_dots;
-      int * in_flattree = (int *)malloc((largest_id+1)*sizeof(int));
-      int * dots = FlatTree -> dots;
-      how_many_dots = FlatTree -> how_many_dots;
-      for (i = 0; i <= largest_id; i++){
-            in_flattree[i] = 0;
-      }
-      for (j = 0; j < how_many_dots; j++){
-            a = dots[j];
-            in_flattree[a] ++;
-      }
-      for (i = 0; i <= largest_id; i++){
-            if (in_flattree[i] > 1){
-                  printf("Moonlet %d is contained %d times.\n", i, in_flattree[i]);
-            }
-      }
-}
-
-
 
 
 

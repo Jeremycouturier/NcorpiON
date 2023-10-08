@@ -596,9 +596,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       if (m_tilde < 0.1*M){ //m_tilde is not proportionnal to Qr/Qr* in this regime
             
             m_tilde = 0.1* M * pow(3.0*k_parameter*C1_3mu/(2.0*1.8*M_PI)*m_1/M,-1.5) * pow(costheta*dv_norm/vesc,-9.0*mu_parameter/2.0); //Eq. (44) of Leinhardt and Stewart (2012)
-            if (moonlet_spawning_bool){ //If there is an inner fluid disk, the ejected mass is added to it
-                  inner_fluid_mass += M - m_tilde;
-            }
+            
             /******** Only the largest fragment remains in the super-catastrophic regime ********/
             /******** Actualizing its speed ********/
             (moonlets+a) -> vx = (m_a*vx_a+m_b*vx_b)/M;

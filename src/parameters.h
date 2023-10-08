@@ -36,9 +36,6 @@
 #define density_earth 0.238764       //The density of the Earth    (5514 kg/m^3) in Mearth/Rearth^3.
 #define Rroche 2.9                   //The Roche radius
 #define Tearth 3.4076                //Earth's sideral period in units of the surface orbital period. Must be larger than 1. Today value is 17.038
-#define moonlet_spawn_dt 11.228001   //If moonlet_spawning_bool is 1, then a moonlet spawns from the inner fluid disk every moonlet_spawn_dt surface orbital period.
-                                     //Has to change if Rroche changes. To be modified later
-#define inner_fluid_disk_mass 0.006  //Initial mass of the inner fluid disk, in Earth masses
 
 
 
@@ -59,11 +56,9 @@
 #define sma_max 14.0                 //Maximal semi-major axis          for a moonlet at t=0
 #define inclination_min 0.0          //Minimal inclination (in radians) for a moonlet at t=0
 #define inclination_max 0.174533     //Maximal inclination (in radians) for a moonlet at t=0
-//#define inclination_max 1.57         //Maximal inclination (in radians) for a moonlet at t=0
 #define low_dumping_threshold 1.8    //Moonlets falling below this threshold (in Earth radii) are dumped from the simulation (collision with the Earth or disruption by tidal forces)
 #define high_dumping_threshold 200.0 //Moonlets going  beyond this threshold (in Earth radii) are dumped from the simulation (assumed unbounded)
 #define max_ids_per_node 173         //The maximum number of ids in each node of the unrolled linked lists (chains). Choose such that sizeof(struct chain) be a multiple of the cache line
-#define f_spawn 0.3                  //Parameter that controls the mass of moonlets spawned from the inner fluid disk. 0.3 in Salmon & Canup 2012
 #define softening_parameter 0.00     //The softening parameter for mutual gravitational interations, in units of the sum of the radii.
 #define seed 778345128               //The seed used for random number generation. Does not matter if seed_bool is 0.
 #define switch_to_brute_force 1024   //Threshold for N below which the program switches to the brute-force method for mutual interactions. Does not matter if brute_force_bool is 1

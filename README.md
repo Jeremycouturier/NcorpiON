@@ -1,6 +1,6 @@
 # Welcome to NcorpiON
 
-NcorpiON is an N-body software dedicated to the simulation of collisional and fragmenting systems.
+NcorpiON is an N-body software dedicated to the simulation of collisional and fragmenting systems. It is very fast and can realistically handle fragmentations
 
 
 ## Features
@@ -23,7 +23,7 @@ You can install NcorpiON with the ```git``` command
 
 	git clone git@github.com:Jeremycouturier/NcorpiON.git
 	
-or if you prefer, you can simply download this repository to your computer. If you install NcorpiON through ```git```, you can later on get updates
+or if you prefer, you can simply download this repository to your computer. Using ```git``` is recommended so you can later on get updates
 by running ```git pull```
 
 Note that the production of animations requires ```ffmpeg``` to be installed on your system. Run

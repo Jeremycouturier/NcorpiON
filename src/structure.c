@@ -23,7 +23,6 @@ struct chain ** hash;
 int * modified_cells;
 int * indexes;
 struct chain * nghb;
-struct chain * to_be_added_fluid_disk;
 int * free_indexes;
 struct pair * pairs;
 struct moonlet * three_largest;
@@ -49,12 +48,7 @@ int total_neighbours;
 typ average_neighbours;
 int first_passage;
 typ time_elapsed;
-typ time_since_last_spawn;
-typ inner_fluid_mass;
 int how_many_free;
-typ spawned_mass_factor;
-typ spawned_radius_factor;
-typ inner_disk_mass_factor;
 int how_many_moonlets;
 int force_naive_bool;
 typ time_until_collision;
@@ -274,34 +268,27 @@ void variable_initialization(){
       largest_id = N_0-1;
       first_passage = 1;
       time_elapsed = 0.0;
-      time_since_last_spawn = 0.0;
       how_many_free = 0;
       how_many_moonlets = N_0;
       how_many_cells = 0;
       cell_id = 0;
       force_naive_bool = 0;
       IndexPeanoHilbertOrder = N_0;
-      if (moonlet_spawning_bool){
-            inner_fluid_mass = inner_fluid_disk_mass;
-            spawned_mass_factor = 16.0*M_PI*f_spawn*f_spawn*pow(Rroche/Rearth,6.0)/(Rroche*Rroche/(Rearth*Rearth)-1.0);
-            spawned_radius_factor = pow(16.0*M_PI*f_spawn*f_spawn*density_earth/density,1.0/3.0)*pow(Rroche*Rroche/(Rearth*Rearth)-1.0,-1.0/3.0)*Rroche*Rroche/(Rearth*Rearth);
-            inner_disk_mass_factor = 0.600914*M_PI*M_PI*G*G/pow(7.41*M_PI*Rearth*Rearth,3.0)/pow(G*Mearth/Rroche,1.5); //Has to change if Rroche changes. To be modified later
-      }
       if(!brute_force_bool){
             typ sinsigma=sin(inclination_max);
-            gam=pow(sma_max*sma_max*sma_max-sma_min*sma_min*sma_min,1.0/3.0)*pow(4.0*M_PI*how_many_neighbours*sinsigma/(((typ) N_0)*81.0),1.0/3.0); //The mesh-size for the O(N) 
-                                                                                                                                                    //collision detection algorithm
-            gam_min=collision_cube_min/((typ) collision_cube_cells);
-            if (gam<gam_min){
-                  gam=gam_min;
+            gam = pow(sma_max*sma_max*sma_max-sma_min*sma_min*sma_min,1.0/3.0)*pow(4.0*M_PI*how_many_neighbours*sinsigma/(((typ) N_0)*81.0),1.0/3.0); //The mesh-size for the O(N) 
+                                                                                                                                                      //collision detection algorithm
+            gam_min = collision_cube_min/((typ) collision_cube_cells);
+            if (gam < gam_min){
+                  gam = gam_min;
             }
 
-            how_many_big=0;
-            how_many_small=0;
-            how_many_modified=0;
-            total_neighbours=0;
-            collision_cube=gam*((typ) collision_cube_cells);
-            average_neighbours=0.0;
+            how_many_big = 0;
+            how_many_small = 0;
+            how_many_modified = 0;
+            total_neighbours = 0;
+            collision_cube = gam*((typ) collision_cube_cells);
+            average_neighbours = 0.0;
       }
       if (collision_bool && !elastic_collision_bool && !instant_merger_bool){
             super_catastrophic_count = 0;
@@ -322,33 +309,21 @@ void array_initialization(){
       
       
       
-      /******** Arrays of moonlets used as buffer ********/
-      //mid_point_speed = (struct moonlet *)malloc(sizeof(struct moonlet)*N_max);
+      /******** Array of moonlets used as buffer ********/
       xx = (struct moonlet *)malloc(sizeof(struct moonlet)*N_max);
-      /*k1 = (struct moonlet *)malloc(sizeof(struct moonlet)*N_max);
-      k2 = (struct moonlet *)malloc(sizeof(struct moonlet)*N_max);
-      k3 = (struct moonlet *)malloc(sizeof(struct moonlet)*N_max);
-      k4 = (struct moonlet *)malloc(sizeof(struct moonlet)*N_max);*/
 
       /******** The kth cell of this array contains 1 if the kth cell of the array moonlets contains a moonlet ********/
-      exists=(int *)malloc(sizeof(int)*N_max);
+      exists = (int *)malloc(sizeof(int)*N_max);
 
 
       int p;
 
       /******** Initializing the array exists with 1 if the kth cell of the array moonlets contains a moonlet, 0 otherwise ********/
-      for (p=0; p<N_0; p++){
-            *(exists+p)=1;
+      for (p = 0; p < N_0; p++){
+            *(exists+p) = 1;
       }
-      for (p=N_0; p<N_max; p++){
-            *(exists+p)=0;
-      }
-      
-      /******** Initializing some chains ********/
-      if (moonlet_spawning_bool){
-            to_be_added_fluid_disk = NULL;
-            add(0,&to_be_added_fluid_disk);
-            to_be_added_fluid_disk->how_many = 0;
+      for (p = N_0; p < N_max; p++){
+            *(exists+p) = 0;
       }
       
       free_indexes = (int *)malloc(N_max*sizeof(int));
@@ -357,43 +332,37 @@ void array_initialization(){
       if (mesh_bool && (mutual_bool || collision_bool)){
       
             bigint n = collision_cube_cells+2; //Adding one layer to the collision cube so we don't have to worry about edges.
-            typ available_ram = ((typ) (get_avphys_pages() * sysconf(_SC_PAGESIZE)))/(1024.0*1024.0*1024.0); //Available RAM in GiB
             typ hash_table_size=((typ) (n*n*n*(bigint) (sizeof(struct chain *))))/(1024.0*1024.0*1024.0); //Size of the hash table in GiB
-            /*if (hash_table_size > available_ram - 2.0){ //If less than 2 GiB of RAM left after allocating the hash table
-                  fprintf(stderr, "Error : The system reports %.1lf GiB of available RAM, but the hash table requires %.1lf GiB. Try decreasing the value of collision_cube_cells\n",
-                          available_ram,hash_table_size);
-                  abort();
-            }*/
             printf("Allocating %.1lf GiB of RAM to the hash table.\n", hash_table_size);
-            hash=(struct chain **)malloc(sizeof(struct chain *)*n*n*n); //A pointer weighs 8 bytes, so this command should allocate ~ 8GB of RAM if collision_cube_cells=1000
+            hash=(struct chain **)malloc(sizeof(struct chain *)*n*n*n); //A pointer weighs 8 bytes, so this command should allocate 8GiB of RAM if collision_cube_cells = 1024
             if (hash==NULL){
-                  fprintf(stderr, "Error : Can't allocate memory for the hash table.\n");
+                  fprintf(stderr, "Error : Can't allocate memory for the hash table in function array_initialization.\n");
                   abort();
             }
-            for (p=0; p<n*n*n; p++){
-                  *(hash+p)=NULL;
+            for (p = 0; p < n*n*n; p++){
+                  *(hash+p) = NULL;
             }
             
-            modified_cells=(int *)malloc(sizeof(int)*N_max); //An array that contains the indexes of modified cells of the hash table. Initialized to {-1, -1, ..., -1}
-            for (p=0; p<N_max; p++){
-                  *(modified_cells+p)=-1;
+            modified_cells = (int *)malloc(sizeof(int)*N_max); //An array that contains the indexes of modified cells of the hash table. Initialized to {-1, -1, ..., -1}
+            for (p = 0; p < N_max; p++){
+                  *(modified_cells+p) = -1;
             }
             
-            indexes=(int *)malloc(27*sizeof(int)); //An array that stores the indexes of the cells of the neighbourhood of a moonlet in the hash table
-            for (p=0; p<27; p++){
-                  *(indexes+p)=-1;
+            indexes = (int *)malloc(27*sizeof(int)); //An array that stores the indexes of the cells of the neighbourhood of a moonlet in the hash table
+            for (p = 0; p < 27; p++){
+                  *(indexes+p) = -1;
             }
             
-            nghb=NULL;
+            nghb = NULL;
             add(0,&nghb);
-            nghb->how_many=0;
+            nghb -> how_many = 0;
             
             /******** If there are mutual gravitational interactions, we allocate the array of pairs that need to be treated for mutual gravitational interactions ********/
             pairs = (struct pair *)malloc(sizeof(struct pair) * 5 * N_max * (int) how_many_neighbours); //Array of pairs of moonlets being in the same neighbourhood
-                                                                                                         //The expected number of such pairs is N*how_many_neighbours/2
+                                                                                                        //The expected number of such pairs is N*how_many_neighbours/2
             how_many_pairs = 0;
             if (pairs == NULL){
-                  fprintf(stderr, "Error : Can't allocate memory for the array pairs.\n");
+                  fprintf(stderr, "Error : Can't allocate memory for the array pairs in function array_initialization.\n");
                   abort();
             }
       }
@@ -406,15 +375,10 @@ void array_initialization(){
       
       if (collision_bool && fragmentation_bool){
             catastrophic_pdf = (int *)malloc(cata_pdf_discrete * sizeof(int));
-            for (p=0; p<cata_pdf_discrete; p++){
+            for (p = 0; p < cata_pdf_discrete; p++){
                   *(catastrophic_pdf+p) = 0;
             }
       }
-      
-      tam_loss = (typ *)malloc(3 * sizeof(typ));
-      *tam_loss = 0.0;
-      *(tam_loss+1) = 0.0;
-      *(tam_loss+2) = 0.0;
       
       if (collision_bool){
             approach = (typ *)malloc(6 * sizeof(typ));
@@ -447,30 +411,20 @@ void deallocation(){
       int p;
       
       free(exists);
-      exists=NULL;
+      exists = NULL;
       free(free_indexes);
-      free_indexes=NULL;
-      if (moonlet_spawning_bool){
-            clear_chain(&to_be_added_fluid_disk);
-      }
+      free_indexes = NULL;
       free(xx);
-      xx=NULL;
-      /*free(mid_point_speed);
-      mid_point_speed=NULL;*/
-      /*free(xx); xx=NULL;
-      free(k1); k1=NULL;
-      free(k2); k2=NULL;
-      free(k3); k3=NULL;
-      free(k4); k4=NULL;*/
+      xx = NULL;
       if(mesh_bool && (mutual_bool || collision_bool)){
             free(hash);
-            hash=NULL;
+            hash = NULL;
             free(indexes);
-            indexes=NULL;
+            indexes = NULL;
             free(nghb);
-            nghb=NULL;
+            nghb = NULL;
             free(modified_cells);
-            modified_cells=NULL;
+            modified_cells = NULL;
             free(pairs);
             pairs = NULL;
       }
@@ -480,8 +434,6 @@ void deallocation(){
             free(catastrophic_pdf);
             catastrophic_pdf = NULL;
       }
-      free(tam_loss);
-      tam_loss = NULL;
       if (collision_bool){
             free(approach);
             approach = NULL;

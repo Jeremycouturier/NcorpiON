@@ -10,12 +10,7 @@ extern typ timestep;                 //The timestep
 extern int largest_id;               //The largest if of a moonlet. This variable allows us not to travel the whole moonlet array
 extern int first_passage;            //To be removed later. Just for the benchmark
 extern typ time_elapsed;             //The physical time elapsed since the beginning of the simulation (in units of the surface orbital period)
-extern typ time_since_last_spawn;    //The physical time elapsed since a moonlet last spawned from the inner fluid disk
-extern typ inner_fluid_mass;         //Mass of the inner fluid disk
 extern int how_many_free;            //Total number of indexes used in priority when a new moonlet is created
-extern typ spawned_mass_factor;      //Factor used to compute the mass   of a spawned moonlet
-extern typ spawned_radius_factor;    //Factor used to compute the radius of a spawned moonlet
-extern typ inner_disk_mass_factor;   //Factor used to compute the variation in the inner fluid disk's mass
 extern int how_many_moonlets;        //Total number of moonlets in the simulation
 extern int force_naive_bool;         //If 1, then forces the program to use the brute-force algorithm for collision detection. Automatically set to 1 by the program when N becomes small
 extern typ time_until_collision;     //Time until collision
@@ -36,13 +31,8 @@ struct moonlet {
 };
 
 
-/******** Global arrays of moonlets used as buffer in the function iteration and leapfrog ********/
+/******** Global arrays of moonlets used as buffer ********/
 extern struct moonlet * xx;
-extern struct moonlet * k1;
-extern struct moonlet * k2;
-extern struct moonlet * k3;
-extern struct moonlet * k4;
-extern struct moonlet * mid_point_speed;
 
 
 /******** Global arrays ********/
@@ -51,14 +41,17 @@ extern struct chain * to_be_added_fluid_disk; //Array of ids of moonlets that ne
 extern int * free_indexes;                    //Arrays of ids of non-existant moonlets
 
 
+/****************************************************************************************/
 /******** Defining a cache-friendly chain structure that holds ids of moonlets   ********/
+/****************************************************************************************/
 
 
 /******** The regular definition of a chain (or linked list) is                  ********/
 
 /******** struct chain {                                                         ********/
 /********       struct chain * queue;                                            ********/
-/********       int id; };                                                       ********/
+/********       int id;                                                          ********/
+/******** };                                                                     ********/
 
 /******** but this definition is such that two consecutives ids are far away in  ********/
 /******** memory. In a cache friendly chain, most ids consecutive in the chain   ********/
@@ -102,7 +95,6 @@ extern int full_fragmentation_count;      //Number of collisions such that eject
 extern int merger_count;                  //Number of collisions having resulted in a merger, that is, such that ejected mass < frag_threshold
 extern int collision_count;               //Number of collisions so far
 extern int * catastrophic_pdf;            //Probability density function of the catastrophicity of collisions
-extern typ * tam_loss;                    //Total angular momentum loss due to dumped moonlets
 extern int * did_collide;                 //The k^th cell contains 1 if moonlet k did collide during that timestep, and 0 otherwise
 
 /******** Global array of output files ********/
