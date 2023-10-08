@@ -7,7 +7,7 @@ NcorpiON is an N-body software dedicated to the simulation of collisional and fr
 
 - Written in C
 - Four built-in modules for mutual interactions, namely
-- Brute-force O(N^2) method
+- Brute-force $\mathcal{O}(N^2)$ method
 - Barnes-Hut O(N ln N) tree code
 - Mesh O(N) algorithm
 - FalcON O(N) Fast Multipole Method
