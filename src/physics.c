@@ -28,31 +28,31 @@ void vector_field(struct moonlet * moonlets){
       
       /******** Getting the coordinates of the three largest moonlets. Useful only when treating mutual gravitational interactions with the O(N) mesh algorithm ********/
       if (mutual_bool && mesh_bool && !force_naive_bool){
-            X0 =  moonlets -> x;
-            Y0 =  moonlets -> y;
-            Z0 =  moonlets -> z;
-            m0 =  moonlets -> mass;
-            R0 =  moonlets -> radius;
-            X1 =  (moonlets+1) -> x;
-            Y1 =  (moonlets+1) -> y;
-            Z1 =  (moonlets+1) -> z;
-            m1 =  (moonlets+1) -> mass;
-            R1 =  (moonlets+1) -> radius;
-            X2 =  (moonlets+2) -> x;
-            Y2 =  (moonlets+2) -> y;
-            Z2 =  (moonlets+2) -> z;
-            m2 =  (moonlets+2) -> mass;
-            R2 =  (moonlets+2) -> radius;
+            X0 =  moonlets       -> x;
+            Y0 =  moonlets       -> y;
+            Z0 =  moonlets       -> z;
+            m0 =  moonlets       -> mass;
+            R0 =  moonlets       -> radius;
+            X1 =  (moonlets + 1) -> x;
+            Y1 =  (moonlets + 1) -> y;
+            Z1 =  (moonlets + 1) -> z;
+            m1 =  (moonlets + 1) -> mass;
+            R1 =  (moonlets + 1) -> radius;
+            X2 =  (moonlets + 2) -> x;
+            Y2 =  (moonlets + 2) -> y;
+            Z2 =  (moonlets + 2) -> z;
+            m2 =  (moonlets + 2) -> mass;
+            R2 =  (moonlets + 2) -> radius;
       }
       
       for (k = 0; k <= largest_id; k++){
             if (*(exists+k)){ //Checking whether or not there is a moonlet in the kth cell of the moonlet array
             
                   /******** Contribution from the Earth's center of mass ********/
-                  X  = (moonlets+k)-> x;
-                  Y  = (moonlets+k)-> y;
-                  Z  = (moonlets+k)-> z;
-                  mk = (moonlets+k)->mass;
+                  X  = (moonlets + k) -> x;
+                  Y  = (moonlets + k) -> y;
+                  Z  = (moonlets + k) -> z;
+                  mk = (moonlets + k) -> mass;
                   rk = sqrt(X*X+Y*Y+Z*Z);
                   r3 = rk*rk*rk;
                   
@@ -86,12 +86,12 @@ void vector_field(struct moonlet * moonlets){
                               if (*(exists+p)){
                               
                                     /******** Getting the positions, masses and radii ********/
-                                    mp = (moonlets+p)-> mass;
-                                    Xp = (moonlets+p)-> x;
-                                    Yp = (moonlets+p)-> y;
-                                    Zp = (moonlets+p)-> z;
-                                    Rp = (moonlets+p)-> radius;
-                                    Rk = (moonlets+k)-> radius;
+                                    mp = (moonlets + p) -> mass;
+                                    Xp = (moonlets + p) -> x;
+                                    Yp = (moonlets + p) -> y;
+                                    Zp = (moonlets + p) -> z;
+                                    Rp = (moonlets + p) -> radius;
+                                    Rk = (moonlets + k) -> radius;
                                     
                                     DX = X-Xp;
                                     DY = Y-Yp;
@@ -108,9 +108,9 @@ void vector_field(struct moonlet * moonlets){
                                     aZ -= G*mp*DZ/D3;
                                     
                                     /******** Updating acceleration of moonlet p ********/
-                                    (moonlets+p)->vx  += G*mk*DX/D3; //dV/dt=A
-                                    (moonlets+p)->vy  += G*mk*DY/D3;
-                                    (moonlets+p)->vz  += G*mk*DZ/D3;
+                                    (moonlets+p) -> vx  += G*mk*DX/D3; //dV/dt=A
+                                    (moonlets+p) -> vy  += G*mk*DY/D3;
+                                    (moonlets+p) -> vz  += G*mk*DZ/D3;
                               }
                         }
                   }
@@ -153,9 +153,9 @@ void vector_field(struct moonlet * moonlets){
                                     aY -= G*m1*DY/D3;
                                     aZ -= G*m1*DZ/D3;
                                     /******** Updating acceleration of moonlet 1 ********/
-                                    (moonlets+1) -> vx += G*mk*DX/D3;
-                                    (moonlets+1) -> vy += G*mk*DY/D3;
-                                    (moonlets+1) -> vz += G*mk*DZ/D3;
+                                    (moonlets + 1) -> vx += G*mk*DX/D3;
+                                    (moonlets + 1) -> vy += G*mk*DY/D3;
+                                    (moonlets + 1) -> vz += G*mk*DZ/D3;
                               }
                               
                               /******** pair (2,k) ********/
@@ -171,17 +171,17 @@ void vector_field(struct moonlet * moonlets){
                                     aY -= G*m2*DY/D3;
                                     aZ -= G*m2*DZ/D3;
                                     /******** Updating acceleration of moonlet 2 ********/
-                                    (moonlets+2) -> vx += G*mk*DX/D3;
-                                    (moonlets+2) -> vy += G*mk*DY/D3;
-                                    (moonlets+2) -> vz += G*mk*DZ/D3;
+                                    (moonlets + 2) -> vx += G*mk*DX/D3;
+                                    (moonlets + 2) -> vy += G*mk*DY/D3;
+                                    (moonlets + 2) -> vz += G*mk*DZ/D3;
                               }
                         }      
                   }
                   
                   /******** Actualizing the acceleration of moonlet k ********/
-                  (moonlets+k)->vx = aX; //dV/dt=A
-                  (moonlets+k)->vy = aY;
-                  (moonlets+k)->vz = aZ;
+                  (moonlets+k) -> vx = aX; //dV/dt=A
+                  (moonlets+k) -> vy = aY;
+                  (moonlets+k) -> vz = aZ;
                   
             }     
       }
@@ -202,9 +202,9 @@ void vector_field(struct moonlet * moonlets){
             }
             for (k = 0; k <= largest_id; k++){
                   if (exists[k]){
-                        (moonlets+k) -> vx += C1Moonlets[3*k]  ;
-                        (moonlets+k) -> vy += C1Moonlets[3*k+1];
-                        (moonlets+k) -> vz += C1Moonlets[3*k+2];
+                        (moonlets + k) -> vx += C1Moonlets[3*k]  ;
+                        (moonlets + k) -> vy += C1Moonlets[3*k+1];
+                        (moonlets + k) -> vz += C1Moonlets[3*k+2];
                   }
             }
       }
@@ -222,12 +222,12 @@ void vector_field(struct moonlet * moonlets){
                   softening = softening_parameter*(R0 + R1);
                   D  = sqrt(DX*DX+DY*DY+DZ*DZ+softening*softening);
                   D3 = D*D*D;
-                  moonlets->vx  -= G*m1*DX/D3;
-                  moonlets->vy  -= G*m1*DY/D3;
-                  moonlets->vz  -= G*m1*DZ/D3;
-                  (moonlets+1)->vx  += G*m0*DX/D3;
-                  (moonlets+1)->vy  += G*m0*DY/D3;
-                  (moonlets+1)->vz  += G*m0*DZ/D3;
+                  moonlets -> vx  -= G*m1*DX/D3;
+                  moonlets -> vy  -= G*m1*DY/D3;
+                  moonlets -> vz  -= G*m1*DZ/D3;
+                  (moonlets + 1) -> vx  += G*m0*DX/D3;
+                  (moonlets + 1) -> vy  += G*m0*DY/D3;
+                  (moonlets + 1) -> vz  += G*m0*DZ/D3;
             }
             
             /******** pair (0,2) ********/
@@ -238,12 +238,12 @@ void vector_field(struct moonlet * moonlets){
                   softening = softening_parameter*(R0 + R2);
                   D  = sqrt(DX*DX+DY*DY+DZ*DZ+softening*softening);
                   D3 = D*D*D;
-                  moonlets->vx  -= G*m2*DX/D3;
-                  moonlets->vy  -= G*m2*DY/D3;
-                  moonlets->vz  -= G*m2*DZ/D3;
-                  (moonlets+2)->vx  += G*m0*DX/D3;
-                  (moonlets+2)->vy  += G*m0*DY/D3;
-                  (moonlets+2)->vz  += G*m0*DZ/D3;
+                  moonlets -> vx  -= G*m2*DX/D3;
+                  moonlets -> vy  -= G*m2*DY/D3;
+                  moonlets -> vz  -= G*m2*DZ/D3;
+                  (moonlets + 2) -> vx  += G*m0*DX/D3;
+                  (moonlets + 2) -> vy  += G*m0*DY/D3;
+                  (moonlets + 2) -> vz  += G*m0*DZ/D3;
             }
             
             /******** pair (1,2) ********/
@@ -254,12 +254,12 @@ void vector_field(struct moonlet * moonlets){
                   softening = softening_parameter*(R1 + R2);
                   D  = sqrt(DX*DX+DY*DY+DZ*DZ+softening*softening);
                   D3 = D*D*D;
-                  (moonlets+1)->vx  -= G*m2*DX/D3;
-                  (moonlets+1)->vy  -= G*m2*DY/D3;
-                  (moonlets+1)->vz  -= G*m2*DZ/D3;
-                  (moonlets+2)->vx  += G*m1*DX/D3;
-                  (moonlets+2)->vy  += G*m1*DY/D3;
-                  (moonlets+2)->vz  += G*m1*DZ/D3;
+                  (moonlets + 1) -> vx  -= G*m2*DX/D3;
+                  (moonlets + 1) -> vy  -= G*m2*DY/D3;
+                  (moonlets + 1) -> vz  -= G*m2*DZ/D3;
+                  (moonlets + 2) -> vx  += G*m1*DX/D3;
+                  (moonlets + 2) -> vy  += G*m1*DY/D3;
+                  (moonlets + 2) -> vz  += G*m1*DZ/D3;
             }
       
             /******** We now consider gravitational interactions between pairs in the same neighbourhood, or between pairs containing a big moonlet. ********/
@@ -273,16 +273,16 @@ void vector_field(struct moonlet * moonlets){
                   if (*(exists+k) && *(exists+p) && k > 2 && p > 2){
                   
                         /******** Getting the positions, masses and radii ********/
-                        X  = (moonlets+k)-> x;
-                        Y  = (moonlets+k)-> y;
-                        Z  = (moonlets+k)-> z;
-                        mk = (moonlets+k)-> mass;
-                        Rk = (moonlets+k)-> radius;
-                        Xp = (moonlets+p)-> x;
-                        Yp = (moonlets+p)-> y;
-                        Zp = (moonlets+p)-> z;
-                        mp = (moonlets+p)-> mass;
-                        Rp = (moonlets+p)-> radius;
+                        X  = (moonlets + k) -> x;
+                        Y  = (moonlets + k) -> y;
+                        Z  = (moonlets + k) -> z;
+                        mk = (moonlets + k) -> mass;
+                        Rk = (moonlets + k) -> radius;
+                        Xp = (moonlets + p) -> x;
+                        Yp = (moonlets + p) -> y;
+                        Zp = (moonlets + p) -> z;
+                        mp = (moonlets + p) -> mass;
+                        Rp = (moonlets + p) -> radius;
                   
                         DX = X-Xp;
                         DY = Y-Yp;
@@ -295,13 +295,13 @@ void vector_field(struct moonlet * moonlets){
                         rp = sqrt(Xp*Xp+Yp*Yp+Zp*Zp);
                         rp3= rp*rp*rp;
                         /******** Updading the acceleration of moonlet k ********/
-                        (moonlets+k)->vx -= G*mp*DX/D3;
-                        (moonlets+k)->vy -= G*mp*DY/D3;
-                        (moonlets+k)->vz -= G*mp*DZ/D3;
+                        (moonlets + k) -> vx -= G*mp*DX/D3;
+                        (moonlets + k) -> vy -= G*mp*DY/D3;
+                        (moonlets + k) -> vz -= G*mp*DZ/D3;
                         /******** Updading the acceleration of moonlet p ********/
-                        (moonlets+p)->vx += G*mk*DX/D3;
-                        (moonlets+p)->vy += G*mk*DY/D3;
-                        (moonlets+p)->vz += G*mk*DZ/D3;           
+                        (moonlets + p) -> vx += G*mk*DX/D3;
+                        (moonlets + p) -> vy += G*mk*DY/D3;
+                        (moonlets + p) -> vz += G*mk*DZ/D3;           
                   }
             }       
       }
@@ -325,21 +325,21 @@ void collision(struct moonlet * moonlets, int a, int b, typ f){
       
       
       /******** Getting the speeds ********/
-      vx_a=(moonlets+a)->vx;
-      vy_a=(moonlets+a)->vy;
-      vz_a=(moonlets+a)->vz;
-      vx_b=(moonlets+b)->vx;
-      vy_b=(moonlets+b)->vy;
-      vz_b=(moonlets+b)->vz;
+      vx_a = (moonlets + a) -> vx;
+      vy_a = (moonlets + a) -> vy;
+      vz_a = (moonlets + a) -> vz;
+      vx_b = (moonlets + b) -> vx;
+      vy_b = (moonlets + b) -> vy;
+      vz_b = (moonlets + b) -> vz;
       
       
       /******** Getting the positions ********/
-      xa=*(approach+0);
-      ya=*(approach+1);
-      za=*(approach+2);
-      xb=*(approach+3);
-      yb=*(approach+4);
-      zb=*(approach+5);
+      xa = *(approach);
+      ya = *(approach + 1);
+      za = *(approach + 2);
+      xb = *(approach + 3);
+      yb = *(approach + 4);
+      zb = *(approach + 5);
       
       
       /******** Calculating the new speeds after impact ********/
@@ -351,29 +351,29 @@ void collision(struct moonlet * moonlets, int a, int b, typ f){
       
       
       /******** Calculating the speeds after impact ********/
-      vx_a+=Jx/m_a;  //v_a=v_a+J/m_a
-      vy_a+=Jy/m_a;
-      vz_a+=Jz/m_a;
-      vx_b-=Jx/m_b;  //v_b=v_b-J/m_b
-      vy_b-=Jy/m_b;
-      vz_b-=Jz/m_b;
+      vx_a += Jx/m_a;  //v_a=v_a+J/m_a
+      vy_a += Jy/m_a;
+      vz_a += Jz/m_a;
+      vx_b -= Jx/m_b;  //v_b=v_b-J/m_b
+      vy_b -= Jy/m_b;
+      vz_b -= Jz/m_b;
       
       
       /******** Actualizing the speeds and positions in the array moonlets                   ********/
       /******** Moonlets are put back where they were at the beginning of the timestep, but  ********/
       /******** with their post-impact velocity, then they drift with all the other moonlets ********/
-      (moonlets+a)->x  = xa - time_until_collision * vx_a;  //Actualizing moonlet a
-      (moonlets+a)->y  = ya - time_until_collision * vy_a;
-      (moonlets+a)->z  = za - time_until_collision * vz_a;
-      (moonlets+a)->vx = vx_a;
-      (moonlets+a)->vy = vy_a;
-      (moonlets+a)->vz = vz_a;
-      (moonlets+b)->x  = xb - time_until_collision * vx_b;  //Actualizing moonlet b
-      (moonlets+b)->y  = yb - time_until_collision * vy_b;
-      (moonlets+b)->z  = zb - time_until_collision * vz_b;
-      (moonlets+b)->vx = vx_b;
-      (moonlets+b)->vy = vy_b;
-      (moonlets+b)->vz = vz_b;
+      (moonlets + a) -> x  = xa - time_until_collision * vx_a;  //Actualizing moonlet a
+      (moonlets + a) -> y  = ya - time_until_collision * vy_a;
+      (moonlets + a) -> z  = za - time_until_collision * vz_a;
+      (moonlets + a) -> vx = vx_a;
+      (moonlets + a) -> vy = vy_a;
+      (moonlets + a) -> vz = vz_a;
+      (moonlets + b) -> x  = xb - time_until_collision * vx_b;  //Actualizing moonlet b
+      (moonlets + b) -> y  = yb - time_until_collision * vy_b;
+      (moonlets + b) -> z  = zb - time_until_collision * vz_b;
+      (moonlets + b) -> vx = vx_b;
+      (moonlets + b) -> vy = vy_b;
+      (moonlets + b) -> vz = vz_b;
       
 
 }
@@ -451,12 +451,6 @@ void merger(struct moonlet * moonlets, int a, int b){
             r_tilde[1] = (m_a*ya + m_b*yb)/m + delta_r[1];
             r_tilde[2] = (m_a*za + m_b*zb)/m + delta_r[2];
             
-            /******** Verification step. To be removed later ********/
-            /*typ r_tilde_amG = amG[0]*r_tilde[0] + amG[1]*r_tilde[1] + amG[2]*r_tilde[2];
-            if (absolute(r_tilde_amG) > 1.0e-13){
-                  fprintf(stderr, "Error : r_tilde is not orthogonal to G. |r_tilde . G| = %.15lf\n",absolute(r_tilde_amG));
-                  abort();
-            }*/
             
             /******** Geting the speed of the merger ********/
             typ r_tilde_vcm = (r_tilde[0]*(m_a*vx_a+m_b*vx_b)+r_tilde[1]*(m_a*vy_a+m_b*vy_b)+r_tilde[2]*(m_a*vz_a+m_b*vz_b))/m; // r_tilde.v_cm
@@ -470,14 +464,6 @@ void merger(struct moonlet * moonlets, int a, int b){
             v_tilde[1] = in_front_of*r_tilde[1] + in_front_of_2*G_x_r_tilde[1];
             v_tilde[2] = in_front_of*r_tilde[2] + in_front_of_2*G_x_r_tilde[2];
             
-            /******** Verification step. To be removed later ********/
-            /*typ G_after[3];
-            cross_product(m*r_tilde[0],m*r_tilde[1],m*r_tilde[2],v_tilde[0],v_tilde[1],v_tilde[2],G_after);
-            typ variation = sqrt((G_after[0]-amG[0])*(G_after[0]-amG[0])+(G_after[1]-amG[1])*(G_after[1]-amG[1])+(G_after[2]-amG[2])*(G_after[2]-amG[2]));
-            if (variation > 1.0e-13){
-                  fprintf(stderr, "Error : The total angular momentum changed upon merging. |G_1-G_0| = %.15lf\n",variation);
-                  abort();
-            }*/
       }
       
       /******** Actualizing the position ********/
@@ -511,10 +497,10 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       typ dx, dy, dz, dvx, dvy, dvz;                           //dx is xa-xb, and so on.
       typ R_a = (moonlets+a)->radius;                          //The moonlets' radii
       typ R_b = (moonlets+b)->radius;
-      typ R = R_a+R_b;                                         //Sum of the radii;
+      typ R   = R_a+R_b;                                       //Sum of the radii;
       typ m_a = (moonlets+a) -> mass;                          //The moonlets's masses
       typ m_b = (moonlets+b) -> mass;
-      typ M = m_a+m_b;                                         //Sum of the masses
+      typ M   = m_a+m_b;                                       //Sum of the masses
       typ m_1;                                                 //Mass of the impactor
       
       /******** Defining the impactor and the target. ********/
@@ -526,20 +512,20 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       }            
       
       /******** Getting the speeds at the impact ********/
-      vx_a = (moonlets+a) -> vx;
-      vy_a = (moonlets+a) -> vy;
-      vz_a = (moonlets+a) -> vz;
-      vx_b = (moonlets+b) -> vx;
-      vy_b = (moonlets+b) -> vy;
-      vz_b = (moonlets+b) -> vz;
+      vx_a = (moonlets + a) -> vx;
+      vy_a = (moonlets + a) -> vy;
+      vz_a = (moonlets + a) -> vz;
+      vx_b = (moonlets + b) -> vx;
+      vy_b = (moonlets + b) -> vy;
+      vz_b = (moonlets + b) -> vz;
       
       /******** Getting the positions at the impact ********/
       xa = * approach   ;
-      ya = *(approach+1);
-      za = *(approach+2);
-      xb = *(approach+3);
-      yb = *(approach+4);
-      zb = *(approach+5);
+      ya = *(approach + 1);
+      za = *(approach + 2);
+      xb = *(approach + 3);
+      yb = *(approach + 4);
+      zb = *(approach + 5);
       
       /******** Getting the relative positions and velocities ********/
       dx  = xa-xb;
@@ -562,7 +548,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       
       if (m_check < frag_threshold && m_tilde >= 0.1 * M){
             merger(moonlets, a ,b);
-            merger_count++;
+            merger_count ++;
             return;
       }
       
@@ -593,35 +579,20 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             
             /******** Only the largest fragment remains in the super-catastrophic regime ********/
             /******** Actualizing its speed ********/
-            (moonlets+a) -> vx = (m_a*vx_a+m_b*vx_b)/M;
-            (moonlets+a) -> vy = (m_a*vy_a+m_b*vy_b)/M;
-            (moonlets+a) -> vz = (m_a*vz_a+m_b*vz_b)/M;
+            (moonlets + a) -> vx = (m_a*vx_a+m_b*vx_b)/M;
+            (moonlets + a) -> vy = (m_a*vy_a+m_b*vy_b)/M;
+            (moonlets + a) -> vz = (m_a*vz_a+m_b*vz_b)/M;
             /******** Actualizing its position ********/
-            (moonlets+a) -> x = (m_a*xa+m_b*xb)/M - time_until_collision * (moonlets+a)->vx;
-            (moonlets+a) -> y = (m_a*ya+m_b*yb)/M - time_until_collision * (moonlets+a)->vy;
-            (moonlets+a) -> z = (m_a*za+m_b*zb)/M - time_until_collision * (moonlets+a)->vz;
+            (moonlets + a) -> x  = (m_a*xa+m_b*xb)/M - time_until_collision * (moonlets + a)->vx;
+            (moonlets + a) -> y  = (m_a*ya+m_b*yb)/M - time_until_collision * (moonlets + a)->vy;
+            (moonlets + a) -> z  = (m_a*za+m_b*zb)/M - time_until_collision * (moonlets + a)->vz;
             /******** Actualizing its mass and radius ********/
-            (moonlets+a) -> mass   = m_tilde;
-            (moonlets+a) -> radius = pow(3.0*m_tilde/(4.0*M_PI*density),1.0/3.0);
+            (moonlets + a) -> mass   = m_tilde;
+            (moonlets + a) -> radius = pow(3.0*m_tilde/(4.0*M_PI*density),1.0/3.0);
             /******** Moonlet b does not exist anymore and we disallow moonlet a to collide again for that timestep ********/
             lose_moonlet(b);
-            *(did_collide+a) = 1;
+            *(did_collide + a) = 1;
             super_catastrophic_count++;
-            
-            /******** To be removed later ********/
-            /*typ angular_momentum_loss[3];
-            typ X,Y,Z,vX,vY,vZ,m;
-            X=(moonlets+a)-> x;
-            Y=(moonlets+a)-> y;
-            Z=(moonlets+a)-> z;
-            vX=(moonlets+a)-> vx;
-            vY=(moonlets+a)-> vy;
-            vZ=(moonlets+a)-> vz;
-            m=(moonlets+a)-> mass;
-            cross_product(m*X,m*Y,m*Z,vX,vY,vZ,angular_momentum_loss);
-            *tam_loss += amG[0]-angular_momentum_loss[0];
-            *(tam_loss+1) += amG[1]-angular_momentum_loss[1];
-            *(tam_loss+2) += amG[2]-angular_momentum_loss[2];*/
             
             return;
       }
@@ -695,48 +666,33 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             /******** Actualizing the moonlets ********/
             typ R_tilde = pow(3.0*m_tilde/(4.0*M_PI*density),1.0/3.0); //Radius of the largest fragment
             typ R_check = pow(3.0*m_check/(4.0*M_PI*density),1.0/3.0); //Radius of the tail fragment
-            (moonlets+a) -> x = r_tilde[0] - time_until_collision * v_tilde[0];
-            (moonlets+a) -> y = r_tilde[1] - time_until_collision * v_tilde[1];
-            (moonlets+a) -> z = r_tilde[2] - time_until_collision * v_tilde[2];
-            (moonlets+a) -> vx = v_tilde[0];
-            (moonlets+a) -> vy = v_tilde[1];
-            (moonlets+a) -> vz = v_tilde[2];
-            (moonlets+a) -> mass = m_tilde;
-            (moonlets+a) -> radius = R_tilde;
-            (moonlets+b) -> x  = r_tilde[0]+r_k[0] - time_until_collision * (v_tilde[0]+v_k[0]);
-            (moonlets+b) -> y  = r_tilde[1]+r_k[1] - time_until_collision * (v_tilde[1]+v_k[1]);
-            (moonlets+b) -> z  = r_tilde[2]+r_k[2] - time_until_collision * (v_tilde[2]+v_k[2]);
-            (moonlets+b) -> vx = v_tilde[0]+v_k[0];
-            (moonlets+b) -> vy = v_tilde[1]+v_k[1];
-            (moonlets+b) -> vz = v_tilde[2]+v_k[2];
-            (moonlets+b) -> mass = m_check;
-            (moonlets+b) -> radius = R_check;
-            
-            /******** Verification step. To be removed later ********/
-            /*typ G_after_tilde[3];
-            typ G_after_check[3];
-            typ G_after[3];
-            cross_product(m_tilde*r_tilde[0],m_tilde*r_tilde[1],m_tilde*r_tilde[2],v_tilde[0],v_tilde[1],v_tilde[2],G_after_tilde);
-            cross_product(m_check*(r_tilde[0]+r_k[0]),m_check*(r_tilde[1]+r_k[1]),m_check*(r_tilde[2]+r_k[2]),v_tilde[0]+v_k[0],v_tilde[1]+v_k[1],v_tilde[2]+v_k[2],G_after_check);
-            G_after[0] = G_after_tilde[0]+G_after_check[0];
-            G_after[1] = G_after_tilde[1]+G_after_check[1];
-            G_after[2] = G_after_tilde[2]+G_after_check[2];
-            typ variation = sqrt((G_after[0]-amG[0])*(G_after[0]-amG[0])+(G_after[1]-amG[1])*(G_after[1]-amG[1])+(G_after[2]-amG[2])*(G_after[2]-amG[2]));
-            if (variation > 1.0e-13){
-                  fprintf(stderr, "Error : The total angular momentum changed upon fragmentation. |G_1-G_0| = %.15lf\n",variation);
-                  abort();
-            }*/
+            (moonlets + a) -> x = r_tilde[0] - time_until_collision * v_tilde[0];
+            (moonlets + a) -> y = r_tilde[1] - time_until_collision * v_tilde[1];
+            (moonlets + a) -> z = r_tilde[2] - time_until_collision * v_tilde[2];
+            (moonlets + a) -> vx = v_tilde[0];
+            (moonlets + a) -> vy = v_tilde[1];
+            (moonlets + a) -> vz = v_tilde[2];
+            (moonlets + a) -> mass = m_tilde;
+            (moonlets + a) -> radius = R_tilde;
+            (moonlets + b) -> x  = r_tilde[0] + r_k[0] - time_until_collision * (v_tilde[0] + v_k[0]);
+            (moonlets + b) -> y  = r_tilde[1] + r_k[1] - time_until_collision * (v_tilde[1] + v_k[1]);
+            (moonlets + b) -> z  = r_tilde[2] + r_k[2] - time_until_collision * (v_tilde[2] + v_k[2]);
+            (moonlets + b) -> vx = v_tilde[0] + v_k[0];
+            (moonlets + b) -> vy = v_tilde[1] + v_k[1];
+            (moonlets + b) -> vz = v_tilde[2] + v_k[2];
+            (moonlets + b) -> mass = m_check;
+            (moonlets + b) -> radius = R_check;
             
             if (mutual_bool && mesh_bool && !force_naive_bool){ //If the mutual gravitational interactions are considered, we register the pair (a,b) to be taken care of
-                  (pairs+how_many_pairs)->fst = a;
-                  (pairs+how_many_pairs)->snd = b;
-                  how_many_pairs++;
+                  (pairs + how_many_pairs) -> fst = a;
+                  (pairs + how_many_pairs) -> snd = b;
+                  how_many_pairs ++;
             }
             
             /******** We disallow moonlets a and be to collide again during that timestep ********/
-            *(did_collide+a) = 1;
-            *(did_collide+b) = 1;
-            half_fragmentation_count++;
+            *(did_collide + a) = 1;
+            *(did_collide + b) = 1;
+            half_fragmentation_count ++;
             return;
       }
       
@@ -805,7 +761,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
                         r_k[3*n] = dr[0] + two_p_R_tilde_2*u[0] + two_q_R_tilde_2*v[0];   // x-coordinate of the position of the (n+1)^th fragment of the tail wrt the largest fragment
                         r_k[3*n+1] = dr[1] + two_p_R_tilde_2*u[1] + two_q_R_tilde_2*v[1]; // y-coordinate of the position of the (n+1)^th fragment of the tail wrt the largest fragment
                         r_k[3*n+2] = dr[2] + two_p_R_tilde_2*u[2] + two_q_R_tilde_2*v[2]; // z-coordinate of the position of the (n+1)^th fragment of the tail wrt the largest fragment
-                        v_k_scalar = vesc * N_tilde/stigma *(pow(1.0-((typ) n)/N_tilde,stigma)-pow(1.0-((typ) (n+1))/N_tilde,stigma)); //Scalar velocity of the (n+1)^th fragment of the tail
+                        v_k_scalar = vesc * N_tilde/stigma *(pow(1.0-((typ) n)/N_tilde,stigma)-pow(1.0-((typ) (n+1))/N_tilde,stigma)); //Scalar velocity of the tail's (n+1)^th fragments
                         in_front_of = v_k_scalar/sqrt(R*R+4.0*R_tilde_2*R_tilde_2*(p*p+q*q));
                         v_k[3*n] = in_front_of * r_k[3*n];  v_k[3*n+1] = in_front_of * r_k[3*n+1];  v_k[3*n+2] = in_front_of * r_k[3*n+2];
                         n++;
@@ -896,8 +852,8 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             if (mutual_bool && mesh_bool && !force_naive_bool){ //Adding the N_tilde(N_tilde+1)/2 pairs to be taken into account for gravitational interactions
                   for (p = 0; p <= N_tilde; p++){
                         for (q = 0; q < p; q++){
-                              (pairs+how_many_pairs) -> fst = id[p];
-                              (pairs+how_many_pairs) -> snd = id[q];
+                              (pairs + how_many_pairs) -> fst = id[p];
+                              (pairs + how_many_pairs) -> snd = id[q];
                               how_many_pairs ++;
                         }
                   }
@@ -909,27 +865,27 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             }
 
             /******** Actualizing the largest fragment ********/
-            (moonlets+id[0]) -> x      = r_tilde[0] - time_until_collision * v_tilde[0];
-            (moonlets+id[0]) -> y      = r_tilde[1] - time_until_collision * v_tilde[1];
-            (moonlets+id[0]) -> z      = r_tilde[2] - time_until_collision * v_tilde[2];
-            (moonlets+id[0]) -> vx     = v_tilde[0];
-            (moonlets+id[0]) -> vy     = v_tilde[1];
-            (moonlets+id[0]) -> vz     = v_tilde[2];
-            (moonlets+id[0]) -> mass   = m_tilde;
-            (moonlets+id[0]) -> radius = pow(3.0*m_tilde/(4.0*M_PI*density),1.0/3.0);
+            (moonlets + id[0]) -> x      = r_tilde[0] - time_until_collision * v_tilde[0];
+            (moonlets + id[0]) -> y      = r_tilde[1] - time_until_collision * v_tilde[1];
+            (moonlets + id[0]) -> z      = r_tilde[2] - time_until_collision * v_tilde[2];
+            (moonlets + id[0]) -> vx     = v_tilde[0];
+            (moonlets + id[0]) -> vy     = v_tilde[1];
+            (moonlets + id[0]) -> vz     = v_tilde[2];
+            (moonlets + id[0]) -> mass   = m_tilde;
+            (moonlets + id[0]) -> radius = pow(3.0*m_tilde/(4.0*M_PI*density),1.0/3.0);
 
             /******** Actualizing the fragments of the tail ********/
             for (n = 0; n < N_tilde; n++){
-                  (moonlets+id[n+1]) -> x      = r_tilde[0]+r_k[3*n]   - time_until_collision * (v_tilde[0]+v_k[3*n])  ;
-                  (moonlets+id[n+1]) -> y      = r_tilde[1]+r_k[3*n+1] - time_until_collision * (v_tilde[1]+v_k[3*n+1]);
-                  (moonlets+id[n+1]) -> z      = r_tilde[2]+r_k[3*n+2] - time_until_collision * (v_tilde[2]+v_k[3*n+2]);
-                  (moonlets+id[n+1]) -> vx     = v_tilde[0]+v_k[3*n];
-                  (moonlets+id[n+1]) -> vy     = v_tilde[1]+v_k[3*n+1];
-                  (moonlets+id[n+1]) -> vz     = v_tilde[2]+v_k[3*n+2];
-                  (moonlets+id[n+1]) -> mass   = m_tilde_2;
-                  (moonlets+id[n+1]) -> radius = R_tilde_2;
+                  (moonlets + id[n+1]) -> x      = r_tilde[0] + r_k[3*n]   - time_until_collision * (v_tilde[0] + v_k[3*n])  ;
+                  (moonlets + id[n+1]) -> y      = r_tilde[1] + r_k[3*n+1] - time_until_collision * (v_tilde[1] + v_k[3*n+1]);
+                  (moonlets + id[n+1]) -> z      = r_tilde[2] + r_k[3*n+2] - time_until_collision * (v_tilde[2] + v_k[3*n+2]);
+                  (moonlets + id[n+1]) -> vx     = v_tilde[0] + v_k[3*n];
+                  (moonlets + id[n+1]) -> vy     = v_tilde[1] + v_k[3*n+1];
+                  (moonlets + id[n+1]) -> vz     = v_tilde[2] + v_k[3*n+2];
+                  (moonlets + id[n+1]) -> mass   = m_tilde_2;
+                  (moonlets + id[n+1]) -> radius = R_tilde_2;
             }
-            full_fragmentation_count++;
+            full_fragmentation_count ++;
             return;
       }
 }
@@ -944,29 +900,29 @@ void collision_treatment(struct moonlet * moonlets, int a, int b, int type_of_co
       /******** 2 --> Instant merger                                            ********/
       /******** 3 --> Fragmentation                                             ********/
       
-      if (!(*(exists+a) && *(exists+b))){
+      if (!(*(exists + a) && *(exists + b))){
             return;
       }
       
       if (type_of_collision == 0){
             collision(moonlets, a, b, 2.0);
-            *(did_collide+a) = 1;
-            *(did_collide+b) = 1;
+            *(did_collide + a) = 1;
+            *(did_collide + b) = 1;
             if (mutual_bool && mesh_bool && !force_naive_bool){ //If the mutual gravity is considered, we register the pair (a,b) to be taken care of
-                  (pairs+how_many_pairs)->fst = a;
-                  (pairs+how_many_pairs)->snd = b;
-                  how_many_pairs++;
+                  (pairs + how_many_pairs) -> fst = a;
+                  (pairs + how_many_pairs) -> snd = b;
+                  how_many_pairs ++;
             }
       }
       
       else if (type_of_collision == 1){
             collision(moonlets, a, b, collision_parameter);
-            *(did_collide+a) = 1;
-            *(did_collide+b) = 1;
+            *(did_collide + a) = 1;
+            *(did_collide + b) = 1;
             if (mutual_bool && mesh_bool && !force_naive_bool){ //If the mutual gravity is considered, we register the pair (a,b) to be taken care of
-                  (pairs+how_many_pairs)->fst = a;
-                  (pairs+how_many_pairs)->snd = b;
-                  how_many_pairs++;
+                  (pairs + how_many_pairs) -> fst = a;
+                  (pairs + how_many_pairs) -> snd = b;
+                  how_many_pairs ++;
             }
       }
       
@@ -977,7 +933,7 @@ void collision_treatment(struct moonlet * moonlets, int a, int b, int type_of_co
       else if (type_of_collision == 3){
             fragmentation(moonlets, a, b);
       }
-      collision_count++;
+      collision_count ++;
 }
 
 
@@ -993,7 +949,7 @@ void get_neighbours_mesh(struct moonlet * moonlets){
       int current_largest_id = largest_id;
       
       for (k = 0; k <= current_largest_id; k++){
-            if(*(exists+k)){ //Checking if there is a moonlet in the k^th cell of the array moonlets
+            if(*(exists + k)){ //Checking if there is a moonlet in the k^th cell of the array moonlets
                   neighbours(moonlets, k); //Adding the moonlet to the hash table, and retrieving its neighbours in the chain nghb
                         
                   while(nghb -> how_many > 0){ //If the moonlet is inside the collision cube and has at least one neighbour

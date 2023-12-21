@@ -27,9 +27,6 @@ void display(struct moonlet * moonlets, typ * aei);
 void end_of_timestep(struct moonlet * moonlets, int progressed);
 
 
-int integration(typ t);
-
-
 int integration_brute_force(typ t);
 
 

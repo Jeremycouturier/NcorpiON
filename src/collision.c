@@ -332,7 +332,7 @@ void mesh(struct moonlet * moonlets){
                                     Rp = (moonlets+p)->radius;
                                     if (Rp < gam || (Rp >= gam && p > k)){ //If the p^th moonlet is small or if it is big and p > k, so the pair (k,p) is not counted twice
                                           the_approach = closest_approach(moonlets, p, k);
-                                          if (the_approach == NULL || *(did_collide+k) || *(did_collide+p)) { //No collision or one of the moonlet already had a collision during that timestep
+                                          if (the_approach == NULL || *(did_collide+k) || *(did_collide+p)) { //No collision or one of the moonlet already collided during that timestep
                                                 if (mutual_bool){ //We register the pair (k,p) to be taken care of for mutual gravitational interactions
                                                                   //In case of collision, this is done when treating the collision
                                                       (pairs+how_many_pairs)->fst = k;
@@ -792,7 +792,7 @@ void collision_flattree(struct node * FlatTree, struct moonlet * moonlets){
                                           u = dots_b[q]; //Id of second moonlet
                                           if (!did_collide[s] && !did_collide[u]){
                                                 the_approach = closest_approach(moonlets, s, u);
-                                                if (the_approach != NULL) { //The closest approach leads to a collision and neither s nor u previously had a collision during that timestep
+                                                if (the_approach != NULL) { //The closest approach leads to a collision and neither s nor u previously collided during that timestep
                                                       if(elastic_collision_bool){ //All collisions are elastic
                                                             collision_treatment(moonlets, s, u, 0);
                                                       }

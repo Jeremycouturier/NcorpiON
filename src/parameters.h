@@ -5,6 +5,7 @@
 
 /*****************************************************************************************/
 /******** Redefining keywords. Do not touch if you are fine with double precision ********/
+/******** Quadruple precision does not seem to be working at the moment           ********/
 /*****************************************************************************************/
 
 #define typ double                   //Renaming double as typ. Define typ as long double (resp. float) for quadruple precision (resp. simple precision)
@@ -22,7 +23,7 @@
 /******** Put / at the end of the path                                                            ********/
 /*********************************************************************************************************/
 
-#define path "/run/media/jeremy/Windows/Users/miste/linux/Moon/dump2/"
+#define path "./ncorpion/"
 
 
 
@@ -33,8 +34,8 @@
 #define Rearth 1.0                   //Radius of the Earth (or central mass) is the unit of length
 #define Mearth 1.0                   //Mass of the Earth (or central mass) is the unit of mass
 #define G 39.47841760435743          //Gravitational constant is set to 4*pi^2, so that the unit of time is the surface orbital period
-#define density 0.1448               //The density of the moonlets (3344 kg/m^3) in Mearth/Rearth^3.
-#define Tearth 3.4076                //Earth's sideral period in units of the surface orbital period. Must be larger than 1. Today value is 17.038
+#define density 0.1448               //The density of the moonlets (here 3344 kg/m^3) in Mearth/Rearth^3.
+#define Tearth 3.4076                //Earth's sideral period in units of the surface orbital period. Must be larger than 1. Today value is 17.038. Unimportant if J2_bool is 0
 
 
 
@@ -42,25 +43,25 @@
 /******** Parameters relative to the simulation ********/
 /*******************************************************/
 
-#define N_max 10000                  //The maximum number of moonlets the simulation can handle
+#define N_max 10000                  //The maximum number of moonlets that the simulation can handle. An error will occur if the number of moonlets ever exceeds N_max.
 #define N_0 1000                     //The initial number of moonlets. Must be less than or equal to N_max.
-#define M_0 0.02214                  //Total (expected) moonlet mass at t=0
-#define t_end 512.0                  //Total simulation time (in surface orbital period)
-#define time_step 0.0078125          //Timestep of the simulation.
-#define output_step 128              //Output occurs every output_step timestep. Matters only if write_to_files_bool is 1
-#define radius_stddev 0.57           //Standard deviation of moonlet's radii at t=0 (drawn uniformly), in units of the mean radius. Must be less than 1/sqrt(3) to prevent negative radius
-#define eccentricity_min 0.0         //Minimal eccentricity             for a moonlet at t=0
-#define eccentricity_max 0.2         //Maximal eccentricity             for a moonlet at t=0
-#define sma_min 2.9                  //Minimal semi-major axis          for a moonlet at t=0
-#define sma_max 14.0                 //Maximal semi-major axis          for a moonlet at t=0
-#define inclination_min 0.0          //Minimal inclination (in radians) for a moonlet at t=0
-#define inclination_max 0.174533     //Maximal inclination (in radians) for a moonlet at t=0
-#define low_dumping_threshold 2.0    //Moonlets falling below this threshold (in Earth radii) are dumped from the simulation (collision with the Earth or disruption by tidal forces)
-#define high_dumping_threshold 200.0 //Moonlets going  beyond this threshold (in Earth radii) are dumped from the simulation (assumed unbounded)
+#define M_0 0.02214                  //Total (expected) moonlet mass at t = 0
+#define t_end 512.0                  //Total simulation time      (in surface orbital period)
+#define time_step 0.0078125          //Timestep of the simulation (in surface orbital period)
+#define output_step 128              //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
+#define radius_stddev 0.57           //Standard deviation of moonlet's radii at t = 0 (drawn uniformly), in units of the mean radius. Must be less than 1/sqrt(3) to prevent negative radius
+#define eccentricity_min 0.0         //Minimal eccentricity             for a moonlet at t = 0
+#define eccentricity_max 0.2         //Maximal eccentricity             for a moonlet at t = 0
+#define sma_min 2.9                  //Minimal semi-major axis          for a moonlet at t = 0
+#define sma_max 14.0                 //Maximal semi-major axis          for a moonlet at t = 0
+#define inclination_min 0.0          //Minimal inclination (in radians) for a moonlet at t = 0
+#define inclination_max 0.174533     //Maximal inclination (in radians) for a moonlet at t = 0
+#define low_dumping_threshold 2.0    //Threshold (in central mass radii) below  which moonlets are dumped from the simulation (collision with the Earth or disruption by tidal forces)
+#define high_dumping_threshold 200.0 //Threshold (in central mass radii) beyond which moonlets are dumped from the simulation (assumed unbounded)
 #define max_ids_per_node 173         //The maximum number of ids in each node of the unrolled linked lists (chains). Choose such that sizeof(struct chain) be a multiple of the cache line
 #define softening_parameter 0.0      //The softening parameter for mutual gravitational interations, in units of the sum of the radii.
 #define seed 778345128               //The seed used for random number generation. Unimportant if seed_bool is 0.
-#define switch_to_brute_force 512    //Threshold for N below which the program switches to the brute-force method for mutual interactions. Does not matter if brute_force_bool is 1
+#define switch_to_brute_force 512    //Threshold for N below which the program switches to the brute-force method for mutual interactions. Unimportant if brute_force_bool is 1
 
 
 
@@ -69,7 +70,7 @@
 /****************************************************************/
 
 #define collision_cube_min 80.0      //Minimal sidelength of the mesh-grid centered on the Earth. The mesh-size will never be less than collision_cube_min/collision_cube_cells
-#define collision_cube_cells 1024    //The number of mesh cells per dimension of the collision cube. Must be even. For 16+ GiB of RAM (resp. 8 or 4 GiB), choose ~1000 (resp. ~800 or ~500)
+#define collision_cube_cells 1024    //Number of mesh cells per dimension of the collision cube. Must be even. For 16+ GiB of RAM (resp. 8 or 4 GiB), choose ~1000 (resp. ~800 or ~500)
 #define how_many_neighbours 16.0     //The desired expected number of neighbours for a moonlet
 
 
@@ -78,27 +79,27 @@
 /******** Parameters relative to tree-based algorithms (falcON and the standard tree code) ********/
 /**************************************************************************************************/
 
-#define expansion_order 3            //The order p of the Taylor expansions. This is p = 3 in Dehnen (2002). NcorpiON allows up to p = 6. Minimum is 1 since order 0 yields no acceleration
-#define theta_min 0.5                //Minimal value of the tolerance parameter theta. Must be strictly less than 1. Sensible values are 0.2 < theta_min < 0.7
+#define expansion_order 3            //The order p of the Taylor expansions. This is p = 3 in Dehnen (2002). NcorpiON allows up to p = 6. Minimum is 1 as order 0 yields no acceleration
+#define theta_min 0.5                //Minimal value of the tolerance parameter theta. Must be strictly less than 1. Sensible values are 0.2 < theta_min < 0.8
                                      //The precision (and computational time) of the mutual gravity computed by Ncorpion increases with increasing p and decreasing theta_min.
 #define subdivision_threshold 17     //A cubic cell is not divided as long as it contains at most that many moonlets. Called s in Dehnen (2002). Must be > 0
-                                     //The computational time depends a lot on this threshold. Suggested values are s ~ 26 if p = 3 and s ~ 80 if p = 6, but should be tweaked by the user.
+                                     //The computational time depends a lot on this threshold. Suggested values are s ~ 26 if p = 3 and s ~ 80 if p = 6 but must be tweaked by the user.
 #define root_sidelength 80.0         //Sidelength of the root cell. Must be machine representable. Particles outside of the root cell only feel Earth's gravity and do not affect others
 #define level_max 25                 //The maximum allowed number of levels in the tree. Root is at level 0 and a cell at level level_max - 1 is never divided.
 #define child_multipole_threshold 1  //If number of particles/number of children is at most this threshold then the multipole moments of a cell are computed directly from the particles.
                                      //Otherwise, they are computed from that of the children
 
 /******** Parameters relative to mutual gravity computation with falcON algorithm ********/
-#define N_cc_pre 8                   //For two cells with N1 and N2 moonlets, if N1N2 < N_cc_pre, then the interaction is computed brute-forcely, no matter if they are well-separated or not
+#define N_cc_pre 8                   //For two cells with N1 and N2 moonlets, if N1N2 < N_cc_pre, then the interaction is computed brute-forcely, regardless of their well-separation
 #define N_cc_post 64                 //For two cells with N1 and N2 moonlets, if N1N2 < N_cc_post and they are not well-separated, then the interaction is computed brute-forcely
-#define N_cs 64                      //If N1 < N_cs, the self-interaction of a cell containing N1 moonlets is computed brute-forcely
-                                     //See TreeWalk algorithm in the draft for details about these thresholds. Since the computational cost of the multipole method increases greatly with the
-                                     //expansion order, the values of N_cc_pre, N_cc_post and N_cs should be adapted to the expansion order p. Note, however, that the computational cost
-                                     //depends more on the subdivision threshold s that on these thresholds. Suggested values are (s, N_cc_pre, N_cc_post, N_cs) = (26, 8, 64, 64) for p = 3
-                                     //and (s, N_cc_pre, N_cc_post, N_cs) = (80, 256, 1024, 128) for p = 6 but this probably depends on the architecture and should be tweaked by the user.
+#define N_cs 64                      //If N1 < N_cs, then the self-interaction of a cell containing N1 moonlets is computed brute-forcely
+                                     //See TreeWalk algorithm in the paper for details about these thresholds. Since the computational cost of the multipole method increases greatly with
+                                     //the expansion order, the values of N_cc_pre, N_cc_post and N_cs should be adapted to the expansion order p. Note, however, that the computational
+                                     //cost depends more on the subdivision threshold s that on these thresholds. Suggested values are (s, N_cc_pre, N_cc_post, N_cs) = (26, 8, 64, 64)
+                                     //for p = 3 and (s, N_cc_pre, N_cc_post, N_cs) = (80, 256, 1024, 128) for p = 6 but this depends on the architecture and should be tweaked.
                                      
 /******** Parameters relative to mutual gravity computation with the standard tree code ********/
-#define N_cb_pre 6                   //If N1 < N_cb_pre, the interaction between a moonlet and a cell with N1 moonlets is performed brute-forcely, no matter if they are well-separated or not
+#define N_cb_pre 6                   //If N1 < N_cb_pre, the interaction between a moonlet and a cell with N1 moonlets is performed brute-forcely, regardless of their well-separation
 #define N_cb_post 16                 //If N1 < N_cb_post and they are not well-separated, the interaction between a moonlet and a cell with N1 moonlets is performed brute-forcely
 
 /******** Parameters relative to collision detection with falcON algorithm ********/
@@ -107,8 +108,8 @@
 #define N_cs_collision 12            //For a node with Na moonlets, if Na < N_cs_collision, then collisions are searched brute-forcely, otherwise, the node is subdivised
 
 /******** Parameters relative to collision detection with the standard tree code ********/
-#define N_cb_collision 16            //This is N_cb_post. For a moonlet not well-separated from a node with Na moonlets, if Na < N_cb_collision, then collisions are searched brute-forcely,
-                                     //otherwise, the node is subdivised. N_cb_pre is 0 when the standard tree code is used for collision detection.
+#define N_cb_collision 16            //This is N_cb_post. For a moonlet not well-separated from a node with Na moonlets, if Na < N_cb_collision, then collisions are searched
+                                     //brute-forcely, otherwise, the node is subdivised. N_cb_pre is 0 when the standard tree code is used for collision detection.
 
 
 
@@ -121,7 +122,7 @@
 
 /******** Collision resolution with the fragmentation model described in the PDF draft ********/
 #define beta_slope 2.6470588235294118//Slope of the power law for fragment size distribution in Leinhardt and Stewart (2012). Must be such that N_tilde is integer.
-#define N_tilde 15                   //2*beta_slope/(3 - beta_slope). This is the ratio between the ejected mass and the mass of the second largest fragment -> N° of fragments in the tail
+#define N_tilde 15                   //2*beta_slope/(3 - beta_slope). This is the ratio between the ejected mass and the mass of the second largest fragment : N° of fragments in the tail
 #define mu_parameter 0.55            //The exponent of the impact velocity in the coupling parameter. See Table 3 of Housen & Holsapple (2011)
 #define C1_parameter 1.5             //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
 #define k_parameter 0.2              //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
@@ -139,14 +140,15 @@
 /****************************************/
 
 #define write_to_files_bool      1   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal   
-#define seed_bool                0   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, then the seed is the number of seconds since 01/01/1970
+#define seed_bool                0   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
 #define J2_bool                  1   //Determines if the contribution from the symmetrical equatorial bulge is taken into account in the simulation
 #define Sun_bool                 0   //Determines if the perturbations from the Sun are taken into account in the simulation
 #define collision_bool           1   //Determines if the moonlets are able to collide
 #define mutual_bool              1   //Determines if there are mutual gravitational interactions between the moonlets.
                                      
 /******** Boolean relative to conservation of the total momentum or total angular momentum ********/
-#define tam_bool                 0   //Determines if the total angular momentum should be conserved upon merging or fragmenting impact. If tam_bool is 0 then the total momentum is conserved
+#define tam_bool                 0   //Determines if the total angular momentum should be conserved upon merging or fragmenting impact. If tam_bool is 0, the total momentum is conserved
+                                     //Since falcON preserves the total momentum by construction, choosing 0 is best when using falcON
 
 /******** Booleans relative to collision resolution. Exactly one of them must be 1 ********/
 #define elastic_collision_bool   0   //Determines if the collisions are all elastic.
