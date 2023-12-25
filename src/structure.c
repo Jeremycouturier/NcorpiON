@@ -1,3 +1,32 @@
+/**************************************************************************************/
+/**************************************************************************************/
+/**************************************************************************************/
+/******** @file    structure.c                                                 ********/
+/******** @brief   Miscellaneous structural implementations                    ********/
+/******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
+/********                                                                      ********/
+/******** @section 	LICENSE                                                ********/
+/******** Copyright (c) 2023 Jérémy COUTURIER                                  ********/
+/********                                                                      ********/
+/******** This file is part of NcorpiON                                        ********/
+/********                                                                      ********/
+/******** NcorpiON is free software. You can redistribute it and/or modify     ********/
+/******** it under the terms of the GNU General Public License as published by ********/
+/******** the Free Software Foundation, either version 3 of the License, or    ********/
+/******** (at your option) any later version.                                  ********/
+/********                                                                      ********/
+/******** NcorpiON is distributed in the hope that it will be useful,          ********/
+/******** but WITHOUT ANY WARRANTY; without even the implied warranty of       ********/
+/******** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         ********/
+/******** GNU General Public License for more details.                         ********/
+/********                                                                      ********/
+/******** You should have received a copy of the GNU General Public License    ********/
+/******** along with rebound.  If not, see <http://www.gnu.org/licenses/>.     ********/
+/**************************************************************************************/
+/**************************************************************************************/
+/**************************************************************************************/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -325,7 +354,7 @@ void array_initialization(){
       /******** If the O(N) algorithm is used for collision detection, initializing the hash table and its dependencies ********/
       if (mesh_bool && (mutual_bool || collision_bool)){
       
-            bigint n = collision_cube_cells+2; //Adding one layer to the collision cube so we don't have to worry about edges.
+            bigint n = collision_cube_cells+2; //Adding one layer to the collision cube so I don't have to worry about edges.
             typ hash_table_size=((typ) (n*n*n*(bigint) (sizeof(struct chain *))))/(1024.0*1024.0*1024.0); //Size of the hash table in GiB
             printf("Allocating %.1lf GiB of RAM to the hash table.\n", hash_table_size);
             hash=(struct chain **)malloc(sizeof(struct chain *)*n*n*n); //A pointer weighs 8 bytes, so this command should allocate 8GiB of RAM if collision_cube_cells = 1024
@@ -351,7 +380,7 @@ void array_initialization(){
             add(0,&nghb);
             nghb -> how_many = 0;
             
-            /******** If there are mutual gravitational interactions, we allocate the array of pairs that need to be treated for mutual gravitational interactions ********/
+            /******** If there are mutual gravitational interactions, I allocate the array of pairs that need to be treated for mutual gravitational interactions ********/
             pairs = (struct pair *)malloc(sizeof(struct pair) * 5 * N_max * (int) how_many_neighbours); //Array of pairs of moonlets being in the same neighbourhood
                                                                                                         //The expected number of such pairs is N*how_many_neighbours/2
             how_many_pairs = 0;
@@ -770,12 +799,12 @@ void three_largest_three_first(struct moonlet * moonlets){
       third = *(three_largest_indexes+2);
       
       if (first != 0){
-            if (*exists){ //There is a moonlet at index zero, but it is not the largest moonlet. We exchange it with the largest moonlet
+            if (*exists){ //There is a moonlet at index zero, but it is not the largest moonlet. I exchange it with the largest moonlet
                   buffer = *moonlets;
                   *moonlets = *(moonlets+first);
                   *(moonlets+first) = buffer;
             }
-            else { //Index zero is not occupied. We occupy it with the largest moonlet
+            else { //Index zero is not occupied. I occupy it with the largest moonlet
                   *moonlets = *(moonlets+first);
                   lose_moonlet(first);
                   *exists = 1;
@@ -788,12 +817,12 @@ void three_largest_three_first(struct moonlet * moonlets){
             }
       }
       if (second != 1){
-            if (*(exists+1)){ //There is a moonlet at index one, but it is not the second largest moonlet. We exchange it with the second largest moonlet
+            if (*(exists+1)){ //There is a moonlet at index one, but it is not the second largest moonlet. I exchange it with the second largest moonlet
                   buffer = *(moonlets+1);
                   *(moonlets+1) = *(moonlets+second);
                   *(moonlets+second) = buffer;
             }
-            else { //Index one is not occupied. We occupy it with the second largest moonlet
+            else { //Index one is not occupied. I occupy it with the second largest moonlet
                   *(moonlets+1) = *(moonlets+second);
                   lose_moonlet(second);
                   *(exists+1) = 1;
@@ -803,12 +832,12 @@ void three_largest_three_first(struct moonlet * moonlets){
             }
       }
       if (third != 2){
-            if (*(exists+2)){ //There is a moonlet at index two, but it is not the third largest moonlet. We exchange it with the third largest moonlet
+            if (*(exists+2)){ //There is a moonlet at index two, but it is not the third largest moonlet. I exchange it with the third largest moonlet
                   buffer = *(moonlets+2);
                   *(moonlets+2) = *(moonlets+third);
                   *(moonlets+third) = buffer;
             }
-            else { //Index two is not occupied. We occupy it with the third largest moonlet
+            else { //Index two is not occupied. I occupy it with the third largest moonlet
                   *(moonlets+2) = *(moonlets+third);
                   lose_moonlet(third);
                   *(exists+2) = 1;

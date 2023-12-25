@@ -1,3 +1,32 @@
+/**************************************************************************************/
+/**************************************************************************************/
+/**************************************************************************************/
+/******** @file    rk4.c                                                       ********/
+/******** @brief   Unlike name-suggested, implements a Leap-frog integrator    ********/
+/******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
+/********                                                                      ********/
+/******** @section 	LICENSE                                                ********/
+/******** Copyright (c) 2023 Jérémy COUTURIER                                  ********/
+/********                                                                      ********/
+/******** This file is part of NcorpiON                                        ********/
+/********                                                                      ********/
+/******** NcorpiON is free software. You can redistribute it and/or modify     ********/
+/******** it under the terms of the GNU General Public License as published by ********/
+/******** the Free Software Foundation, either version 3 of the License, or    ********/
+/******** (at your option) any later version.                                  ********/
+/********                                                                      ********/
+/******** NcorpiON is distributed in the hope that it will be useful,          ********/
+/******** but WITHOUT ANY WARRANTY; without even the implied warranty of       ********/
+/******** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         ********/
+/******** GNU General Public License for more details.                         ********/
+/********                                                                      ********/
+/******** You should have received a copy of the GNU General Public License    ********/
+/******** along with rebound.  If not, see <http://www.gnu.org/licenses/>.     ********/
+/**************************************************************************************/
+/**************************************************************************************/
+/**************************************************************************************/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -285,7 +314,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
             }
       }
       
-      /******** If the simulation progressed by at least 0.1%, we display useful informations ********/
+      /******** If the simulation progressed by at least 0.1%, I display useful informations ********/
       if (progressed){
             printf("                  N = %d\n",how_many_moonlets);
             printf("                  largest id = %d\n",largest_id);
@@ -336,7 +365,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   clear_chain(hash+index); //Reinitializing to NULL the index^th cell of the hash table
             }
       
-            /******** We updated the size of the mesh ********/
+            /******** I update the size of the mesh ********/
             average_neighbours = 2.0*((typ) total_neighbours)/((typ) how_many_moonlets);
             gam *= pow(how_many_neighbours/average_neighbours, 1.0/3.0);
             if (gam < gam_min){
@@ -344,7 +373,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
             }
             collision_cube = gam*((typ) collision_cube_cells);
       
-            /******** If the simulation progressed by at least 0.1% since last display, we display useful informations ********/
+            /******** If the simulation progressed by at least 0.1% since last display, I display useful informations ********/
             if (progressed){
                   printf("                  average number of neighbours = %.3lf\n", average_neighbours);
                   printf("                  gamma = %.6lf = %.2lf km\n", gam, gam*6371.0);
@@ -357,7 +386,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
             total_neighbours = 0;
       }
       
-      /******** If there are very few moonlets, we switch to the brute-force algorithm ********/
+      /******** If there are very few moonlets, I switch to the brute-force algorithm ********/
       if (!brute_force_bool && !force_naive_bool && how_many_moonlets < switch_to_brute_force){
             force_naive_bool = 1;
       }
@@ -422,7 +451,7 @@ int integration_brute_force(typ t){
             /******** Writing the results of the numerical integration to the output files ********/
             if (write_to_files_bool && iter % output_step == 0 && iter > 0){
                   
-                  /******** We kicked too far at the previous timestep, we have to unkick by half a timestep ********/
+                  /******** I kicked too far at the previous timestep, I have to unkick by half a timestep ********/
                   for (j = 0; j <= largest_id; j++){
                         if (*(exists + j)){
                               *(moonlet_buffer + j) = *(moonlets + j);
@@ -569,7 +598,7 @@ int integration_tree(typ t){
             /******** Writing the results of the numerical integration to the output files ********/
             if (write_to_files_bool && iter % output_step == 0 && iter > 0){
 
-                  /******** We drifted too far at the previous timestep, we have to undrift by half a timestep ********/
+                  /******** I drifted too far at the previous timestep, I have to undrift by half a timestep ********/
                   for (j = 0; j <= largest_id; j++){
                         if (*(exists + j)){
                               *(moonlet_buffer + j) = *(moonlets + j);
@@ -722,7 +751,7 @@ int integration_mesh(typ t){
             /******** Writing the results of the numerical integration to the output files ********/
             if (write_to_files_bool && iter % output_step == 0 && iter > 0){
 
-                  /******** We kicked too far at the previous timestep, we have to unkick by half a timestep ********/
+                  /******** I kicked too far at the previous timestep, I have to unkick by half a timestep ********/
                   for (j = 0; j <= largest_id; j++){
                         if (*(exists + j)){
                               *(moonlet_buffer + j) = *(moonlets + j);
@@ -869,7 +898,7 @@ int integration_brute_force_SABA1(typ t){
             /******** Writing the results of the numerical integration to the output files ********/
             if (write_to_files_bool && iter % output_step == 0 && iter > 0){
                   
-                  /******** We drifted too far at the previous timestep, we have to undrift by half a timestep ********/
+                  /******** I drifted too far at the previous timestep, I have to undrift by half a timestep ********/
                   for (j = 0; j <= largest_id; j++){
                         if (*(exists + j)){
                               *(moonlet_buffer + j) = *(moonlets + j);

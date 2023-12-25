@@ -1,3 +1,32 @@
+/**************************************************************************************/
+/**************************************************************************************/
+/**************************************************************************************/
+/******** @file    collision.c                                                 ********/
+/******** @brief   This file manages collision detection                       ********/
+/******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
+/********                                                                      ********/
+/******** @section 	LICENSE                                                ********/
+/******** Copyright (c) 2023 Jérémy COUTURIER                                  ********/
+/********                                                                      ********/
+/******** This file is part of NcorpiON                                        ********/
+/********                                                                      ********/
+/******** NcorpiON is free software. You can redistribute it and/or modify     ********/
+/******** it under the terms of the GNU General Public License as published by ********/
+/******** the Free Software Foundation, either version 3 of the License, or    ********/
+/******** (at your option) any later version.                                  ********/
+/********                                                                      ********/
+/******** NcorpiON is distributed in the hope that it will be useful,          ********/
+/******** but WITHOUT ANY WARRANTY; without even the implied warranty of       ********/
+/******** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         ********/
+/******** GNU General Public License for more details.                         ********/
+/********                                                                      ********/
+/******** You should have received a copy of the GNU General Public License    ********/
+/******** along with rebound.  If not, see <http://www.gnu.org/licenses/>.     ********/
+/**************************************************************************************/
+/**************************************************************************************/
+/**************************************************************************************/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -9,26 +38,26 @@
 #include <math.h>
 
 
-/**************************************************************************************/
-/******** We first implement a mesh-based algorithm to find colliding moonlets ********/
-/**************************************************************************************/
+/*************************************************************************************/
+/******** I first implement a mesh-based algorithm to find colliding moonlets ********/
+/*************************************************************************************/
 
 
 typ * closest_approach(struct moonlet * moonlets, int a, int b){
 
-      /******** A much better version than the old version. No more logarithmic search and no more case    ********/
-      /******** disjonction according to whether or not the closest approach occurs during or at the end   ********/
-      /******** of the timestep. In this version, the time t after the beginning of the timestep when the  ********/
-      /******** collision occurs is entirely determined by the knowledge of the vectors dr=r_a-r_b and     ********/
-      /******** dv=v_a-v_b at the beginning of the timestep. See the PDF draft for details.                ********/
-      /******** As in the old version, we return a NULL pointer if no collision occurs during the timestep ********/
-      /******** and we approximate the trajectories by straight lines. Fills the array approach with the   ********/
-      /******** 6 positions of the two collinding moonlets.                                                ********/
+      /******** A much better version than the old version. No more logarithmic search and no more case   ********/
+      /******** disjonction according to whether or not the closest approach occurs during or at the end  ********/
+      /******** of the timestep. In this version, the time t after the beginning of the timestep when the ********/
+      /******** collision occurs is entirely determined by the knowledge of the vectors dr = r_a-r_b and  ********/
+      /******** dv = v_a-v_b at the beginning of the timestep. See the PDF draft for details.             ********/
+      /******** As in the old version, I return a NULL pointer if no collision occurs during the timestep ********/
+      /******** and I approximate the trajectories by straight lines. Fills the array approach with the   ********/
+      /******** 6 positions of the two collinding moonlets.                                               ********/
       
 
       
-      /******** One of the moonlet might not exist if it previously collided during this timestep. We check that ********/
-      if (!(*(exists+a) && *(exists+b))){
+      /******** One of the moonlet might not exist if it previously collided during this timestep. I check that ********/
+      if (!(*(exists + a) && *(exists + b))){
             return NULL;
       }
       
@@ -77,9 +106,9 @@ typ * closest_approach(struct moonlet * moonlets, int a, int b){
       /******** If that point is reached, then the moonlets are getting closer to each other at the ********/
       /******** beginning of the timestep and a collision might occur. A collision will occur if,   ********/
       /******** and only if, the discriminant (dr.dv)^2+dv^2(R^2-dr^2) is positive. If that is not  ********/
-      /******** the case, then we return a NULL pointer. If that is the case, but the collision     ********/
-      /******** will happen after a time larger than the timestep, then we still return a NULL      ********/
-      /******** pointer. Otherwise, we return the array [xa, ya, za, xb, yb, zb] at the collision.  ********/
+      /******** the case, then I return a NULL pointer. If that is the case, but the collision      ********/
+      /******** will happen after a time larger than the timestep, then I still return a NULL       ********/
+      /******** pointer. Otherwise, I return the array [xa, ya, za, xb, yb, zb] at the collision.   ********/
       
       typ dr2 = dx*dx+dy*dy+dz*dz; //Square of the distance between the moonlets at the beginning of the timestep
       typ dv2 = dvx*dvx+dvy*dvy+dvz*dvz; //Square of the relative velocity between the moonlets
@@ -153,11 +182,11 @@ void hash_table_cell_index(struct moonlet * moonlets, int a){
             k = d/2+1+((int) (integral(Z/gam))); //Then, that particular cell is accessed by *(hash+index), where index=i+j*d+k*d^2 and d = collision_cube_cells
             
             
-            /******** We compute the indexes by increasing order, so that we subsequently travel along the neighbourhoods in a (supposedly) cache-friendly manner ********/
+            /******** I compute the indexes by increasing order, so that I subsequently travel along the neighbourhoods in a (supposedly) cache-friendly manner ********/
             
             
-            /******** The 9 cells on the bottom of the neighbourhood                                                                           ********/
-            /******** Bottom, top, front and back are defined assuming that we are looking at the system from position (x=0, y=-infinity, z=0) ********/
+            /******** The 9 cells on the bottom of the neighbourhood                                                                          ********/
+            /******** Bottom, top, front and back are defined assuming that I are looking at the system from position (x=0, y=-infinity, z=0) ********/
             
             /******** The 3 cells at the front ********/
             *indexes      = (i-1)+(j-1)*d+(k-1)*d2;
@@ -221,22 +250,22 @@ void neighbours(struct moonlet * moonlets, int a){
             return;
       }
       
-      /******** a is inside the collision cube. We check its neighbourhood. ********/
+      /******** a is inside the collision cube. I check its neighbourhood. ********/
       int index;
       int l;
       int node_size;
       int idd;
       
       
-      for (l=0; l<27; l++){ // We go over the whole neighbourhood of a
+      for (l=0; l<27; l++){ // I go over the whole neighbourhood of a
             index = *(indexes+l);    //The index of the neighbouring cell
             ch    = *(hash+index);   //The chain of ids of moonlets contained in this cell
             if (ch!=NULL) { //If there is a moonlet in that cell
             node_size = ch -> how_many;
-                  while (ch!=NULL){   //We travel along the chain of moonlets' ids contained in this cell
+                  while (ch!=NULL){   //I travel along the chain of moonlets' ids contained in this cell
                         idd = (ch -> ids)[node_size - 1];
                         if (*(exists + idd)){  //idd might not exist anymore if it previously collided during that timestep
-                              add(idd, &nghb); //We add the ids of moonlets contained in that cell to the chain nghb
+                              add(idd, &nghb); //I add the ids of moonlets contained in that cell to the chain nghb
                         }
                         node_size --;
                         if (node_size == 0){
@@ -247,7 +276,7 @@ void neighbours(struct moonlet * moonlets, int a){
             }
       }
       
-      /******** We actualize the array modified_cells and the variable how_many_modified to keep track of the modifications to the hash table ********/
+      /******** I actualize the array modified_cells and the variable how_many_modified to keep track of the modifications to the hash table ********/
       index = *(indexes+13);
       ch    = *(hash+index);
       
@@ -256,7 +285,7 @@ void neighbours(struct moonlet * moonlets, int a){
             how_many_modified ++;
       }
       
-      /******** We add a to the hash table ********/
+      /******** I add a to the hash table ********/
       add(a, hash+index);
 
 }
@@ -270,11 +299,11 @@ void neighbours(struct moonlet * moonlets, int a){
 void mesh(struct moonlet * moonlets){
 
 
-      /******** We go over all the moonlets once. For each moonlet, we check whether its radius is smaller ********/
-      /******** or larger than the mesh-size. If it is larger, we look for collisions between that moonlet ********/
-      /******** and any other moonlet. If it is smaller, we add the moonlet to the chain of the            ********/
-      /******** corresponding cell in the hash table, and we look for collisions between that moonlet and  ********/
-      /******** any other moonlet currently in its neighbourhood.                                          ********/
+      /******** I go over all the moonlets once. For each moonlet, I check whether its radius is smaller  ********/
+      /******** or larger than the mesh-size. If it is larger, I look for collisions between that moonlet ********/
+      /******** and any other moonlet. If it is smaller, I add the moonlet to the chain of the            ********/
+      /******** corresponding cell in the hash table, and I look for collisions between that moonlet and  ********/
+      /******** any other moonlet currently in its neighbourhood.                                         ********/
       
       
       int k,p;
@@ -296,7 +325,7 @@ void mesh(struct moonlet * moonlets){
                               p = (nghb -> ids)[nghb -> how_many - 1]; // p is the id of a moonlet neighbour to k
                               the_approach = closest_approach(moonlets, p, k);
                               if (the_approach == NULL || *(did_collide+k) || *(did_collide+p)) { //No collision or one of the moonlet already had a collision during that timestep
-                                    if (mutual_bool){ //We register the pair (k,p) to be taken care of for mutual gravitational interactions
+                                    if (mutual_bool){ //I register the pair (k,p) to be taken care of for mutual gravitational interactions
                                                       //In case of collision, this is done when treating the collision
                                           (pairs + how_many_pairs) -> fst = k;
                                           (pairs + how_many_pairs) -> snd = p;
@@ -333,7 +362,7 @@ void mesh(struct moonlet * moonlets){
                                     if (Rp < gam || (Rp >= gam && p > k)){ //If the p^th moonlet is small or if it is big and p > k, so the pair (k,p) is not counted twice
                                           the_approach = closest_approach(moonlets, p, k);
                                           if (the_approach == NULL || *(did_collide+k) || *(did_collide+p)) { //No collision or one of the moonlet already collided during that timestep
-                                                if (mutual_bool){ //We register the pair (k,p) to be taken care of for mutual gravitational interactions
+                                                if (mutual_bool){ //I register the pair (k,p) to be taken care of for mutual gravitational interactions
                                                                   //In case of collision, this is done when treating the collision
                                                       (pairs+how_many_pairs)->fst = k;
                                                       (pairs+how_many_pairs)->snd = p;
@@ -371,7 +400,7 @@ void mesh(struct moonlet * moonlets){
 void brute_force(struct moonlet * moonlets){
 
 
-      /******** We look for collisions between all pairs of moonlets ********/
+      /******** I look for collisions between all pairs of moonlets ********/
       int i,j;
       typ * the_approach;
       int current_largest_id = largest_id;
@@ -609,8 +638,8 @@ void center_and_maxR_flattree(struct node * FlatTree, struct moonlet * moonlets)
       int j = 0; //Index of where to put a node in the stack
       int how_many_children;
       
-      /******** We travel the flattree. If a node is childless, we compute the average moonlet position and the largest moonlet radius directly ********/
-      /******** Otherwise, we store it in the stack for future treatment                                                                        ********/
+      /******** I travel the flattree. If a node is childless, I compute the average moonlet position and the largest moonlet radius directly ********/
+      /******** Otherwise, I store it in the stack for future treatment                                                                       ********/
       for (i = 0; i < cell_id; i++){
             how_many_children = (FlatTree + i) -> how_many_children;
             if (how_many_children == 0){ //If the node has no children
@@ -628,7 +657,7 @@ void center_and_maxR_flattree(struct node * FlatTree, struct moonlet * moonlets)
             abort();
       }
       
-      /******** We now travel the stack from the end to treat nodes that were not treated previously ********/
+      /******** I now travel the stack from the end to treat nodes that were not treated previously ********/
       while(j > 0){
             j--;
             i = stack[j];
@@ -649,8 +678,8 @@ void rmax_and_rcrit_flattree(struct node * FlatTree, struct moonlet * moonlets){
       int j = 0; //Index of where to put a node in the stack
       int how_many_children;
       
-      /******** We travel the flattree. If a node is childless, we compute its convergence radius ********/
-      /******** Otherwise, we store it in the stack for future treatment                          ********/
+      /******** I travel the flattree. If a node is childless, I compute its convergence radius ********/
+      /******** Otherwise, I store it in the stack for future treatment                         ********/
       for (i = 0; i < cell_id; i++){
             how_many_children = (FlatTree + i) -> how_many_children;
             if (how_many_children == 0){ //If the node has no children
@@ -668,7 +697,7 @@ void rmax_and_rcrit_flattree(struct node * FlatTree, struct moonlet * moonlets){
             abort();
       }
       
-      /******** We now travel the stack from the end to treat nodes that were not treated previously ********/
+      /******** I now travel the stack from the end to treat nodes that were not treated previously ********/
       while(j > 0){
             j--;
             i = stack[j];
@@ -684,8 +713,8 @@ void collision_flattree(struct node * FlatTree, struct moonlet * moonlets){
 
       /******** Tree walk for collision detection ********/
       
-      /******** It is hard to tell in advance how many pairs will be treated by the tree walk    ********/
-      /******** We expect it will be at most factor * cell_id, but that might have to be changed ********/
+      /******** It is hard to tell in advance how many pairs will be treated by the tree walk   ********/
+      /******** I expect it will be at most factor * cell_id, but that might have to be changed ********/
       int factor = (int) integral(250.0 * 0.5 / theta_min);
       struct pair * stack = (struct pair *)malloc(factor * cell_id * sizeof(struct pair)); //Stack of pairs of ids of nodes that have to be treated
       if (stack == NULL){
@@ -716,11 +745,11 @@ void collision_flattree(struct node * FlatTree, struct moonlet * moonlets){
       j++;
       
       
-      /******** We travel the stack of pairs of nodes. At each pair, if NaNb < N_cc_pre, we treat it brute-forcely,  ********/
-      /******** otherwise, if the nodes are well-separated, we do nothing, otherwise, if                             ********/
-      /******** NaNb < N_cc_post or the pair has no children, we treat it brute-forcely, otherwise, we subdivise the ********/
-      /******** largest node of the pair (or the only one that has children). If it is a pair of the same node, we   ********/
-      /******** treat it brute-forcely if Na < N_cs or if it has no children, and we subdivise it else               ********/
+      /******** I travel the stack of pairs of nodes. At each pair, if NaNb < N_cc_pre, I treat it brute-forcely,  ********/
+      /******** otherwise, if the nodes are well-separated, I do nothing, otherwise, if                            ********/
+      /******** NaNb < N_cc_post or the pair has no children, I treat it brute-forcely, otherwise, I subdivise the ********/
+      /******** largest node of the pair (or the only one that has children). If it is a pair of the same node, I  ********/
+      /******** treat it brute-forcely if Na < N_cs or if it has no children, and I subdivise it else              ********/
       while (j > i){
             a = (stack + i) -> fst; //Id of first  node
             b = (stack + i) -> snd; //Id of second node
@@ -863,6 +892,10 @@ void collision_flattree(struct node * FlatTree, struct moonlet * moonlets){
       stack = NULL;
 }
 
+
+/******************************************************************************/
+/******** Implementing collision detection with the standard tree code ********/
+/******************************************************************************/
 
 
 void standard_tree_collision(struct node * FlatTree, struct moonlet * moonlets, int b){

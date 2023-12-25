@@ -1,3 +1,32 @@
+/**************************************************************************************/
+/**************************************************************************************/
+/**************************************************************************************/
+/******** @file    physics.c                                                   ********/
+/******** @brief   This file computes the vector field and resolves collisions ********/
+/******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
+/********                                                                      ********/
+/******** @section 	LICENSE                                                ********/
+/******** Copyright (c) 2023 Jérémy COUTURIER                                  ********/
+/********                                                                      ********/
+/******** This file is part of NcorpiON                                        ********/
+/********                                                                      ********/
+/******** NcorpiON is free software. You can redistribute it and/or modify     ********/
+/******** it under the terms of the GNU General Public License as published by ********/
+/******** the Free Software Foundation, either version 3 of the License, or    ********/
+/******** (at your option) any later version.                                  ********/
+/********                                                                      ********/
+/******** NcorpiON is distributed in the hope that it will be useful,          ********/
+/******** but WITHOUT ANY WARRANTY; without even the implied warranty of       ********/
+/******** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         ********/
+/******** GNU General Public License for more details.                         ********/
+/********                                                                      ********/
+/******** You should have received a copy of the GNU General Public License    ********/
+/******** along with rebound.  If not, see <http://www.gnu.org/licenses/>.     ********/
+/**************************************************************************************/
+/**************************************************************************************/
+/**************************************************************************************/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -118,7 +147,7 @@ void vector_field(struct moonlet * moonlets){
                   /******** Mutual gravitational interactions with the mesh O(N) algorithm ********/
                   if (mutual_bool && mesh_bool && !force_naive_bool){
                   
-                        /******** For now, we only consider gravitational interactions between pairs containing one of the three largest moonlets and another moonlet ********/
+                        /******** For now, I only consider gravitational interactions between pairs containing one of the three largest moonlets and another moonlet ********/
                         if (k > 2){
                               Rk = (moonlets+k)-> radius;
                               
@@ -262,10 +291,10 @@ void vector_field(struct moonlet * moonlets){
                   (moonlets + 2) -> vz  += G*m1*DZ/D3;
             }
       
-            /******** We now consider gravitational interactions between pairs in the same neighbourhood, or between pairs containing a big moonlet. ********/
+            /******** I now consider gravitational interactions between pairs in the same neighbourhood, or between pairs containing a big moonlet. ********/
             int j;
             
-            for (j=0; j<how_many_pairs; j++){ //We go over all such pairs. The expected value of how_many_pairs is 0.5*N*how_many_neighbours = O(N)
+            for (j=0; j<how_many_pairs; j++){ //I go over all such pairs. The expected value of how_many_pairs is 0.5*N*how_many_neighbours = O(N)
                   
                   k = (pairs+j)->fst; //The array "pairs" was updated by the function mesh in collision.c
                   p = (pairs+j)->snd;
@@ -480,7 +509,7 @@ void merger(struct moonlet * moonlets, int a, int b){
       (moonlets+a) -> mass = m;
       (moonlets+a) -> radius = pow(3.0*m/(4.0*M_PI*density),1.0/3.0);
       
-      /******** Moonlet b does not exist anymore and we disallow moonlet a to collide again for that timestep ********/        
+      /******** Moonlet b does not exist anymore and I disallow moonlet a to collide again for that timestep ********/        
       lose_moonlet(b);
       *(did_collide+a) = 1;
 
@@ -589,7 +618,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             /******** Actualizing its mass and radius ********/
             (moonlets + a) -> mass   = m_tilde;
             (moonlets + a) -> radius = pow(3.0*m_tilde/(4.0*M_PI*density),1.0/3.0);
-            /******** Moonlet b does not exist anymore and we disallow moonlet a to collide again for that timestep ********/
+            /******** Moonlet b does not exist anymore and I disallow moonlet a to collide again for that timestep ********/
             lose_moonlet(b);
             *(did_collide + a) = 1;
             super_catastrophic_count++;
@@ -683,13 +712,13 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             (moonlets + b) -> mass = m_check;
             (moonlets + b) -> radius = R_check;
             
-            if (mutual_bool && mesh_bool && !force_naive_bool){ //If the mutual gravitational interactions are considered, we register the pair (a,b) to be taken care of
+            if (mutual_bool && mesh_bool && !force_naive_bool){ //If the mutual gravitational interactions are considered, I register the pair (a,b) to be taken care of
                   (pairs + how_many_pairs) -> fst = a;
                   (pairs + how_many_pairs) -> snd = b;
                   how_many_pairs ++;
             }
             
-            /******** We disallow moonlets a and be to collide again during that timestep ********/
+            /******** I disallow moonlets a and be to collide again during that timestep ********/
             *(did_collide + a) = 1;
             *(did_collide + b) = 1;
             half_fragmentation_count ++;
@@ -755,7 +784,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             u[0] = v_x_dr[0]/R;  u[1] = v_x_dr[1]/R;  u[2] = v_x_dr[2]/R; //Defining the unit vector u
             int n = 0;
             typ v_k_scalar, two_p_R_tilde_2, two_q_R_tilde_2, in_front_of;
-            for (p = pq[0]; p <= pq[1]; p++){ //We travel along the rectangle of integer coordinate points to define the position and speeds of the fragments of the tail
+            for (p = pq[0]; p <= pq[1]; p++){ //I travel along the rectangle of integer coordinate points to define the position and speeds of the fragments of the tail
                   for (q = pq[2]; q <= pq[3]; q++){
                         two_p_R_tilde_2 = ((typ) (2*p))*R_tilde_2;  two_q_R_tilde_2 = ((typ) (2*q))*R_tilde_2;
                         r_k[3*n] = dr[0] + two_p_R_tilde_2*u[0] + two_q_R_tilde_2*v[0];   // x-coordinate of the position of the (n+1)^th fragment of the tail wrt the largest fragment
@@ -908,7 +937,7 @@ void collision_treatment(struct moonlet * moonlets, int a, int b, int type_of_co
             collision(moonlets, a, b, 2.0);
             *(did_collide + a) = 1;
             *(did_collide + b) = 1;
-            if (mutual_bool && mesh_bool && !force_naive_bool){ //If the mutual gravity is considered, we register the pair (a,b) to be taken care of
+            if (mutual_bool && mesh_bool && !force_naive_bool){ //If the mutual gravity is considered, I register the pair (a,b) to be taken care of
                   (pairs + how_many_pairs) -> fst = a;
                   (pairs + how_many_pairs) -> snd = b;
                   how_many_pairs ++;
@@ -919,7 +948,7 @@ void collision_treatment(struct moonlet * moonlets, int a, int b, int type_of_co
             collision(moonlets, a, b, collision_parameter);
             *(did_collide + a) = 1;
             *(did_collide + b) = 1;
-            if (mutual_bool && mesh_bool && !force_naive_bool){ //If the mutual gravity is considered, we register the pair (a,b) to be taken care of
+            if (mutual_bool && mesh_bool && !force_naive_bool){ //If the mutual gravity is considered, I register the pair (a,b) to be taken care of
                   (pairs + how_many_pairs) -> fst = a;
                   (pairs + how_many_pairs) -> snd = b;
                   how_many_pairs ++;

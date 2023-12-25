@@ -1,3 +1,32 @@
+/**************************************************************************************/
+/**************************************************************************************/
+/**************************************************************************************/
+/******** @file    ffm.c                                                       ********/
+/******** @brief   This file manages gravitation with falcON and Barnes & Hut  ********/
+/******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
+/********                                                                      ********/
+/******** @section 	LICENSE                                                ********/
+/******** Copyright (c) 2023 Jérémy COUTURIER                                  ********/
+/********                                                                      ********/
+/******** This file is part of NcorpiON                                        ********/
+/********                                                                      ********/
+/******** NcorpiON is free software. You can redistribute it and/or modify     ********/
+/******** it under the terms of the GNU General Public License as published by ********/
+/******** the Free Software Foundation, either version 3 of the License, or    ********/
+/******** (at your option) any later version.                                  ********/
+/********                                                                      ********/
+/******** NcorpiON is distributed in the hope that it will be useful,          ********/
+/******** but WITHOUT ANY WARRANTY; without even the implied warranty of       ********/
+/******** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         ********/
+/******** GNU General Public License for more details.                         ********/
+/********                                                                      ********/
+/******** You should have received a copy of the GNU General Public License    ********/
+/******** along with rebound.  If not, see <http://www.gnu.org/licenses/>.     ********/
+/**************************************************************************************/
+/**************************************************************************************/
+/**************************************************************************************/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -9,7 +38,7 @@
 #include "parameters.h"
 
 /*******************************************************************************************************************/
-/******** In this file, we implement the fast multipole algorithm falcON for O(N) mutual gravity evaluation ********/
+/******** In this file, I implement the fast multipole algorithm falcON for O(N) mutual gravity evaluation ********/
 /*******************************************************************************************************************/
 
 
@@ -192,7 +221,7 @@ int OctantFromDigit[48][8] = {
 };
 
 /*********************************************************************************************************************/
-/******** First, we implement functions allowing to put moonlets in a tree-like structure called boxdot       ********/
+/******** First, I implement functions allowing to put moonlets in a tree-like structure called boxdot       ********/
 /*********************************************************************************************************************/
 
 typ fast_pow(typ x, int power){
@@ -303,11 +332,11 @@ void add_boxdot(struct boxdot * BoxDot, struct moonlet * moonlets, int a){
       
       int octant;
       
-      while (1){ //While the box has children, we keep getting deeper into the tree
+      while (1){ //While the box has children, I keep getting deeper into the tree
             D /= 2.0;
             octant = get_octant(x, y, z, xa, ya, za, D); //Retrieving the corresponding octant
             
-            if ((BoxDot -> oct)[octant] == NULL){ //If the child is still NULL, we initialize it 
+            if ((BoxDot -> oct)[octant] == NULL){ //If the child is still NULL, I initialize it 
                   typ corner[3];
                   get_corner_coordinates(x, y, z, D, octant, corner);
                   create_boxdot(&((BoxDot -> oct)[octant]), corner, D);
@@ -386,7 +415,7 @@ struct boxdot * root_cell(struct moonlet * moonlets){
 
 
 /***********************************************************************************************************************/
-/******** We now link the boxdot tree to a simple array containing the multipole moments and field tensor C^(n) ********/
+/******** I now link the boxdot tree to a simple array containing the multipole moments and field tensor C^(n) ********/
 /******** Each node of the boxdot tree is attributed a unique id that respects the Hilbert-Peano order and that ********/
 /******** corresponds to its index position into the aforementioned array.                                      ********/
 /******** The three phases of Dehnen's algorithm are performed on that array instead of on the boxdot tree      ********/
@@ -504,7 +533,7 @@ struct node * flattree_init(struct boxdot * BoxDot){
             ((FlatTree + cell_id) -> center)[0]       = (to_be_treated -> corner)[0] + D/2.0;
             ((FlatTree + cell_id) -> center)[1]       = (to_be_treated -> corner)[1] + D/2.0;
             ((FlatTree + cell_id) -> center)[2]       = (to_be_treated -> corner)[2] - D/2.0;
-            if (how_many_child == 0){ //If to_be_treated has no children, then we arbitrarily set the unique id of its first child to -1 
+            if (how_many_child == 0){ //If to_be_treated has no children, then I arbitrarily set the unique id of its first child to -1 
                   (FlatTree + cell_id) -> idFirstChild = -1;
             }
             how_many_child = 0;
@@ -638,7 +667,7 @@ void get_s2_s3(int k, int * s2, int * s3){
 
 void s1s2s3_from_kn_init(){
 
-      /******** In order not to call function get_s1_s2_s3 too many times, we store its return values in a table s1s2s3_from_kn ********/
+      /******** In order not to call function get_s1_s2_s3 too many times, I store its return values in a table s1s2s3_from_kn ********/
       
       int k, n, s1, s2, s3;
       for (k = 0; k < 28; k++){
@@ -677,7 +706,7 @@ void get_k(int s2, int s3, int * k){
 
 void k_from_s2s3_init(){
 
-      /******** In order not to call function get_k too many times, we store its return values in a table k_from_s2s3 ********/
+      /******** In order not to call function get_k too many times, I store its return values in a table k_from_s2s3 ********/
       int k;
       int i,j;
       
@@ -853,7 +882,7 @@ void q1fromq2q3_init(){
 
 
 /******************************************************************************************/
-/******** We now write functions relative to the first stage of Dehnen's algorithm ********/
+/******** I now write functions relative to the first stage of Dehnen's algorithm ********/
 /******************************************************************************************/
 
 
@@ -978,7 +1007,7 @@ void get_tolerance_parameter(struct node * FlatTree, int a, typ precision){
             current_precision = absolute(dtheta/theta);
             nstep++;
             
-            /******** If the method gets lost, we try to put it back on a right path ********/
+            /******** If the method gets lost, I try to put it back on track ********/
             if (theta >= 1.0 || theta <= theta_min){
                   theta = rdm(theta_min, 1.0);
             }
@@ -1364,8 +1393,8 @@ void com_flattree(struct node * FlatTree, struct moonlet * moonlets){
       int j = 0; //Index of where to put a node in the stack
       int how_many_children;
       
-      /******** We travel the flattree. If a node is childless, we compute its mass and center of mass ********/
-      /******** Otherwise, we store it in the stack for future treatment                               ********/
+      /******** I travel the flattree. If a node is childless, I compute its mass and center of mass ********/
+      /******** Otherwise, I store it in the stack for future treatment                              ********/
       for (i = 0; i < cell_id; i++){
             how_many_children = (FlatTree + i) -> how_many_children;
             if (how_many_children == 0){ //If the node has no children
@@ -1383,7 +1412,7 @@ void com_flattree(struct node * FlatTree, struct moonlet * moonlets){
             abort();
       }
       
-      /******** We now travel the stack from the end to treat nodes that were not treated previously ********/
+      /******** I now travel the stack from the end to treat nodes that were not treated previously ********/
       while(j > 0){
             j--;
             i = stack[j];
@@ -1404,8 +1433,8 @@ void rmax_flattree(struct node * FlatTree, struct moonlet * moonlets){
       int j = 0; //Index of where to put a node in the stack
       int how_many_children;
       
-      /******** We travel the flattree. If a node is childless, we compute its convergence radius ********/
-      /******** Otherwise, we store it in the stack for future treatment                          ********/
+      /******** I travel the flattree. If a node is childless, I compute its convergence radius ********/
+      /******** Otherwise, I store it in the stack for future treatment                         ********/
       for (i = 0; i < cell_id; i++){
             how_many_children = (FlatTree + i) -> how_many_children;
             if (how_many_children == 0){ //If the node has no children
@@ -1423,7 +1452,7 @@ void rmax_flattree(struct node * FlatTree, struct moonlet * moonlets){
             abort();
       }
       
-      /******** We now travel the stack from the end to treat nodes that were not treated previously ********/
+      /******** I now travel the stack from the end to treat nodes that were not treated previously ********/
       while(j > 0){
             j--;
             i = stack[j];
@@ -1442,7 +1471,7 @@ void rcrit_flattree(struct node * FlatTree, struct moonlet * moonlets){
       int i;
       
       
-      /******** We travel the flattree and compute the tolerance parameter theta and r_crit for each node ********/
+      /******** I travel the flattree and compute the tolerance parameter theta and r_crit for each node ********/
       for (i = 0; i < cell_id; i++){
             get_tolerance_parameter(FlatTree, i, 1.0e-6);
       }
@@ -1460,8 +1489,8 @@ void multipole_flattree(struct node * FlatTree, struct moonlet * moonlets){
       int how_many_children;
       int how_many_dots;
       
-      /******** We travel the flattree. If a node is childless or contains few moonlets, we compute ********/
-      /******** its multipole moments. Otherwise, we store it in the stack for future treatment     ********/
+      /******** I travel the flattree. If a node is childless or contains few moonlets, I compute ********/
+      /******** its multipole moments. Otherwise, I store it in the stack for future treatment    ********/
       for (i = 0; i < cell_id; i++){
             how_many_children = (FlatTree + i) -> how_many_children;
             if (how_many_children == 0){ //If the node has no children
@@ -1485,7 +1514,7 @@ void multipole_flattree(struct node * FlatTree, struct moonlet * moonlets){
             abort();
       }
       
-      /******** We now travel the stack from the end to treat nodes that were not treated previously ********/
+      /******** I now travel the stack from the end to treat nodes that were not treated previously ********/
       while(j > 0){
             j--;
             i = stack[j];
@@ -1496,10 +1525,10 @@ void multipole_flattree(struct node * FlatTree, struct moonlet * moonlets){
 }
 
 
-/**************************************************************************************/
-/******** We now write functions to compute the gradient of the Green function ********/
-/******** and the inner product between two tensors                            ********/
-/**************************************************************************************/
+/*************************************************************************************/
+/******** I now write functions to compute the gradient of the Green function ********/
+/******** and the inner product between two tensors                           ********/
+/*************************************************************************************/
 
 
 void gradR(typ * R, typ * grad, int p){
@@ -1693,7 +1722,7 @@ void inner_product(typ * T1, typ * T2, typ * T3, int p, int q, typ factor){
 
 
 /***************************************************************************/
-/******** We now write functions relative two the second stage of   ********/
+/******** I now write functions relative two the second stage of    ********/
 /******** Dehnen's algorithm, accumulation of the C^(m) in the tree ********/
 /***************************************************************************/
 
@@ -1708,8 +1737,8 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
       /******** Similarly, it is assumed that the C^(m) are 0.0 upon calling this function      ********/
       
       
-      /******** It is hard to tell in advance how many pairs will be treated by the tree walk    ********/
-      /******** We expect it will be at most factor * cell_id, but that might have to be changed ********/
+      /******** It is hard to tell in advance how many pairs will be treated by the tree walk   ********/
+      /******** I expect it will be at most factor * cell_id, but that might have to be changed ********/
       int factor = (int) integral(250.0 * 0.5 / theta_min);
       struct pair * stack = (struct pair *)malloc(factor * cell_id * sizeof(struct pair)); //Stack of pairs of ids of nodes that have to be treated
       if (stack == NULL){
@@ -1746,11 +1775,11 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
       j++;
       
       
-      /******** We travel the stack of pairs of nodes. At each pair, if NaNb < N_cc_pre, we treat it brute-forcely,  ********/
-      /******** otherwise, if the nodes are well-separated, we treat them by a multipole expansion, otherwise, if    ********/
-      /******** NaNb < N_cc_post or the pair has no children, we treat it brute-forcely, otherwise, we subdivise the ********/
-      /******** largest node of the pair (or the only one that has children). If it is a pair of the same node, we   ********/
-      /******** treat it brute-forcely if Na < N_cs or if it has no children, and we subdivise it else               ********/
+      /******** I travel the stack of pairs of nodes. At each pair, if NaNb < N_cc_pre, I treat it brute-forcely,  ********/
+      /******** otherwise, if the nodes are well-separated, I treat them by a multipole expansion, otherwise, if   ********/
+      /******** NaNb < N_cc_post or the pair has no children, I treat it brute-forcely, otherwise, I subdivise the ********/
+      /******** largest node of the pair (or the only one that has children). If it is a pair of the same node, I  ********/
+      /******** treat it brute-forcely if Na < N_cs or if it has no children, and I subdivise it else              ********/
       while (j > i){
             a = (stack + i) -> fst; //Id of first  node
             b = (stack + i) -> snd; //Id of second node
@@ -2055,10 +2084,10 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
 }
 
 
-/************************************************************************/
-/******** We now write functions relative two the third stage of ********/
-/******** Dehnen's algorithm, passing the C^(n) down the tree    ********/
-/************************************************************************/
+/***********************************************************************/
+/******** I now write functions relative two the third stage of ********/
+/******** Dehnen's algorithm, passing the C^(n) down the tree   ********/
+/***********************************************************************/
 
 
 void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
@@ -2093,7 +2122,7 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
       while (j > i){
             a = stack[i];
 
-            /******** If the node has a parent, we shift and accumulate its C^(n) ********/
+            /******** If the node has a parent, I shift and accumulate its C^(n) ********/
             idParent = (FlatTree + a) -> idParent;
             if (idParent != -1){
                   C1 =  (FlatTree + a)        -> C1;
@@ -2177,7 +2206,7 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
                   }
             }
             
-            /******** If the node has children, we put them in the stack ********/
+            /******** If the node has children, I put them in the stack ********/
             how_many_children = (FlatTree + a) -> how_many_children;
             if (how_many_children > 0){
                   idFirstChild = (FlatTree + a) -> idFirstChild;
@@ -2188,7 +2217,7 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
                   }
             }
             
-            /******** If the node has no children, we shift and accumulate its C^(n) to its moonlets ********/
+            /******** If the node has no children, I shift and accumulate its C^(n) to its moonlets ********/
             else{
                   Na = (FlatTree + a) -> how_many_dots;
                   dots = (FlatTree + a) -> dots;
@@ -2248,7 +2277,7 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
 
 
 /******************************************************************************************/
-/******** We now write functions allowing to compute gravity with the tree-code of ********/
+/******** I now write functions allowing to compute gravity with the tree-code of  ********/
 /******** Barnes & Hut. The original algorithm of Barnes & Hut performs a first    ********/
 /******** order Taylor expansion, but here, the order is given by expansion_order. ********/
 /******************************************************************************************/
@@ -2296,9 +2325,9 @@ void standard_tree_acceleration(struct node * FlatTree, struct moonlet * moonlet
       stack[j] = 0;
       j++;
       
-      /******** At each node, if it has at most N_cb_pre moonlets, we treat it directly, otherwise,      ********/
-      /******** if it is well-separated, we treat it by multipole expansion, otherwise, if it has at     ********/
-      /******** most N_cb_post moonlets or no children, we treat it directly, otherwise, we subdivise it ********/
+      /******** At each node, if it has at most N_cb_pre moonlets, I treat it directly, otherwise,     ********/
+      /******** if it is well-separated, I treat it by multipole expansion, otherwise, if it has at    ********/
+      /******** most N_cb_post moonlets or no children, I treat it directly, otherwise, I subdivise it ********/
       while (j > i){
             a = stack[i];
             how_many_dots = (FlatTree + a) -> how_many_dots;
@@ -2306,7 +2335,7 @@ void standard_tree_acceleration(struct node * FlatTree, struct moonlet * moonlet
                   dots = (FlatTree + a) -> dots;
                   for (index = 0; index < how_many_dots; index++){
                         k = dots[index];
-                        if (k != b){ //If the moonlet is different from moonlet b, we accumulate its contribution to the acceleration
+                        if (k != b){ //If the moonlet is different from moonlet b, I accumulate its contribution to the acceleration
                               m   = (moonlets + k) -> mass;
                               Rad = (moonlets + k) -> radius;
                               x   = (moonlets + k) -> x;
@@ -2367,7 +2396,7 @@ void standard_tree_acceleration(struct node * FlatTree, struct moonlet * moonlet
                               dots = (FlatTree + a) -> dots;
                               for (index = 0; index < how_many_dots; index++){
                                     k = dots[index];
-                                    if (k != b){ //If the moonlet is different from moonlet b, we accumulate its contribution to the acceleration
+                                    if (k != b){ //If the moonlet is different from moonlet b, I accumulate its contribution to the acceleration
                                           m   = (moonlets + k) -> mass;
                                           Rad = (moonlets + k) -> radius;
                                           x   = (moonlets + k) -> x;
