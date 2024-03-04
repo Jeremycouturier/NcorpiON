@@ -299,27 +299,36 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       typ maxR       = 0.0;
       for (j = 0; j <= largest_id; j++){
             if (*(exists+j)){
-                  X = (moonlets+j) -> x;
-                  Y = (moonlets+j) -> y;
-                  Z = (moonlets+j) -> z;
-                  R = (moonlets+j) -> radius;
+                  X = (moonlets + j) -> x;
+                  Y = (moonlets + j) -> y;
+                  Z = (moonlets + j) -> z;
+                  R = (moonlets + j) -> radius;
+                  m = (moonlets + j) -> mass;
                   if (X*X+Y*Y+Z*Z < low_dumping_threshold*low_dumping_threshold || X*X+Y*Y+Z*Z > high_dumping_threshold*high_dumping_threshold){
                         lose_moonlet(j);
+                        if (inner_fluid_disk_bool && X*X+Y*Y+Z*Z < low_dumping_threshold*low_dumping_threshold){
+                              fluid_disk_Sigma += m/(M_PI*(Rroche*Rroche - Rearth*Rearth)); //The mass of the dumped moonlet is added to the inner fluid disk
+                        }
                   }
                   if (R > maxR){
                         maxR = R;
                   }
                   how_many_moonlets ++;
-                  total_mass += (moonlets+j) -> mass;
+                  total_mass += m;
             }
       }
       
       /******** If the simulation progressed by at least 0.1%, I display useful informations ********/
       if (progressed){
-            printf("                  N = %d\n",how_many_moonlets);
-            printf("                  largest id = %d\n",largest_id);
-            printf("                  Total moonlet mass = %.8lf Mearth\n", total_mass);
-            printf("                  Largest moonlet radius = %.8lf Rearth\n", maxR);
+            printf("                  N = %d   (largest moonlet id = %d)\n", how_many_moonlets, largest_id);
+            if (inner_fluid_disk_bool){
+                  typ disk_mass = M_PI*(Rroche*Rroche - Rearth*Rearth)*fluid_disk_Sigma;
+                  printf("                  Moonlet mass = %.8lf,  Inner fluid disk mass = %.8lf,  Total = %.8lf\n", total_mass, disk_mass, disk_mass + total_mass);
+            }
+            else{
+                  printf("                  Moonlet mass = %.8lf\n", total_mass);
+            }
+            printf("                  Largest moonlet radius = %.8lf\n", maxR);
             if (collision_bool){
                   printf("                  Total collisions = %d\n", collision_count);
                   if (fragmentation_bool && collision_count != 0){
@@ -354,15 +363,15 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
             }
       }
       
-
+      /******** Reinitializing data relative to the mesh algorithm ********/
       if (mesh_bool && (collision_bool || mutual_bool) && !force_naive_bool){
       
             how_many_pairs = 0; //It is unnecessary to reinitialize the array pairs
             /******** Reinitializing the hash table ********/
             int p;
             for (p = 0; p < how_many_modified; p++){
-                  index = *(modified_cells+p);
-                  clear_chain(hash+index); //Reinitializing to NULL the index^th cell of the hash table
+                  index = *(modified_cells + p);
+                  clear_chain(hash + index); //Reinitializing to NULL the index^th cell of the hash table
             }
       
             /******** I update the size of the mesh ********/
@@ -399,6 +408,26 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   for (j = 0; j < IndexPeanoHilbertOrder; j++){
                         PeanoHilbertOrder[j] = j;
                   }
+            }
+      }
+      
+      /******** Spawning moonlets from the inner fluid disk ********/
+      if (inner_fluid_disk_bool){
+            time_since_last_spawn += timestep;
+            typ quotient = integral(time_since_last_spawn/time_between_spawn);
+            time_since_last_spawn -= quotient*time_between_spawn;
+            int how_many_to_be_spawned = (int) quotient;
+            while (how_many_to_be_spawned){ //If the time elapsed since the last spawn if above the characteristic timescale of moonlet spawning, I spawn a moonlet
+                  typ mf  = 16.0*fast_pow(M_PI,4)*f_tilde*f_tilde*fast_pow(fluid_disk_Sigma*Rroche*Rroche,3)/(Mearth*Mearth); //Mass of the spawned moonlet
+                  typ rad = pow(3.0*mf/(4.0*M_PI*density) ,1.0/3.0);
+                  fluid_disk_Sigma -= mf/(M_PI*(Rroche*Rroche - Rearth*Rearth)); //New surface density of the inner fluid disk
+                  int index = get_free_index(0); //Retrieving an index in the moonlets array for the new moonlet
+                  typ nu, omega, Omega;
+                  nu              = rdm(0.0, 2.0*M_PI);
+                  omega           = rdm(0.0, 2.0*M_PI);
+                  Omega           = rdm(0.0, 2.0*M_PI);
+                  *(moonlets + index) = init(Rroche, 0.0, 0.0, nu, omega, Omega, rad); //Spawning a moonlet at the Roche radius on a circular and equatorial orbit
+                  how_many_to_be_spawned --;
             }
       }
 }

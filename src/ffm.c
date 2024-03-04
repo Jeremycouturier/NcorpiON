@@ -466,7 +466,7 @@ struct node * flattree_init(struct boxdot * BoxDot){
             fprintf(stderr, "Error : Cannot allocate %d cells to the array FlatTree. Try increasing subdivision_threshold or decreasing level_max.\n", how_many_cells);
             abort();
       }
-      (FlatTree + cell_id) -> idParent = -1; //Arbitrarily setting to -1 the unique id of the parent of the root cell
+      (FlatTree + cell_id) -> idParent = -1; //Arbitrarily setting to -1 the unique id of the root cell's parent
       
       /******** Stack of nodes still to be treated ********/
       struct boxdot ** stack = (struct boxdot **)malloc(how_many_cells * sizeof(struct boxdot *));
@@ -495,8 +495,8 @@ struct node * flattree_init(struct boxdot * BoxDot){
                               (FlatTree + cell_id) -> idFirstChild = j;
                               isFirstChild = 0;
                         }
-                        j++;
-                        how_many_child++;
+                        j ++;
+                        how_many_child ++;
                   }
             }
             (FlatTree + cell_id) -> how_many_children = how_many_child;
@@ -519,7 +519,7 @@ struct node * flattree_init(struct boxdot * BoxDot){
                         IndexPeanoHilbertOrder ++;
                   }
                   /******** Switching to the next moonlet ********/                                                  
-                  index--;
+                  index --;
                   if (index < 0){
                         ch = ch -> queue;
                         index = max_ids_per_node - 1;
@@ -538,7 +538,7 @@ struct node * flattree_init(struct boxdot * BoxDot){
             }
             how_many_child = 0;
             isFirstChild = 1;
-            cell_id++;
+            cell_id ++;
       }
 
       /******** Making sure that the stack was big enough. To be removed when the code is robust ********/

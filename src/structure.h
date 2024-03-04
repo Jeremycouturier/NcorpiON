@@ -43,6 +43,9 @@ extern int how_many_free;            //Total number of indexes used in priority 
 extern int how_many_moonlets;        //Total number of moonlets in the simulation
 extern int force_naive_bool;         //If 1, then forces the program to use the brute-force algorithm for collision detection. Automatically set to 1 by the program when N becomes small
 extern typ time_until_collision;     //Time until collision
+extern typ time_since_last_spawn;    //The time elapsed since a moonlet last spawned from the inner fluid disk
+extern typ time_between_spawn;       //The characteristic timescale between moonlet spawning
+extern typ fluid_disk_Sigma;         //The mass of the inner fluid disk per unit area
 
 
 
@@ -56,7 +59,7 @@ struct moonlet {
       typ vz;
       typ mass;           //Moonlet mass.
       typ radius;         //Moonlet radius. While the radius can be computed from the mass, storing the radius reduces computation time, at the cost of more memory usage.
-                          //This does not even yield more memory usage due to padding if the field radius is removed. The structure moonlet weighs 64 bytes in both cases.
+                          //This does not even yield more memory usage due to padding if the field radius is removed. The structure moonlet weighs 64 bytes if typ is double.
 };
 
 

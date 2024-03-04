@@ -41,7 +41,7 @@
 #define typ double                   //Renaming double as typ. Define typ as long double (resp. float) for quadruple precision (resp. simple precision)
 #define bigint long int              //Renaming long int as bigint. If sizeof(int) == sizeof(long int) == 4 on your system, then define bigint as long long int instead
                                      //Open the file /usr/share/gtksourceview/language-specs/c.lang and then find the field
-                                     //<context id="types" style-ref="type">. Add the line <keyword>typ</keyword> and <keyword>bigint</keyword> to it
+                                     //<context id="types" style-ref="type">. Add the lines <keyword>typ</keyword> and <keyword>bigint</keyword> to it
                                      //and color gedit with C. The keywords typ and bigint should now be colored after a reboot
 #define absolute fabs                //The function returning the absolute value of a typ. Choose fabs (resp. fabsf or fabsl) if typ is double (resp. float or long double)
 #define integral floor               //The function returning the floor of a typ. Choose floor (resp. floorf or floorl) if typ is double (resp. float or long double)
@@ -62,10 +62,12 @@
 /**************************************************/
 
 #define Rearth 1.0                   //Radius of the Earth (or central mass) is the unit of length
-#define Mearth 1.0                   //Mass of the Earth (or central mass) is the unit of mass
+#define Mearth 1.0                   //Mass   of the Earth (or central mass) is the unit of mass
 #define G 39.47841760435743          //Gravitational constant is set to 4*pi^2, so that the unit of time is the surface orbital period
-#define density 0.1448               //The density of the moonlets (here 3344 kg/m^3) in Mearth/Rearth^3.
-#define Tearth 3.4076                //Earth's sideral period in units of the surface orbital period. Must be larger than 1. Today value is 17.038. Unimportant if J2_bool is 0
+#define density 0.1448               //The density of the moonlets (here 3344 kg/m^3) in central masses per cubic central radii.
+#define Tearth 3.4076                //Central body's sideral period in units of the surface orbital period. Must be > 1. Earth's current value is 17.038. Unimportant if J2_bool is 0
+#define Rroche 2.9                   //The Roche radius where moonlets spawn from the inner fluid disk. The radius of tidal disruption is low_dumping_threshold defined below
+                                     //Must be larger than low_dumping_threshold and than Rearth. Unimportant if inner_fluid_disk_bool is 0
 
 
 
@@ -73,10 +75,11 @@
 /******** Parameters relative to the simulation ********/
 /*******************************************************/
 
-#define N_max 10000                  //The maximum number of moonlets that the simulation can handle. An error will occur if the number of moonlets ever exceeds N_max.
-#define N_0 1000                     //The initial number of moonlets. Must be less than or equal to N_max.
-#define M_0 0.02214                  //Total (expected) moonlet mass at t = 0
-#define t_end 512.0                  //Total simulation time      (in surface orbital period)
+/******** General parameters ********/
+#define N_max 50000                  //The maximum number of moonlets that the simulation can handle. An error will occur if the number of moonlets ever exceeds N_max.
+#define N_0 4000                     //The initial number of moonlets. Must be less than or equal to N_max
+#define M_0 0.010332                 //Total (expected) moonlet mass at t = 0
+#define t_end 1024.0                 //Total simulation time      (in surface orbital period)
 #define time_step 0.0078125          //Timestep of the simulation (in surface orbital period)
 #define output_step 128              //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define radius_stddev 0.57           //Standard deviation of moonlet's radii at t = 0 (drawn uniformly), in units of the mean radius. Must be less than 1/sqrt(3) to prevent negative radius
@@ -88,10 +91,14 @@
 #define inclination_max 0.174533     //Maximal inclination (in radians) for a moonlet at t = 0
 #define low_dumping_threshold 2.0    //Threshold (in central mass radii) below  which moonlets are dumped from the simulation (collision with the Earth or disruption by tidal forces)
 #define high_dumping_threshold 200.0 //Threshold (in central mass radii) beyond which moonlets are dumped from the simulation (assumed unbounded)
+
+/******** Specific parameters ********/
 #define max_ids_per_node 173         //The maximum number of ids in each node of the unrolled linked lists (chains). Choose such that sizeof(struct chain) be a multiple of the cache line
 #define softening_parameter 0.0      //The softening parameter for mutual gravitational interations, in units of the sum of the radii.
 #define seed 778345128               //The seed used for random number generation. Unimportant if seed_bool is 0.
 #define switch_to_brute_force 512    //Threshold for N below which the program switches to the brute-force method for mutual interactions. Unimportant if brute_force_bool is 1
+#define inner_mass 0.006888          //Mass of the inner fluid disk at t = 0. Unimportant if inner_fluid_disk_bool is 0
+#define f_tilde 0.3                  //A parameter controlling the mass of moonlets spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
 
 
 
@@ -150,7 +157,7 @@
 /******** Collision resolution when all collisions are inelastic ********/
 #define collision_parameter 1.1      //The collision parameter f to model inelastic collision. Must be between 1 (completely inelastic) and 2 (elastic)
 
-/******** Collision resolution with the fragmentation model described in the PDF draft ********/
+/******** Collision resolution with the fragmentation model described in NcorpiON's paper ********/
 #define beta_slope 2.6470588235294118//Slope of the power law for fragment size distribution in Leinhardt and Stewart (2012). Must be such that N_tilde is integer.
 #define N_tilde 15                   //2*beta_slope/(3 - beta_slope). This is the ratio between the ejected mass and the mass of the second largest fragment : N° of fragments in the tail
 #define mu_parameter 0.55            //The exponent of the impact velocity in the coupling parameter. See Table 3 of Housen & Holsapple (2011)
@@ -173,12 +180,13 @@
 #define seed_bool                0   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
 #define J2_bool                  1   //Determines if the contribution from the symmetrical equatorial bulge is taken into account in the simulation
 #define Sun_bool                 0   //Determines if the perturbations from the Sun are taken into account in the simulation
+#define inner_fluid_disk_bool    1   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which moonlets spawn). See Salmon & Canup 2012
 #define collision_bool           1   //Determines if the moonlets are able to collide
 #define mutual_bool              1   //Determines if there are mutual gravitational interactions between the moonlets.
                                      
 /******** Boolean relative to conservation of the total momentum or total angular momentum ********/
 #define tam_bool                 0   //Determines if the total angular momentum should be conserved upon merging or fragmenting impact. If tam_bool is 0, the total momentum is conserved
-                                     //Since falcON preserves the total momentum by construction, choosing 0 is best when using falcON
+                                     //Since falcON preserves the total momentum by construction, choosing 0 is best when falcON_bool is 1
 
 /******** Booleans relative to collision resolution. Exactly one of them must be 1 ********/
 #define elastic_collision_bool   0   //Determines if the collisions are all elastic.

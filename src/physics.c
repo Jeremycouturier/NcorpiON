@@ -868,17 +868,17 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             
             /******** Managing the indexes of all the moonlets ********/
             
-            int id[N_tilde+1]; //The N_tilde+1 indexes where the N_tilde+1 moonlets will be stored in the array moonlets
-            id[0] = a; //Putting the largest fragment there
+            int id[N_tilde + 1]; //The N_tilde+1 indexes where the N_tilde+1 moonlets will be stored in the array moonlets
+            id[0] = a;           //Putting the largest fragment there
             for (n = 1; n <= N_tilde; n++){
                   if (mesh_bool && !force_naive_bool){ //By construction of the mesh algorithm, the fragments must be put at the end 
-                        id[n] = get_free_index(1); //Putting the remaining N_tilde fragments of the tail there
+                        id[n] = get_free_index(1);     //Putting the remaining N_tilde fragments of the tail there
                   }
                   else{ //No need to put the fragments at the end
-                        id[n] = get_free_index(0); //Putting the remaining N_tilde fragments of the tail there
+                        id[n] = get_free_index(0);     //Putting the remaining N_tilde fragments of the tail there
                   }
             }
-            if (mutual_bool && mesh_bool && !force_naive_bool){ //Adding the N_tilde(N_tilde+1)/2 pairs to be taken into account for gravitational interactions
+            if (mutual_bool && mesh_bool && !force_naive_bool){ //Adding the N_tilde*(N_tilde+1)/2 pairs to be taken into account for gravitational interactions
                   for (p = 0; p <= N_tilde; p++){
                         for (q = 0; q < p; q++){
                               (pairs + how_many_pairs) -> fst = id[p];

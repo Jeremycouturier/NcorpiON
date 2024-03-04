@@ -81,6 +81,9 @@ int half_fragmentation_count;
 int full_fragmentation_count;
 int merger_count;
 int collision_count;
+typ time_since_last_spawn;
+typ time_between_spawn;
+typ fluid_disk_Sigma;
 
 
 typ * ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega){
@@ -258,22 +261,22 @@ struct moonlet * populate(typ M, typ dR){
       }
       
       /******** Populating the moonlet array ********/
-      typ a,e,i,nu,omega,Omega,rad,m,mean_rad;
+      typ a, e, i, nu, omega, Omega, rad, m, mean_rad;
       int k;
       m = M/((typ) N_0);
-      mean_rad=pow(3.0*m/(4.0*M_PI*density*(1.0+3.0*radius_stddev*radius_stddev)), 1.0/3.0);
+      mean_rad = pow(3.0*m/(4.0*M_PI*density*(1.0+3.0*radius_stddev*radius_stddev)), 1.0/3.0);
       for (k=0; k<N_0; k++){
-            a = rdm(sma_min, sma_max);
-            e = rdm(eccentricity_min, eccentricity_max);
-            i = rdm(inclination_min, inclination_max);
-            nu = rdm(0.0, 2.0*M_PI);
-            omega = rdm(0.0, 2.0*M_PI);
-            Omega = rdm(0.0, 2.0*M_PI);
-            rad = rdm((1.0-sqrt(3.0)*radius_stddev)*mean_rad, (1.0+sqrt(3.0)*radius_stddev)*mean_rad);
-            *(moonlets+k) = init(a, e, i, nu, omega, Omega, rad);
+            a               = rdm(sma_min, sma_max);
+            e               = rdm(eccentricity_min, eccentricity_max);
+            i               = rdm(inclination_min, inclination_max);
+            nu              = rdm(0.0, 2.0*M_PI);
+            omega           = rdm(0.0, 2.0*M_PI);
+            Omega           = rdm(0.0, 2.0*M_PI);
+            rad             = rdm((1.0-sqrt(3.0)*radius_stddev)*mean_rad, (1.0+sqrt(3.0)*radius_stddev)*mean_rad);
+            *(moonlets + k) = init(a, e, i, nu, omega, Omega, rad);
       }
       for (k=N_0; k<N_max; k++){ //Filling the unused cells of the moonlet array with whatever
-            *(moonlets+k) = init(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+            *(moonlets + k) = init(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
       }
       
       return moonlets;
@@ -286,19 +289,19 @@ void variable_initialization(){
       /******** Defines and initializes external variables ********/
       
       
-      J2 = 0.5/(Tearth*Tearth); //Earth's equatorial bulge parameter. This equation is valid only if Earth is fluid and Tearth^2>>1
-      timestep = time_step;     //Simulation timestep
-      largest_id = N_0-1;
-      first_passage = 1;
-      time_elapsed = 0.0;
-      how_many_free = 0;
-      how_many_moonlets = N_0;
-      how_many_cells = 0;
-      cell_id = 0;
-      force_naive_bool = 0;
+      J2                     = 0.5/(Tearth*Tearth); //Earth's equatorial bulge parameter. This equation is valid only if Earth is fluid and Tearth^2>>1
+      timestep               = time_step;           //Simulation timestep
+      largest_id             = N_0-1;
+      first_passage          = 1;
+      time_elapsed           = 0.0;
+      how_many_free          = 0;
+      how_many_moonlets      = N_0;
+      how_many_cells         = 0;
+      cell_id                = 0;
+      force_naive_bool       = 0;
       IndexPeanoHilbertOrder = N_0;
       if(!brute_force_bool){
-            typ sinsigma=sin(inclination_max);
+            typ sinsigma = sin(inclination_max);
             gam = pow(sma_max*sma_max*sma_max-sma_min*sma_min*sma_min,1.0/3.0)*pow(4.0*M_PI*how_many_neighbours*sinsigma/(((typ) N_0)*81.0),1.0/3.0); //The mesh-size for the O(N) 
                                                                                                                                                       //collision detection algorithm
             gam_min = collision_cube_min/((typ) collision_cube_cells);
@@ -306,23 +309,35 @@ void variable_initialization(){
                   gam = gam_min;
             }
 
-            how_many_big = 0;
-            how_many_small = 0;
-            how_many_modified = 0;
-            total_neighbours = 0;
-            collision_cube = gam*((typ) collision_cube_cells);
+            how_many_big       = 0;
+            how_many_small     = 0;
+            how_many_modified  = 0;
+            total_neighbours   = 0;
+            collision_cube     = gam*((typ) collision_cube_cells);
             average_neighbours = 0.0;
       }
       if (collision_bool && !elastic_collision_bool && !instant_merger_bool){
             super_catastrophic_count = 0;
             half_fragmentation_count = 0;
             full_fragmentation_count = 0;
-            merger_count = 0;
+            merger_count             = 0;
       }
       if (collision_bool){
             collision_count = 0;
       }
-
+      if (inner_fluid_disk_bool){
+            time_since_last_spawn = 0.0;
+            fluid_disk_Sigma      = inner_mass/(M_PI*(Rroche*Rroche-Rearth*Rearth));
+            typ x                 = Rroche/Rearth;
+            typ x52               = fast_pow(sqrt(x), 5) - 1.0;
+            typ x32               = fast_pow(sqrt(x), 3);
+            typ x2                = x*x - 1.0;
+            typ gx                = (4.0*x*x52-5.0*x2*x32)/(4.0*x52-5.0*x2);
+            typ Rroche3           = Rroche*Rroche*Rroche;
+            typ Omega             = sqrt(G*Mearth/Rroche3);
+            time_between_spawn    = 16.0*M_PI*f_tilde*f_tilde*Rroche3*Rroche3*Omega*Omega*Omega*gx*(1.0-x)*(1.0-gx)/(Mearth*Mearth*x*G*G); //From Salmon & Canup 2012
+            printf("Characteristic timescale between spawn = %.8lf\n", time_between_spawn);
+      }
 }
 
 
@@ -390,8 +405,8 @@ void array_initialization(){
             }
       }
       
-      three_largest_indexes = (int *)malloc(3 * sizeof(int)); //Array of the indexes of the three largest moonlets
-      *three_largest_indexes = 0;
+      three_largest_indexes      = (int *)malloc(3 * sizeof(int)); //Array of the indexes of the three largest moonlets
+      *three_largest_indexes     = 0;
       *(three_largest_indexes+1) = 0;
       *(three_largest_indexes+2) = 0;
       
@@ -462,9 +477,9 @@ void deallocation(){
       }
 }
 
-/*************************************************************************************/
-/******** Functions relative to chains (or unrolled linked list) manipulation ********/
-/*************************************************************************************/
+/**********************************************************************************/
+/******** Functions relative to chains (unrolled linked list) manipulation ********/
+/**********************************************************************************/
 
 
 void add(int head, struct chain ** ch){
@@ -497,7 +512,7 @@ void add(int head, struct chain ** ch){
 
 struct chain * Add(int head, struct chain * ch){
 
-      /******** Same as above but with different types ********/
+      /******** Same as above but with different data types ********/
       
       if (ch==NULL){
             struct chain * to_be_returned=(struct chain *)malloc(sizeof(struct chain));
@@ -529,16 +544,16 @@ struct chain * delete_chain(struct chain * ch){
       /******** Deletes the first element of the chain ch ********/
       
       if (ch!=NULL){
-            int hwmn = ch->how_many;
-            if (hwmn>1){
-                  ch->how_many-=1;
+            int hwmn = ch -> how_many;
+            if (hwmn > 1){
+                  ch -> how_many-=1;
                   return ch;
             }
             else{
                   struct chain * to_be_returned=NULL;
-                  to_be_returned=ch->queue;
+                  to_be_returned = ch -> queue;
                   free(ch);
-                  ch=NULL;
+                  ch = NULL;
                   return to_be_returned;
             }
       }
@@ -862,9 +877,9 @@ void lose_moonlet(int a){
 
       /******** Treats the loss of moonlet a from the simulation ********/
       
-      *(free_indexes+how_many_free) = a;
+      *(free_indexes + how_many_free) = a;
       how_many_free ++;
-      *(exists+a) = 0;
+      *(exists + a) = 0;
       if (a <= 2 && mesh_bool && !force_naive_bool){
             how_many_free --;
       }
