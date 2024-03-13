@@ -100,8 +100,8 @@ FILE ** file_opening(){
       
       
       /******** Initializing the paths towards the files ********/
-      char filex_path[100]; char filey_path[100]; char filez_path[100]; char filevx_path[100]; char filevy_path[100]; char filevz_path[100]; char filerad_path[100];
-      char filea_path[100]; char filee_path[100]; char filei_path[100]; char filestat_path[100];
+      char filex_path[200]; char filey_path[200]; char filez_path[200]; char filevx_path[200]; char filevy_path[200]; char filevz_path[200]; char filerad_path[200];
+      char filea_path[200]; char filee_path[200]; char filei_path[200]; char filestat_path[200];
       
       strcpy(filex_path,   path); //The string "path" is defined in structure.h
       strcpy(filey_path,   path);
@@ -148,21 +148,21 @@ FILE ** file_opening(){
       
       /******** Defining and initializing the array of 6 files ********/
       files = (FILE **)malloc(11*sizeof(FILE *));
-      if (files==NULL){
+      if (files == NULL){
             fprintf(stderr, "Error : Can't allocate file array.\n");
             abort();
       }
-      *files=filex;
-      *(files+1)=filey;
-      *(files+2)=filez;
-      *(files+3)=filevx;
-      *(files+4)=filevy;
-      *(files+5)=filevz;
-      *(files+6)=filerad;
-      *(files+7)=filea;
-      *(files+8)=filee;
-      *(files+9)=filei;
-      *(files+10)=filestat;
+      * files       = filex;
+      *(files + 1)  = filey;
+      *(files + 2)  = filez;
+      *(files + 3)  = filevx;
+      *(files + 4)  = filevy;
+      *(files + 5)  = filevz;
+      *(files + 6)  = filerad;
+      *(files + 7)  = filea;
+      *(files + 8)  = filee;
+      *(files + 9)  = filei;
+      *(files + 10) = filestat;
       
 
       return files;
@@ -176,32 +176,35 @@ void file_closing(){
 
 
       /******** Closing the files ********/
-      fclose(*files);
-      fclose(*(files+1));
-      fclose(*(files+2));
-      fclose(*(files+3));
-      fclose(*(files+4));
-      fclose(*(files+5));
-      fclose(*(files+6));
-      fclose(*(files+7));
-      fclose(*(files+8));
-      fclose(*(files+9));
-      fclose(*(files+10));
+      fclose(* files);
+      fclose(*(files + 1));
+      fclose(*(files + 2));
+      fclose(*(files + 3));
+      fclose(*(files + 4));
+      fclose(*(files + 5));
+      fclose(*(files + 6));
+      fclose(*(files + 7));
+      fclose(*(files + 8));
+      fclose(*(files + 9));
+      fclose(*(files + 10));
       free(files);
-      files=NULL;
+      files = NULL;
 
 }
 
 
 void display(struct moonlet * moonlets, typ * aei){
 
-      /******** Outputs the moonlets to the output files                                                                      ********/
-      /******** The output occurs on 11 files named x.txt, y.txt, ... vz.txt, radius.txt, a.txt, e.txt, i.txt and stat.txt    ********/
-      /******** x.txt to vz.txt contain the cartesian coordinates, while a.txt, e.txt and i.txt contains the orbital elements ********/
-      /******** In each file, a time step is printed on a single line. For example, the third line of e.txt contains the      ********/
-      /******** eccentricities of the N_max moonlets. If the j^th moonlet did not exist at the n^th output, then the j^th     ********/
-      /******** column of the n^th line contains 0. The columns of stat.txt are time, total number of moonlets, cumulative    ********/
-      /******** number of collisions, radius of the largest moonlet and total mass of the moonlets                            ********/
+      /******** Outputs the moonlets to the output files.                                                                       ********/
+      /******** The output occurs on 11 files named x.txt, y.txt, ... vz.txt, radius.txt, a.txt, e.txt, i.txt and stat.txt.     ********/
+      /******** x.txt to vz.txt contain the cartesian coordinates, while a.txt, e.txt and i.txt contains the orbital elements   ********/
+      /******** In each file, a time step is printed on a single line. For example, a line of e.txt contains the eccentricities ********/
+      /******** of the N moonlets that existed at that time. The columns of stat.txt are time, total number of moonlets, total  ********/
+      /******** number of collisions, radius of the largest moonlet and total mass of the moonlets. If there is an inner fluid  ********/
+      /******** disk, its mass is given in an additional column. If collisions are resolved by fragmentation, four additional   ********/
+      /******** columns give the number of mergers, super-catastrophic collisions, half fragmentations and full fragmentations. ********/
+      /******** Files other that stat.txt have a variable number of columns due to the variable number of moonlets throughout   ********/
+      /******** the simulation.                                                                                                 ********/
       
       
       FILE * filex;
@@ -217,36 +220,37 @@ void display(struct moonlet * moonlets, typ * aei){
       FILE * filestat;
   
       
-      /******** Defining the 7 files ********/
+      /******** Defining the 11 files ********/
       filex    = * files;
-      filey    = *(files+1);
-      filez    = *(files+2);
-      filevx   = *(files+3);
-      filevy   = *(files+4);
-      filevz   = *(files+5);
-      filerad  = *(files+6);
-      filea    = *(files+7);
-      filee    = *(files+8);
-      filei    = *(files+9);
-      filestat = *(files+10);
+      filey    = *(files + 1);
+      filez    = *(files + 2);
+      filevx   = *(files + 3);
+      filevy   = *(files + 4);
+      filevz   = *(files + 5);
+      filerad  = *(files + 6);
+      filea    = *(files + 7);
+      filee    = *(files + 8);
+      filei    = *(files + 9);
+      filestat = *(files + 10);
 
       
       /******** Writing to the files ********/
       int p;
       typ X,Y,Z,vX,vY,vZ,m,R;
       typ total_mass = 0.0;
+      typ inner_fluid_disk_mass;
       typ maxR = 0.0;
-      for (p = 0; p <= largest_id; p++){
-            if(*(exists+p)){
+      for (p = 0; p <= largest_id; p ++){
+            if(*(exists + p)){
                   cart2aei(moonlets, p, aei);
-                  X  = (moonlets+p) ->      x;
-                  Y  = (moonlets+p) ->      y;
-                  Z  = (moonlets+p) ->      z;
-                  vX = (moonlets+p) ->     vx;
-                  vY = (moonlets+p) ->     vy;
-                  vZ = (moonlets+p) ->     vz;
-                  m  = (moonlets+p) ->   mass;
-                  R  = (moonlets+p) -> radius;
+                  X  = (moonlets + p) ->      x;
+                  Y  = (moonlets + p) ->      y;
+                  Z  = (moonlets + p) ->      z;
+                  vX = (moonlets + p) ->     vx;
+                  vY = (moonlets + p) ->     vy;
+                  vZ = (moonlets + p) ->     vz;
+                  m  = (moonlets + p) ->   mass;
+                  R  = (moonlets + p) -> radius;
                   fprintf(filex,   "%.13lf ",        X);
                   fprintf(filey,   "%.13lf ",        Y);
                   fprintf(filez,   "%.13lf ",        Z);
@@ -264,6 +268,13 @@ void display(struct moonlet * moonlets, typ * aei){
             }
       }
       fprintf(filestat, "%.13lf %d %d %.13lf %.13lf", time_elapsed, how_many_moonlets, collision_count, maxR, total_mass);
+      if (inner_fluid_disk_bool){
+            inner_fluid_disk_mass = fluid_disk_Sigma*M_PI*(Rroche*Rroche - Rearth*Rearth);
+            fprintf(filestat, " %.13lf", inner_fluid_disk_mass);
+      }
+      if (collision_bool && fragmentation_bool){
+            fprintf(filestat, " %d %d %d %d", merger_count, super_catastrophic_count, half_fragmentation_count, full_fragmentation_count);
+      }
       fprintf(filex,   "\n");
       fprintf(filey,   "\n");
       fprintf(filez,   "\n");
@@ -281,10 +292,10 @@ void display(struct moonlet * moonlets, typ * aei){
 
 void end_of_timestep(struct moonlet * moonlets, int progressed){
 
-      /******** Takes care of the end of the timestep by reinitializing the hash table and everything that needs to be. ********/
-      /******** Updates the mesh-size gam to match the desired expected number of neighbours                            ********/
-      /******** Updates the timestep to match the mesh-size                                                             ********/
-      /******** Prints useful informations in the terminal for the user to read                                         ********/
+      /******** Takes care of the end of the timestep by reinitializing the hash table, trees and everything   ********/
+      /******** that needs to be. Updates the mesh-size gam to match the desired expected number of neighbours ********/
+      /******** Updates the timestep to match the mesh-size                                                    ********/
+      /******** Prints useful informations in the terminal for the user to read                                ********/
       
       
       int index;

@@ -53,7 +53,7 @@
 /******** Put / at the end of the path. The path must exist.                                      ********/
 /*********************************************************************************************************/
 
-#define path "./ncorpion/"
+#define path "/home/jeremy/Documents/NcorpiON_simulation/trash/"
 
 
 
@@ -79,9 +79,9 @@
 #define N_max 50000                  //The maximum number of moonlets that the simulation can handle. An error will occur if the number of moonlets ever exceeds N_max.
 #define N_0 4000                     //The initial number of moonlets. Must be less than or equal to N_max
 #define M_0 0.010332                 //Total (expected) moonlet mass at t = 0
-#define t_end 1024.0                 //Total simulation time      (in surface orbital period)
+#define t_end 8192.0                 //Total simulation time      (in surface orbital period)
 #define time_step 0.0078125          //Timestep of the simulation (in surface orbital period)
-#define output_step 128              //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
+#define output_step 256              //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define radius_stddev 0.57           //Standard deviation of moonlet's radii at t = 0 (drawn uniformly), in units of the mean radius. Must be less than 1/sqrt(3) to prevent negative radius
 #define eccentricity_min 0.0         //Minimal eccentricity             for a moonlet at t = 0
 #define eccentricity_max 0.2         //Maximal eccentricity             for a moonlet at t = 0
@@ -176,7 +176,8 @@
 /******** Defining some booleans ********/
 /****************************************/
 
-#define write_to_files_bool      1   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal   
+#define write_to_files_bool      1   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
+#define make_animation_bool      1   //Determines if animations of the simulation are produced. write_to_files_bool must be 1
 #define seed_bool                0   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
 #define J2_bool                  1   //Determines if the contribution from the symmetrical equatorial bulge is taken into account in the simulation
 #define Sun_bool                 0   //Determines if the perturbations from the Sun are taken into account in the simulation

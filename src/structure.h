@@ -78,12 +78,12 @@ extern int * free_indexes;                    //Arrays of ids of non-existant mo
 
 
 /******** The regular definition of a chain (or linked list) is                  ********/
-
+/********                                                                        ********/
 /******** struct chain {                                                         ********/
 /********       struct chain * queue;                                            ********/
 /********       int id;                                                          ********/
 /******** };                                                                     ********/
-
+/********                                                                        ********/
 /******** but this definition is such that two consecutives ids are far away in  ********/
 /******** memory. In a cache friendly chain, most ids consecutive in the chain   ********/
 /******** are consecutive in memory too, which favours cache hits and reduces    ********/

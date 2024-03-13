@@ -316,14 +316,12 @@ void variable_initialization(){
             collision_cube     = gam*((typ) collision_cube_cells);
             average_neighbours = 0.0;
       }
-      if (collision_bool && !elastic_collision_bool && !instant_merger_bool){
+      collision_count = 0;
+      if (collision_bool && fragmentation_bool){
             super_catastrophic_count = 0;
             half_fragmentation_count = 0;
             full_fragmentation_count = 0;
             merger_count             = 0;
-      }
-      if (collision_bool){
-            collision_count = 0;
       }
       if (inner_fluid_disk_bool){
             time_since_last_spawn = 0.0;

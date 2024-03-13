@@ -39,6 +39,7 @@
 #include <math.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <string.h>
 
 
 int main(){
@@ -104,7 +105,59 @@ int main(){
       /******** Deallocating the arrays that are used globally ********/
       printf("Deallocating global memory\n");
       deallocation();
-      printf("Over\n");
+      printf("Simulation over\n");
+      
+      
+      /******** Making animations out of the simulation ********/
+      if (make_animation_bool && write_to_files_bool){
+            /******** Producing the images      ********/
+            /******** A python script is called ********/
+            printf("Producing the images for the animations\n");
+            char frag_bl[10]; 
+            char inner_bl[10];
+            char sideralPeriod[30];
+            if (J2_bool){ //The second zonal harmonic is passed to the python script
+                  sprintf(sideralPeriod, "%.13lf", Tearth);
+            }
+            else{
+                  sprintf(sideralPeriod, "%.13lf", 999999999.0);
+            }
+            if (fragmentation_bool && collision_bool){ //The user decision to use NcorpiON's fragmentation model is passed to the python script
+                  sprintf(frag_bl, "%d", 1);
+            }
+            else{
+                  sprintf(frag_bl, "%d", 0);
+            }
+            if (inner_fluid_disk_bool){ //The user decision to feature an inner fluid disk is passed to the python script
+                  sprintf(inner_bl, "%d", 1);
+            }
+            else{
+                  sprintf(inner_bl, "%d", 0);
+            }
+            
+            int n_images = (int) (t_end/(timestep*(typ) output_step)); //The number of images to produce
+            char argument[20];
+            sprintf(argument, "%d", n_images); //Transforming it to a string
+            char to_system[500];
+            strcpy(to_system, "./image_creation.sh ");
+            strcat(to_system, argument);
+            strcat(to_system, " ");
+            strcat(to_system, path);
+            strcat(to_system, " ");
+            strcat(to_system, inner_bl);
+            strcat(to_system, " ");
+            strcat(to_system, frag_bl);
+            strcat(to_system, " ");
+            strcat(to_system, sideralPeriod);      
+            int status = system(to_system);
+            
+            /******** Assembling the images into a gif and a mp4 ********/
+            /******** Ffmpeg is called                           ********/
+            printf("\nAssembling the images\n\n");
+            strcpy(to_system, "./ncorpion_animation.sh ");
+            strcat(to_system, path);
+            status = system(to_system);
+      }
 
       return integ;
 }
