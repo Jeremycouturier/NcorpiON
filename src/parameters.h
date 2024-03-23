@@ -53,7 +53,7 @@
 /******** Put / at the end of the path. The path must exist.                                      ********/
 /*********************************************************************************************************/
 
-#define path "/home/jeremy/Documents/NcorpiON_simulation/trash/"
+#define path "./ncorpion/"
 
 
 
@@ -76,16 +76,16 @@
 /*******************************************************/
 
 /******** General parameters ********/
-#define N_max 50000                  //The maximum number of moonlets that the simulation can handle. An error will occur if the number of moonlets ever exceeds N_max.
-#define N_0 4000                     //The initial number of moonlets. Must be less than or equal to N_max
-#define M_0 0.010332                 //Total (expected) moonlet mass at t = 0
-#define t_end 8192.0                 //Total simulation time      (in surface orbital period)
+#define N_max 30000                  //The maximum number of moonlets that the simulation can handle. An error will occur if the number of moonlets ever exceeds N_max.
+#define N_0 1000                     //The initial number of moonlets. Must be less than or equal to N_max
+#define M_0 0.02214                  //Total (expected) moonlet mass at t = 0
+#define t_end 1024.0                 //Total simulation time      (in surface orbital period)
 #define time_step 0.0078125          //Timestep of the simulation (in surface orbital period)
-#define output_step 256              //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
+#define output_step 64               //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define radius_stddev 0.57           //Standard deviation of moonlet's radii at t = 0 (drawn uniformly), in units of the mean radius. Must be less than 1/sqrt(3) to prevent negative radius
 #define eccentricity_min 0.0         //Minimal eccentricity             for a moonlet at t = 0
-#define eccentricity_max 0.2         //Maximal eccentricity             for a moonlet at t = 0
-#define sma_min 2.9                  //Minimal semi-major axis          for a moonlet at t = 0
+#define eccentricity_max 0.4         //Maximal eccentricity             for a moonlet at t = 0
+#define sma_min 2.0                  //Minimal semi-major axis          for a moonlet at t = 0
 #define sma_max 14.0                 //Maximal semi-major axis          for a moonlet at t = 0
 #define inclination_min 0.0          //Minimal inclination (in radians) for a moonlet at t = 0
 #define inclination_max 0.174533     //Maximal inclination (in radians) for a moonlet at t = 0
@@ -181,7 +181,7 @@
 #define seed_bool                0   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
 #define J2_bool                  1   //Determines if the contribution from the symmetrical equatorial bulge is taken into account in the simulation
 #define Sun_bool                 0   //Determines if the perturbations from the Sun are taken into account in the simulation
-#define inner_fluid_disk_bool    1   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which moonlets spawn). See Salmon & Canup 2012
+#define inner_fluid_disk_bool    0   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which moonlets spawn). See Salmon & Canup 2012
 #define collision_bool           1   //Determines if the moonlets are able to collide
 #define mutual_bool              1   //Determines if there are mutual gravitational interactions between the moonlets.
                                      
