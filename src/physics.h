@@ -38,6 +38,9 @@
 void vector_field(struct moonlet * moonlets);
 
 
+void tides(struct moonlet * X);
+
+
 void collision(struct moonlet * moonlets, int a, int b, typ f);
 
 

@@ -46,6 +46,7 @@ extern typ time_until_collision;     //Time until collision
 extern typ time_since_last_spawn;    //The time elapsed since a moonlet last spawned from the inner fluid disk
 extern typ time_between_spawn;       //The characteristic timescale between moonlet spawning
 extern typ fluid_disk_Sigma;         //The mass of the inner fluid disk per unit area
+extern typ SideralOmega;             //The sideral rotation frequency of the central body
 
 
 

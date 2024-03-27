@@ -57,25 +57,31 @@ void vector_field(struct moonlet * moonlets){
       
       /******** Getting the coordinates of the three largest moonlets. Useful only when treating mutual gravitational interactions with the O(N) mesh algorithm ********/
       if (mutual_bool && mesh_bool && !force_naive_bool){
-            X0 =  moonlets       -> x;
-            Y0 =  moonlets       -> y;
-            Z0 =  moonlets       -> z;
-            m0 =  moonlets       -> mass;
-            R0 =  moonlets       -> radius;
-            X1 =  (moonlets + 1) -> x;
-            Y1 =  (moonlets + 1) -> y;
-            Z1 =  (moonlets + 1) -> z;
-            m1 =  (moonlets + 1) -> mass;
-            R1 =  (moonlets + 1) -> radius;
-            X2 =  (moonlets + 2) -> x;
-            Y2 =  (moonlets + 2) -> y;
-            Z2 =  (moonlets + 2) -> z;
-            m2 =  (moonlets + 2) -> mass;
-            R2 =  (moonlets + 2) -> radius;
+            if (exists[0]){
+                  X0 =  moonlets       -> x;
+                  Y0 =  moonlets       -> y;
+                  Z0 =  moonlets       -> z;
+                  m0 =  moonlets       -> mass;
+                  R0 =  moonlets       -> radius;
+            }
+            if (exists[1]){
+                  X1 =  (moonlets + 1) -> x;
+                  Y1 =  (moonlets + 1) -> y;
+                  Z1 =  (moonlets + 1) -> z;
+                  m1 =  (moonlets + 1) -> mass;
+                  R1 =  (moonlets + 1) -> radius;
+            }
+            if (exists[2]){
+                  X2 =  (moonlets + 2) -> x;
+                  Y2 =  (moonlets + 2) -> y;
+                  Z2 =  (moonlets + 2) -> z;
+                  m2 =  (moonlets + 2) -> mass;
+                  R2 =  (moonlets + 2) -> radius;
+            }
       }
       
       for (k = 0; k <= largest_id; k++){
-            if (*(exists+k)){ //Checking whether or not there is a moonlet in the kth cell of the moonlet array
+            if (*(exists + k)){ //Checking whether or not there is a moonlet in the kth cell of the moonlet array
             
                   /******** Contribution from the Earth's center of mass ********/
                   X  = (moonlets + k) -> x;
@@ -111,8 +117,8 @@ void vector_field(struct moonlet * moonlets){
                   
                   /******** Mutual gravitational interactions with the brute-force O(N^2) algorithm ********/
                   if (mutual_bool && (brute_force_bool || force_naive_bool)){
-                        for (p=0; p < k; p++){
-                              if (*(exists+p)){
+                        for (p = 0; p < k; p ++){
+                              if (*(exists + p)){
                               
                                     /******** Getting the positions, masses and radii ********/
                                     mp = (moonlets + p) -> mass;
@@ -137,9 +143,9 @@ void vector_field(struct moonlet * moonlets){
                                     aZ -= G*mp*DZ/D3;
                                     
                                     /******** Updating acceleration of moonlet p ********/
-                                    (moonlets+p) -> vx  += G*mk*DX/D3; //dV/dt=A
-                                    (moonlets+p) -> vy  += G*mk*DY/D3;
-                                    (moonlets+p) -> vz  += G*mk*DZ/D3;
+                                    (moonlets + p) -> vx  += G*mk*DX/D3; //dV/dt=A
+                                    (moonlets + p) -> vy  += G*mk*DY/D3;
+                                    (moonlets + p) -> vz  += G*mk*DZ/D3;
                               }
                         }
                   }
@@ -149,7 +155,7 @@ void vector_field(struct moonlet * moonlets){
                   
                         /******** For now, I only consider gravitational interactions between pairs containing one of the three largest moonlets and another moonlet ********/
                         if (k > 2){
-                              Rk = (moonlets+k)-> radius;
+                              Rk = (moonlets + k) -> radius;
                               
                               /******** pair (0,k) ********/
                               if (exists[0]){
@@ -229,7 +235,7 @@ void vector_field(struct moonlet * moonlets){
                         }
                   }
             }
-            for (k = 0; k <= largest_id; k++){
+            for (k = 0; k <= largest_id; k ++){
                   if (exists[k]){
                         (moonlets + k) -> vx += C1Moonlets[3*k]  ;
                         (moonlets + k) -> vy += C1Moonlets[3*k+1];
@@ -291,10 +297,10 @@ void vector_field(struct moonlet * moonlets){
                   (moonlets + 2) -> vz  += G*m1*DZ/D3;
             }
       
-            /******** I now consider gravitational interactions between pairs in the same neighbourhood, or between pairs containing a big moonlet. ********/
+            /******** I now consider gravitational interactions between pairs in the same neighbourhood, excluding pairs containing a big moonlet. ********/
             int j;
             
-            for (j=0; j<how_many_pairs; j++){ //I go over all such pairs. The expected value of how_many_pairs is 0.5*N*how_many_neighbours = O(N)
+            for (j = 0; j < how_many_pairs; j ++){ //I go over all such pairs. The expected value of how_many_pairs is 0.5*N*how_many_neighbours = O(N)
                   
                   k = (pairs+j)->fst; //The array "pairs" was updated by the function mesh in collision.c
                   p = (pairs+j)->snd;
@@ -337,6 +343,97 @@ void vector_field(struct moonlet * moonlets){
 }
 
 
+void tides(struct moonlet * X){
+
+      /******** When this function is called, the moonlet array xx contains the acceleration without tides ********/
+      /******** This function uses the knowledge of the acceleration without tides in order to compute the ********/
+      /******** speed at the middle of the kick phase. Then, the acceleration due to tides can be computed ********/
+      /******** and is added to the acceleration without tides in the array xx                             ********/
+      
+      three_largest_moonlets(X); //Only the three largest moonlets raise tides. I retrieve their indexes
+      typ largest_positions [9]; //Positions  of the three largest moonlets at t - Delta t
+      typ largest_velocities[9]; //Velocities of the three largest moonlets at t
+      int j,k;
+      
+      /******** Estimating the velocities in the middle of the kick phase ********/
+      for (k = 0; k <= 2; k ++){
+            if (three_largest_indexes[k] != -1 && *(exists + three_largest_indexes[k])){
+                  largest_velocities[3*k]     = (X + three_largest_indexes[k]) -> vx + 0.5*timestep * (xx + three_largest_indexes[k]) -> vx;
+                  largest_velocities[3*k + 1] = (X + three_largest_indexes[k]) -> vy + 0.5*timestep * (xx + three_largest_indexes[k]) -> vy;
+                  largest_velocities[3*k + 2] = (X + three_largest_indexes[k]) -> vz + 0.5*timestep * (xx + three_largest_indexes[k]) -> vz;
+            }
+      }
+      
+      /******** Computing the r_k^\star at t - Delta t ********/
+      for (k = 0; k <= 2; k ++){
+            if (three_largest_indexes[k] != -1 && *(exists + three_largest_indexes[k])){
+                  largest_positions [3*k]     = (X + three_largest_indexes[k]) -> x - Delta_t * (largest_velocities[3*k]     + SideralOmega*(X + three_largest_indexes[k]) -> y);
+                  largest_positions [3*k + 1] = (X + three_largest_indexes[k]) -> y - Delta_t * (largest_velocities[3*k + 1] - SideralOmega*(X + three_largest_indexes[k]) -> x);
+                  largest_positions [3*k + 2] = (X + three_largest_indexes[k]) -> z - Delta_t * (largest_velocities[3*k + 2]);
+            }
+      }
+      
+      /******** Computing the tidal acceleration ********/
+      typ Rearth3 = Rearth*Rearth*Rearth;
+      typ Rearth5 = Rearth3*Rearth*Rearth;
+      typ scalar_product;
+      typ xj,yj,zj,xk,yk,zk;
+      typ rj2, rk2, rj5rk5, mj, mk, factor;
+      for (j = 0; j <= largest_id; j ++){ //Looping over all moonlets
+            if (*(exists + j)){
+                  for (k = 0; k <= 2; k ++){ //Looping over all three perturbing moonlets
+                        if (three_largest_indexes[k] != -1 && *(exists + three_largest_indexes[k])){
+                              xj = (X + j) -> x;
+                              yj = (X + j) -> y;
+                              zj = (X + j) -> z;
+                              xk = largest_positions[3*k];
+                              yk = largest_positions[3*k + 1];
+                              zk = largest_positions[3*k + 2];
+                              scalar_product = xj*xk + yj*yk + yj*yk;
+                              rj2 = xj*xj + yj*yj + zj*zj;
+                              rk2 = xk*xk + yk*yk + zk*zk;
+                              rj5rk5 = rj2 * rj2 * rk2 * rk2 * sqrt(rj2*rk2);
+                              mj  = (X + j) -> mass;
+                              mk  = (X + three_largest_indexes[k]) -> mass;
+                              /******** Adding the contributions from tides to the acceleration ********/
+                              factor = 1.5*k2*G*mk*Rearth5/rj5rk5;
+                              (xx + j) -> vx += factor*(rk2*xj - 5.0/rj2*scalar_product*scalar_product*xj + 2.0*scalar_product*xk);
+                              (xx + j) -> vy += factor*(rk2*yj - 5.0/rj2*scalar_product*scalar_product*yj + 2.0*scalar_product*yk);
+                              (xx + j) -> vz += factor*(rk2*zj - 5.0/rj2*scalar_product*scalar_product*zj + 2.0*scalar_product*zk);
+                              typ ax, ay, az;
+                              ax = factor*(rk2*xj - 5.0/rj2*scalar_product*scalar_product*xj + 2.0*scalar_product*xk);
+                              ay = factor*(rk2*yj - 5.0/rj2*scalar_product*scalar_product*yj + 2.0*scalar_product*yk);
+                              az = factor*(rk2*zj - 5.0/rj2*scalar_product*scalar_product*zj + 2.0*scalar_product*zk);
+                              typ dg[3];
+                              cross_product(mj*xj, mj*yj, mj*zj, ax, ay, az, dg);
+                              /******** Computing the new sideral rotation of the central body ********/
+                              SideralOmega -= 3.0*k2*timestep*G*mj*mk*Rearth3/(dimensionless_moi*Mearth*rj5rk5)*scalar_product*(xj*yk - yj*xk);
+                              /******** If j is not one of the three largest moonlet, I must consider the reciprocal interaction to conserve angular momentum ********/
+                              /******** I limit myself to elastic tides                                                                                       ********/
+                              if (j != *three_largest_indexes && j != three_largest_indexes[1] && j != three_largest_indexes[2]){
+                                    xk = (X + three_largest_indexes[k]) -> x;
+                                    yk = (X + three_largest_indexes[k]) -> y;
+                                    zk = (X + three_largest_indexes[k]) -> z;
+                                    rk2 = xk*xk + yk*yk + zk*zk;
+                                    rj5rk5 = rj2 * rj2 * rk2 * rk2 * sqrt(rj2*rk2);
+                                    factor = 1.5*k2*G*mj*Rearth5/rj5rk5;
+                                    scalar_product = xj*xk + yj*yk + yj*yk;
+                                    (xx + three_largest_indexes[k]) -> vx += factor*(rj2*xk - 5.0/rk2*scalar_product*scalar_product*xk + 2.0*scalar_product*xj);
+                                    (xx + three_largest_indexes[k]) -> vy += factor*(rj2*yk - 5.0/rk2*scalar_product*scalar_product*yk + 2.0*scalar_product*yj);
+                                    (xx + three_largest_indexes[k]) -> vz += factor*(rj2*zk - 5.0/rk2*scalar_product*scalar_product*zk + 2.0*scalar_product*zj);
+                                    SideralOmega -= 3.0*k2*timestep*G*mj*mk*Rearth3/(dimensionless_moi*Mearth*rj5rk5)*scalar_product*(xk*yj - yk*xj);
+                                    ax = factor*(rj2*xk - 5.0/rk2*scalar_product*scalar_product*xk + 2.0*scalar_product*xj);
+                                    ay = factor*(rj2*yk - 5.0/rk2*scalar_product*scalar_product*yk + 2.0*scalar_product*yj);
+                                    az = factor*(rj2*zk - 5.0/rk2*scalar_product*scalar_product*zk + 2.0*scalar_product*zj);
+                                    cross_product(mk*xk, mk*yk, mk*zk, ax, ay, az, dg);
+                              }
+                        }
+                  }
+            }
+      }
+}
+
+
 void collision(struct moonlet * moonlets, int a, int b, typ f){
 
       /******** Treats the collision between moonlets a and b. The collision's elasticity is determined     ********/
@@ -346,11 +443,11 @@ void collision(struct moonlet * moonlets, int a, int b, typ f){
 
       typ vx_a, vy_a, vz_a, vx_b, vy_b, vz_b;     //Cartesian speeds of the moonlets.
       typ xa, ya, za, xb, yb, zb;                 //Cartesian positions at the collision
-      typ R_a=(moonlets+a)->radius;               //The moonlets' radii
-      typ R_b=(moonlets+b)->radius;
-      typ R=R_a+R_b;                              //Sum of the radii;
-      typ m_a=(moonlets+a)->mass;                 //The moonlets's masses
-      typ m_b=(moonlets+b)->mass;              
+      typ R_a = (moonlets + a) -> radius;         //The moonlets' radii
+      typ R_b = (moonlets + b) -> radius;
+      typ R   = R_a + R_b;                        //Sum of the radii;
+      typ m_a = (moonlets + a) -> mass;           //The moonlets's masses
+      typ m_b = (moonlets + b) -> mass;              
       
       
       /******** Getting the speeds ********/

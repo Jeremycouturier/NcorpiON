@@ -84,6 +84,7 @@ int collision_count;
 typ time_since_last_spawn;
 typ time_between_spawn;
 typ fluid_disk_Sigma;
+typ SideralOmega;
 
 
 typ * ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega){
@@ -156,24 +157,23 @@ void cart2aei(struct moonlet * moonlets, int id, typ * aei){
 
       /******** Modifies the array [a,e,i] of the semimajor axis, the eccentricity and the inclination ********/
       /******** of the moonlet whose id is id. Stores these three quantities in the array aei.         ********/
-      /********  ********/
       
       
       typ r,v2,r_cross_v,r_cross_v_square,X,Y,Z,vX,vY,vZ,a,e,i,cosi,r_cross_v_1,r_cross_v_2,r_cross_v_3,mu;
       
       /******** Getting the cartesian coordinates ********/
-      X = (moonlets+id)->x;
-      Y = (moonlets+id)->y;
-      Z = (moonlets+id)->z;
-      vX = (moonlets+id)->vx;
-      vY = (moonlets+id)->vy;
-      vZ = (moonlets+id)->vz;
+      X  = (moonlets + id) -> x;
+      Y  = (moonlets + id) -> y;
+      Z  = (moonlets + id) -> z;
+      vX = (moonlets + id) -> vx;
+      vY = (moonlets + id) -> vy;
+      vZ = (moonlets + id) -> vz;
       
       /******** Getting the semimajor axis from the orbital energy ********/
-      r = sqrt(X*X+Y*Y+Z*Z);
+      r  = sqrt(X*X+Y*Y+Z*Z);
       v2 = vX*vX+vY*vY+vZ*vZ;
       mu = G*Mearth;
-      a = mu*r/(2.0*mu-r*v2);
+      a  = mu*r/(2.0*mu-r*v2);
       
       /******** If the Earth is oblate, correcting Kepler third law (See Greenberg, 1981) ********/
       if (J2_bool){
@@ -185,7 +185,7 @@ void cart2aei(struct moonlet * moonlets, int id, typ * aei){
       r_cross_v_1 = Y*vZ-vY*Z;
       r_cross_v_2 = vX*Z-X*vZ;
       r_cross_v_3 = X*vY-vX*Y;
-      r_cross_v_square = r_cross_v_1*r_cross_v_1+r_cross_v_2*r_cross_v_2+r_cross_v_3*r_cross_v_3;
+      r_cross_v_square = r_cross_v_1*r_cross_v_1 + r_cross_v_2*r_cross_v_2 + r_cross_v_3*r_cross_v_3;
       e = sqrt(1.0-r_cross_v_square/(mu*a));
       
       /******** Getting the inclination from the third component of the angular momentum ********/
@@ -300,6 +300,7 @@ void variable_initialization(){
       cell_id                = 0;
       force_naive_bool       = 0;
       IndexPeanoHilbertOrder = N_0;
+      SideralOmega           = 2.0*M_PI/Tearth;
       if(!brute_force_bool){
             typ sinsigma = sin(inclination_max);
             gam = pow(sma_max*sma_max*sma_max-sma_min*sma_min*sma_min,1.0/3.0)*pow(4.0*M_PI*how_many_neighbours*sinsigma/(((typ) N_0)*81.0),1.0/3.0); //The mesh-size for the O(N) 
@@ -403,11 +404,7 @@ void array_initialization(){
             }
       }
       
-      three_largest_indexes      = (int *)malloc(3 * sizeof(int)); //Array of the indexes of the three largest moonlets
-      *three_largest_indexes     = 0;
-      *(three_largest_indexes+1) = 0;
-      *(three_largest_indexes+2) = 0;
-      
+      three_largest_indexes      = (int *)malloc(3 * sizeof(int)); //Array of the indexes of the three largest moonlets     
       
       if (collision_bool){
             approach = (typ *)malloc(6 * sizeof(typ));
@@ -725,17 +722,21 @@ void three_largest_moonlets(struct moonlet * moonlets){
       int i = 0;
       int j;
       typ R_0, R_1, R_2, R;
+      
+      three_largest_indexes[0] = -1;
+      three_largest_indexes[1] = -1;
+      three_largest_indexes[2] = -1;
 
-      for (j=0; j<=largest_id; j++){
-            if (*(exists+j)){
+      for (j = 0; j <= largest_id; j ++){
+            if (*(exists + j)){
             
                   if (i == 0){
-                        R_0 = (moonlets+j) -> radius;
+                        R_0 = (moonlets + j) -> radius;
                         *three_largest_indexes = j;
                   }
                   
                   else if (i == 1){
-                        R_1 = (moonlets+j) -> radius;
+                        R_1 = (moonlets + j) -> radius;
                         if (R_0 > R_1){
                               *(three_largest_indexes+1) = j;
                         }
@@ -749,7 +750,7 @@ void three_largest_moonlets(struct moonlet * moonlets){
                   }
                   
                   else if (i == 2){
-                        R_2 = (moonlets+j) -> radius;
+                        R_2 = (moonlets + j) -> radius;
                         if (R_1 >= R_2){
                               *(three_largest_indexes+2) = j;
                         }
@@ -774,7 +775,7 @@ void three_largest_moonlets(struct moonlet * moonlets){
                   /******** At this stage, the three first moonlets indexes occupy three_largest_indexes by decreasing radius ********/
                   
                   else { // If i > 2
-                        R = (moonlets+j) -> radius;
+                        R = (moonlets + j) -> radius;
                         if (R > R_0){
                               *(three_largest_indexes+2) = *(three_largest_indexes+1);
                               *(three_largest_indexes+1) = *three_largest_indexes;

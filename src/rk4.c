@@ -54,23 +54,28 @@ void kick(struct moonlet * X, void (*F)(struct moonlet *)){
       int i;
       
       
-      for(i=0; i<=largest_id; i++){            
+      for(i = 0; i <= largest_id; i ++){            
             if(*(exists+i)){ //Checking whether or not there is a moonlet in the i^th cell of the moonlet array
             
-                  /******** xx=X ********/
-                  *(xx+i) = *(X+i);
+                  /******** xx = X ********/
+                  *(xx + i) = *(X + i);
             }
       }     
       
-      /******** xx=F(X)=dX/dt ********/
-      (*F)(xx);      
+      /******** xx = F(X) = dX/dt ********/
+      (*F)(xx);
+      
+      /******** Taking care of tides and other dissipation ********/
+      if (central_tides_bool){
+            tides(X);
+      }
       
       /******** Applying the kick ********/
-      for(i=0; i<=largest_id; i++){            
+      for(i = 0; i <= largest_id; i ++){            
             if(*(exists+i)){ //Checking whether or not there is a moonlet in the ith cell of the moonlet array
-                  (X+i) -> vx += timestep * (xx+i) -> vx;
-                  (X+i) -> vy += timestep * (xx+i) -> vy;
-                  (X+i) -> vz += timestep * (xx+i) -> vz;
+                  (X + i) -> vx += timestep * (xx + i) -> vx;
+                  (X + i) -> vy += timestep * (xx + i) -> vy;
+                  (X + i) -> vz += timestep * (xx + i) -> vz;
             }
       }
 }
@@ -86,9 +91,9 @@ void drift(struct moonlet * X){
       
       for(i=0; i<=largest_id; i++){            
             if(*(exists+i)){ //Checking whether or not there is a moonlet in the i^th cell of the moonlet array
-                  (X+i) -> x += timestep * (X+i) -> vx;
-                  (X+i) -> y += timestep * (X+i) -> vy;
-                  (X+i) -> z += timestep * (X+i) -> vz;
+                  (X + i) -> x += timestep * (X + i) -> vx;
+                  (X + i) -> y += timestep * (X + i) -> vy;
+                  (X + i) -> z += timestep * (X + i) -> vz;
             }
       }
 }
@@ -203,6 +208,7 @@ void display(struct moonlet * moonlets, typ * aei){
       /******** number of collisions, radius of the largest moonlet and total mass of the moonlets. If there is an inner fluid  ********/
       /******** disk, its mass is given in an additional column. If collisions are resolved by fragmentation, four additional   ********/
       /******** columns give the number of mergers, super-catastrophic collisions, half fragmentations and full fragmentations. ********/
+      /******** If tides are taken into account, the length of day on the central body is plotted in an additional column.      ********/
       /******** Files other that stat.txt have a variable number of columns due to the variable number of moonlets throughout   ********/
       /******** the simulation.                                                                                                 ********/
       
@@ -275,6 +281,9 @@ void display(struct moonlet * moonlets, typ * aei){
       if (collision_bool && fragmentation_bool){
             fprintf(filestat, " %d %d %d %d", merger_count, super_catastrophic_count, half_fragmentation_count, full_fragmentation_count);
       }
+      if (central_tides_bool){
+            fprintf(filestat, " %.13lf", 2.0*M_PI/SideralOmega);
+      }
       fprintf(filex,   "\n");
       fprintf(filey,   "\n");
       fprintf(filez,   "\n");
@@ -340,6 +349,9 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   printf("                  Moonlet mass = %.8lf\n", total_mass);
             }
             printf("                  Largest moonlet radius = %.8lf\n", maxR);
+            if (central_tides_bool){
+                  printf("                  Length of day = %.13lf\n", 2.0*M_PI/SideralOmega);
+            }
             if (collision_bool){
                   printf("                  Total collisions = %d\n", collision_count);
                   if (fragmentation_bool && collision_count != 0){
@@ -352,6 +364,25 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                         mrg, spc, hfr, ffr);
                   }
             }
+            
+            /******** To be removed ********/
+            typ dg[3];
+            typ angular_momemtum[3] = {0.0, 0.0, 0.0};
+            for (j = 0; j <= largest_id; j ++){
+                  X  = (moonlets + j) -> x;
+                  Y  = (moonlets + j) -> y;
+                  Z  = (moonlets + j) -> z;
+                  vX = (moonlets + j) -> vx;
+                  vY = (moonlets + j) -> vy;
+                  vZ = (moonlets + j) -> vz;
+                  m  = (moonlets + j) -> mass;
+                  cross_product(m*X, m*Y, m*Z, vX, vY, vZ, dg);
+                  angular_momemtum[0] += dg[0];
+                  angular_momemtum[1] += dg[1];
+                  angular_momemtum[2] += dg[2];
+            }
+            printf("                  Angular momemtum = (%.13lf, %.13lf, %.13lf)\n\n", angular_momemtum[0], angular_momemtum[1], angular_momemtum[2]);
+            
       }
       
       /******** Resetting global variables relative to the boxdot tree ********/
@@ -441,125 +472,6 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   how_many_to_be_spawned --;
             }
       }
-}
-
-
-int integration_brute_force(typ t){
-
-
-      /******** Performs the numerical integration with a brute force method. t is the final time ********/
-
-
-      /******** Initializing the array of moonlets ********/
-      struct moonlet * moonlets = populate(M_0, radius_stddev);
-      struct moonlet * moonlet_buffer = (struct moonlet *)malloc(N_max*sizeof(struct moonlet)); //Buffer for output steps
-      if (moonlet_buffer == NULL){
-            fprintf(stderr, "Error : Can't allocate buffer for array of moonlets in function integration_brute_force.\n");
-            abort();
-      }
-      
-      
-      /******** Numerical integration ********/
-      int error = 0;
-      int iter = 0;
-      int progressed = 0;
-      typ progress = 0.0;
-      typ previous_progress = 0.0;
-      typ * aei = (typ *)malloc(3*sizeof(typ));
-      int index, j;
-      
-      printf("progress = %.1lf %%\n", 0.0);
-      if (write_to_files_bool){
-            display(moonlets, aei);
-      }
-      
-      timestep /= 2.0;
-      kick(moonlets, vector_field); //Performing half a kick
-      timestep *= 2.0;
-      
-      /******** To be removed ********/
-      int sample_size = (int) (t_end/timestep);
-      typ * time_per_timestep = (typ *)malloc(sample_size * sizeof(typ));
-      clock_t t0, t1;
-      typ timestep_time, average, stdd;
-
-      while(time_elapsed < t && error == 0){
-
-            progressed = 0;
-                   
-            
-            /******** Writing the results of the numerical integration to the output files ********/
-            if (write_to_files_bool && iter % output_step == 0 && iter > 0){
-                  
-                  /******** I kicked too far at the previous timestep, I have to unkick by half a timestep ********/
-                  for (j = 0; j <= largest_id; j++){
-                        if (*(exists + j)){
-                              *(moonlet_buffer + j) = *(moonlets + j);
-                        }
-                  }
-                  timestep /= -2.0;
-                  kick(moonlet_buffer, vector_field); //Performing half a backward kick
-                  timestep *= -2.0;
-                  display(moonlet_buffer, aei);
-            }
-
-            /******** Integrator is SBAB1 ********/
-            t0 = clock(); //To be removed
-            if (collision_bool){
-                  brute_force(moonlets);        //Resolving collisions and going backward
-            }
-            drift(moonlets);              //Performing a full drift
-            kick(moonlets, vector_field); //Performing a full kick
-            t1 = clock(); //To be removed
-            timestep_time = ((typ) (t1 - t0)) / CLOCKS_PER_SEC; //To be removed
-            time_per_timestep[iter] = timestep_time; //To be removed
-
-            iter ++;
-            time_elapsed += timestep;
-            progress = time_elapsed/t;
-            
-            /******** Displaying informations in the terminal, and reinitializing what needs to be reinitialized after every timestep ********/
-            if (progress-previous_progress > 0.001){
-                  previous_progress = progress;
-                  printf("progress = %.1lf %%\n", 100.0*progress);
-                  progressed = 1;
-            }
-            
-            /******** Taking care of the end of the timestep ********/
-            end_of_timestep(moonlets, progressed);
-            
-            
-      }
-      printf("progress = %.1lf %%\n", 100.0);
-      printf("total number of timestep performed : %d\n",iter);
-      
-      /******** To be removed ********/
-      average = 0.0;
-      for (j = 0; j < sample_size; j++){
-            average += time_per_timestep[j];
-      }
-      average /= (typ) sample_size;
-      stdd = 0.0;
-      for (j = 0; j < sample_size; j++){
-            stdd += (time_per_timestep[j] - average) * (time_per_timestep[j] - average);
-      }
-      stdd /= (typ) sample_size;
-      stdd  = sqrt(stdd);
-      printf("average            = %.13lf\n", average);
-      printf("standard deviation = %.13lf\n", stdd);
-      free(time_per_timestep);
-      time_per_timestep = NULL;
-      
-      
-      /******** Deallocating the array of moonlets ********/
-      free(moonlets);
-      moonlets = NULL;
-      free(moonlet_buffer);
-      moonlet_buffer = NULL;
-      free(aei);
-      aei = NULL;
-       
-      return 0;
 }
 
 
@@ -777,11 +689,6 @@ int integration_mesh(typ t){
       how_many_modified = 0; //It is unnecessary to reinitialize the array modified_cells
       total_neighbours  = 0;
       
-      /******** To be removed ********/
-      int sample_size = (int) (t_end/timestep);
-      typ * time_per_timestep = (typ *)malloc(sample_size * sizeof(typ));
-      clock_t t0, t1;
-      typ timestep_time, average, stdd;
 
       while(time_elapsed < t && error == 0){
 
@@ -820,7 +727,6 @@ int integration_mesh(typ t){
             }
 
             /******** Integrator is SBAB1 ********/
-            t0 = clock(); //To be removed
             if (collision_bool){
                   if (force_naive_bool){
                         brute_force(moonlets); //Resolving collisions and going backward
@@ -838,9 +744,6 @@ int integration_mesh(typ t){
                   get_neighbours_mesh(moonlets);
             }
             kick(moonlets, vector_field); //Performing a full kick
-            t1 = clock(); //To be removed
-            timestep_time = ((typ) (t1 - t0)) / CLOCKS_PER_SEC; //To be removed
-            time_per_timestep[iter] = timestep_time; //To be removed
 
             iter ++;
             time_elapsed += timestep;
@@ -860,23 +763,6 @@ int integration_mesh(typ t){
       }
       printf("progress = %.1lf %%\n", 100.0);
       printf("total number of timestep performed : %d\n",iter);
-      
-      /******** To be removed ********/
-      average = 0.0;
-      for (j = 0; j < sample_size; j++){
-            average += time_per_timestep[j];
-      }
-      average /= (typ) sample_size;
-      stdd = 0.0;
-      for (j = 0; j < sample_size; j++){
-            stdd += (time_per_timestep[j] - average) * (time_per_timestep[j] - average);
-      }
-      stdd /= (typ) sample_size;
-      stdd  = sqrt(stdd);
-      printf("average            = %.13lf\n", average);
-      printf("standard deviation = %.13lf\n", stdd);
-      free(time_per_timestep);
-      time_per_timestep = NULL;
       
       
       /******** Deallocating the array of moonlets ********/
@@ -924,11 +810,6 @@ int integration_brute_force_SABA1(typ t){
       drift(moonlets); //Performing half a drift
       timestep *= 2.0;
 
-      /******** To be removed ********/
-      int sample_size = (int) (t_end/timestep);
-      typ * time_per_timestep = (typ *)malloc(sample_size * sizeof(typ));
-      clock_t t0, t1;
-      typ timestep_time, average, stdd;
 
       while(time_elapsed < t && error == 0){
 
@@ -951,15 +832,11 @@ int integration_brute_force_SABA1(typ t){
             }
 
             /******** Integrator is SBAB1 ********/
-            t0 = clock(); //To be removed
             kick(moonlets, vector_field); //Performing a full kick
             if (collision_bool){
                   brute_force(moonlets);  //Resolving collisions and going backward
             }
             drift(moonlets);              //Performing a full drift
-            t1 = clock(); //To be removed
-            timestep_time = ((typ) (t1 - t0)) / CLOCKS_PER_SEC; //To be removed
-            time_per_timestep[iter] = timestep_time; //To be removed
             
 
             iter ++;
@@ -980,23 +857,6 @@ int integration_brute_force_SABA1(typ t){
       }
       printf("progress = %.1lf %%\n", 100.0);
       printf("total number of timestep performed : %d\n",iter);
-      
-      /******** To be removed ********/
-      average = 0.0;
-      for (j = 0; j < sample_size; j++){
-            average += time_per_timestep[j];
-      }
-      average /= (typ) sample_size;
-      stdd = 0.0;
-      for (j = 0; j < sample_size; j++){
-            stdd += (time_per_timestep[j] - average) * (time_per_timestep[j] - average);
-      }
-      stdd /= (typ) sample_size;
-      stdd  = sqrt(stdd);
-      printf("average            = %.13lf\n", average);
-      printf("standard deviation = %.13lf\n", stdd);
-      free(time_per_timestep);
-      time_per_timestep = NULL;
       
       
       /******** Deallocating the array of moonlets ********/
