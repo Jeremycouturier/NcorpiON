@@ -61,24 +61,32 @@
 /******** Defining some physical constants ********/
 /**************************************************/
 
-#define Rearth 1.0                   //Radius of the central mass is the unit of length
-#define Mearth 1.0                   //Mass   of the central mass is the unit of mass
-#define G 39.47841760435743          //Gravitational constant is set to 4*pi^2, so that the unit of time is the surface orbital period
-#define density 0.1448               //The density of the moonlets (here 3344 kg/m^3) in central masses per cubic central radii
-#define Tearth 3.4076                //Central body's sideral period in units of the surface orbital period. Must be > 1. Earth's current value is 17.038
-                                     //Unimportant if both J2_bool and central_tides_bool are 0
+#define Rearth 1.0                   //Radius of the central mass. It is the unit of length of the simulation
+#define Mearth 1.0                   //Mass   of the central mass. It is the unit of mass
+#define G 39.47841760435743          //Gravitational constant is set to 4*pi^2, so that the simulation's unit of time is the surface orbital period
+#define density 0.1448               //The density of the moonlets (here 3344 kg/m^3) in simulation's units (central masses per cubic central radii)
 
+/******** Physical constants relative to the symmetrical equatorial bulge (J2) and to tides. Unimportant if both J2_bool and central_tides_bool are 0. ********/
+#define Tearth 3.4076                //Central body's sideral period in units of the surface orbital period. Must be > 1. Earth's current value is 17.038
+                                     //In case of tides, the sideral period changes and this is the value at t = 0.
+#define J2_value 0.0                 //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body)
+                                     //where Omega is the sideral frequency and Omega_crit = sqrt(G*Mearth/Rearth^3)
 
 /******** Physical constants relative to tides raised on the central body. Unimportant if central_tides_bool is 0. The constant timelag model is used ********/
 #define k2 1.5                       //Second Love number of the central body. Here the value is for a fluid body (zero shear modulus)
 #define Delta_t 0.1185574            //The timelag between stress and response. Here 10 minutes. In units of the orbital period at the surface of the central body.
-#define dimensionless_moi 0.3307     //The moment of inertia of the central body, in units of its mass times its radius squared.
+#define dimensionless_moi 0.3307     //The moment of inertia of the central body, in simulation units (in units of its mass times its radius squared).
+
+/******** Physical constants relative to perturbations from the star (or companion star) that the central body is orbiting. Unimportant if Sun_bool is 0 ********/
+#define star_semi_major 23481.066    //The semi-major axis of the orbit of the central body around its star or its companion star in simulation units (central body radius).
+#define star_mass 332946.0434581987  //The mass of the star or companion star in simulation units (mass of the central body).
+#define obliquity 0.4091051767       //The obliquity (in radians) of the central body on its orbital plane.
                                      
 /******** Physical constants relative to the inner fluid disk. Unimportant if inner_fluid_disk_bool is 0 ********/
 #define inner_mass 0.006888          //Mass of the inner fluid disk at t = 0. 
 #define f_tilde 0.3                  //A parameter controlling the mass of moonlets spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
 #define Rroche 2.9                   //The Roche radius where moonlets spawn from the inner fluid disk. The radius of tidal disruption is low_dumping_threshold defined below
-                                     //Must be larger than low_dumping_threshold and than Rearth. Unimportant if inner_fluid_disk_bool is 0
+                                     //Must be larger than low_dumping_threshold and than Rearth.
 
 
 
@@ -98,8 +106,8 @@
 #define eccentricity_max 0.4         //Maximal eccentricity             for a moonlet at t = 0
 #define sma_min 3.0                  //Minimal semi-major axis          for a moonlet at t = 0
 #define sma_max 15.0                 //Maximal semi-major axis          for a moonlet at t = 0
-#define inclination_min 0.0          //Minimal inclination (in radians) for a moonlet at t = 0
-#define inclination_max 0.174533     //Maximal inclination (in radians) for a moonlet at t = 0
+#define inclination_min 0.0          //Minimal inclination (in radians) for a moonlet at t = 0 with respect to the central body's equator
+#define inclination_max 0.174533     //Maximal inclination (in radians) for a moonlet at t = 0 with respect to the central body's equator
 #define low_dumping_threshold 2.0    //Threshold (in central mass radii) below  which moonlets are dumped from the simulation (collision with the Earth or disruption by tidal forces)
 #define high_dumping_threshold 200.0 //Threshold (in central mass radii) beyond which moonlets are dumped from the simulation (assumed unbounded)
 
@@ -186,7 +194,7 @@
 /****************************************/
 
 /******** Booleans relative to the simulation ********/
-#define write_to_files_bool      1   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
+#define write_to_files_bool      0   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
 #define make_animation_bool      0   //Determines if animations of the simulation are produced. write_to_files_bool must be 1
 #define seed_bool                1   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
 #define tam_bool                 0   //Determines if the total angular momentum should be conserved upon merging or fragmenting impact. If tam_bool is 0, the total momentum is conserved

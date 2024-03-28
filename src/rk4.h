@@ -53,7 +53,7 @@ void file_closing();
 void display(struct moonlet * moonlets, typ * aei);
 
 
-void end_of_timestep(struct moonlet * moonlets, int progressed);
+void end_of_timestep(struct moonlet * moonlets, int progressed, typ t);
 
 
 int integration_tree(typ t);

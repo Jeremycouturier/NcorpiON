@@ -2,7 +2,7 @@
 /**************************************************************************************/
 /**************************************************************************************/
 /******** @file    rk4.c                                                       ********/
-/******** @brief   Unlike name-suggested, implements a Leap-frog integrator    ********/
+/******** @brief   Unlike name-suggested, implements a Leapfrog integrator     ********/
 /******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
 /********                                                                      ********/
 /******** @section 	LICENSE                                                ********/
@@ -299,7 +299,7 @@ void display(struct moonlet * moonlets, typ * aei){
 }
 
 
-void end_of_timestep(struct moonlet * moonlets, int progressed){
+void end_of_timestep(struct moonlet * moonlets, int progressed, typ t){
 
       /******** Takes care of the end of the timestep by reinitializing the hash table, trees and everything   ********/
       /******** that needs to be. Updates the mesh-size gam to match the desired expected number of neighbours ********/
@@ -315,8 +315,8 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
 
       /******** Removing from the simulation the moonlets that need to be removed ********/
       how_many_moonlets = 0;
-      typ total_mass = 0.0;
-      typ maxR       = 0.0;
+      typ total_mass    = 0.0;
+      typ maxR          = 0.0;
       for (j = 0; j <= largest_id; j++){
             if (*(exists+j)){
                   X = (moonlets + j) -> x;
@@ -472,6 +472,13 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   how_many_to_be_spawned --;
             }
       }
+
+      /******** Updating the position of the star or companion star ********/
+      if (Sun_bool){
+            *sun_vector       = star_semi_major * cos(t*star_mean_motion);
+            *(sun_vector + 1) = star_semi_major * sin(t*star_mean_motion) * cos(obliquity);
+            *(sun_vector + 2) = star_semi_major * sin(t*star_mean_motion) * sin(obliquity);
+      }
 }
 
 
@@ -617,7 +624,7 @@ int integration_tree(typ t){
             }
             
             /******** Taking care of the end of the timestep ********/
-            end_of_timestep(moonlets, progressed);
+            end_of_timestep(moonlets, progressed, t);
             
             
       }
@@ -757,7 +764,7 @@ int integration_mesh(typ t){
             }
             
             /******** Taking care of the end of the timestep ********/
-            end_of_timestep(moonlets, progressed);
+            end_of_timestep(moonlets, progressed, t);
             
             
       }
@@ -851,7 +858,7 @@ int integration_brute_force_SABA1(typ t){
             }
             
             /******** Taking care of the end of the timestep ********/
-            end_of_timestep(moonlets, progressed);
+            end_of_timestep(moonlets, progressed, t);
             
             
       }

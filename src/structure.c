@@ -55,6 +55,7 @@ typ * tam_loss;
 typ * approach;
 int * did_collide;
 int * already_in_tree;
+typ sun_vector[3];
 
 
 /******** Declaring external variables ********/
@@ -85,6 +86,7 @@ typ time_since_last_spawn;
 typ time_between_spawn;
 typ fluid_disk_Sigma;
 typ SideralOmega;
+typ star_mean_motion;
 
 
 typ * ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega){
@@ -288,9 +290,13 @@ void variable_initialization(){
 
       /******** Defines and initializes external variables ********/
       
-      
-      J2                     = 0.5/(Tearth*Tearth); //Earth's equatorial bulge parameter. This equation is valid only if Earth is fluid and Tearth^2>>1
-      timestep               = time_step;           //Simulation timestep
+      if (J2_value == 0.0){
+            J2 = 0.5/(Tearth*Tearth); //Earth's equatorial bulge parameter. This equation is valid only if Earth is fluid and Tearth^2>>1
+      }
+      else{
+            J2 = J2_value;
+      }
+      timestep               = time_step;
       largest_id             = N_0-1;
       first_passage          = 1;
       time_elapsed           = 0.0;
@@ -301,6 +307,7 @@ void variable_initialization(){
       force_naive_bool       = 0;
       IndexPeanoHilbertOrder = N_0;
       SideralOmega           = 2.0*M_PI/Tearth;
+      star_mean_motion       = sqrt(G*(Mearth + star_mass)/(star_semi_major*star_semi_major*star_semi_major));
       if(!brute_force_bool){
             typ sinsigma = sin(inclination_max);
             gam = pow(sma_max*sma_max*sma_max-sma_min*sma_min*sma_min,1.0/3.0)*pow(4.0*M_PI*how_many_neighbours*sinsigma/(((typ) N_0)*81.0),1.0/3.0); //The mesh-size for the O(N) 
@@ -404,7 +411,13 @@ void array_initialization(){
             }
       }
       
-      three_largest_indexes      = (int *)malloc(3 * sizeof(int)); //Array of the indexes of the three largest moonlets     
+      three_largest_indexes      = (int *)malloc(3 * sizeof(int)); //Array of the indexes of the three largest moonlets
+
+      if (Sun_bool){
+            *sun_vector       = star_semi_major;
+            *(sun_vector + 1) = 0.0;
+            *(sun_vector + 2) = 0.0;
+      }
       
       if (collision_bool){
             approach = (typ *)malloc(6 * sizeof(typ));

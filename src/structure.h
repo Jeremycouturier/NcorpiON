@@ -47,6 +47,7 @@ extern typ time_since_last_spawn;    //The time elapsed since a moonlet last spa
 extern typ time_between_spawn;       //The characteristic timescale between moonlet spawning
 extern typ fluid_disk_Sigma;         //The mass of the inner fluid disk per unit area
 extern typ SideralOmega;             //The sideral rotation frequency of the central body
+extern typ star_mean_motion;         //The mean motion of the central body around its star or companion star
 
 
 
@@ -127,6 +128,11 @@ extern int full_fragmentation_count;      //Number of collisions such that eject
 extern int merger_count;                  //Number of collisions having resulted in a merger, that is, such that ejected mass < frag_threshold
 extern int collision_count;               //Number of collisions so far
 extern int * did_collide;                 //The k^th cell contains 1 if moonlet k did collide during that timestep, and 0 otherwise
+
+
+/******** array relative to pertubations from the star or companion star ********/
+extern typ sun_vector[3];                 //The position of the star in the geocentric reference frame. Unused if Sun_bool is 0
+
 
 /******** Global array of output files ********/
 extern FILE ** files;
