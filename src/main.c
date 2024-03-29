@@ -93,6 +93,10 @@ int main(){
       else if (mesh_bool){
             integ = integration_mesh(t_end);
       }
+      else{
+            fprintf(stderr, "Error : Exactly one of the booleans (brute_force_bool, falcON_bool, standard_tree_bool, mesh_bool) must be 1.\n");
+            abort();
+      }
 
       
       /******** Closing the output files ********/

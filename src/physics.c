@@ -377,7 +377,7 @@ void tides(struct moonlet * X){
       typ Rearth3 = Rearth*Rearth*Rearth;
       typ Rearth5 = Rearth3*Rearth*Rearth;
       typ scalar_product;
-      typ xj,yj,zj,xk,yk,zk;
+      typ xj, yj, zj, xk, yk, zk;
       typ rj2, rk2, rj5rk5, mj, mk, factor;
       for (j = 0; j <= largest_id; j ++){ //Looping over all moonlets
             if (*(exists + j)){
@@ -400,16 +400,10 @@ void tides(struct moonlet * X){
                               (xx + j) -> vx += factor*(rk2*xj - 5.0/rj2*scalar_product*scalar_product*xj + 2.0*scalar_product*xk);
                               (xx + j) -> vy += factor*(rk2*yj - 5.0/rj2*scalar_product*scalar_product*yj + 2.0*scalar_product*yk);
                               (xx + j) -> vz += factor*(rk2*zj - 5.0/rj2*scalar_product*scalar_product*zj + 2.0*scalar_product*zk);
-                              typ ax, ay, az;
-                              ax = factor*(rk2*xj - 5.0/rj2*scalar_product*scalar_product*xj + 2.0*scalar_product*xk);
-                              ay = factor*(rk2*yj - 5.0/rj2*scalar_product*scalar_product*yj + 2.0*scalar_product*yk);
-                              az = factor*(rk2*zj - 5.0/rj2*scalar_product*scalar_product*zj + 2.0*scalar_product*zk);
-                              typ dg[3];
-                              cross_product(mj*xj, mj*yj, mj*zj, ax, ay, az, dg);
                               /******** Computing the new sideral rotation of the central body ********/
                               SideralOmega -= 3.0*k2*timestep*G*mj*mk*Rearth3/(dimensionless_moi*Mearth*rj5rk5)*scalar_product*(xj*yk - yj*xk);
                               /******** If j is not one of the three largest moonlet, I must consider the reciprocal interaction to conserve angular momentum ********/
-                              /******** I limit myself to elastic tides                                                                                       ********/
+                              /******** I limit myself to elastic tides for the reciprocal interaction                                                        ********/
                               if (j != *three_largest_indexes && j != three_largest_indexes[1] && j != three_largest_indexes[2]){
                                     xk = (X + three_largest_indexes[k]) -> x;
                                     yk = (X + three_largest_indexes[k]) -> y;

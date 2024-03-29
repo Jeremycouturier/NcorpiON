@@ -101,7 +101,7 @@ void drift(struct moonlet * X){
 
 FILE ** file_opening(){
 
-      /******** Opens the files given as arguments to "display" ********/      
+      /******** Opens the files given as arguments to the function display ********/      
       
       
       /******** Initializing the paths towards the files ********/
@@ -363,26 +363,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed, typ t){
                         printf("                  Merger = %.2lf %% | Super-catastrophic = %.2lf %% | Partially fragmented = %.2lf %% | Fully fragmented = %.2lf %%\n", 
                         mrg, spc, hfr, ffr);
                   }
-            }
-            
-            /******** To be removed ********/
-            typ dg[3];
-            typ angular_momemtum[3] = {0.0, 0.0, 0.0};
-            for (j = 0; j <= largest_id; j ++){
-                  X  = (moonlets + j) -> x;
-                  Y  = (moonlets + j) -> y;
-                  Z  = (moonlets + j) -> z;
-                  vX = (moonlets + j) -> vx;
-                  vY = (moonlets + j) -> vy;
-                  vZ = (moonlets + j) -> vz;
-                  m  = (moonlets + j) -> mass;
-                  cross_product(m*X, m*Y, m*Z, vX, vY, vZ, dg);
-                  angular_momemtum[0] += dg[0];
-                  angular_momemtum[1] += dg[1];
-                  angular_momemtum[2] += dg[2];
-            }
-            printf("                  Angular momemtum = (%.13lf, %.13lf, %.13lf)\n\n", angular_momemtum[0], angular_momemtum[1], angular_momemtum[2]);
-            
+            }    
       }
       
       /******** Resetting global variables relative to the boxdot tree ********/

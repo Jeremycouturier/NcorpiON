@@ -197,8 +197,8 @@
 #define write_to_files_bool      0   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
 #define make_animation_bool      0   //Determines if animations of the simulation are produced. write_to_files_bool must be 1
 #define seed_bool                1   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
-#define tam_bool                 0   //Determines if the total angular momentum should be conserved upon merging or fragmenting impact. If tam_bool is 0, the total momentum is conserved
-                                     //Since falcON preserves the total momentum by construction, choosing 0 is best when falcON_bool is 1
+#define tam_bool                 0   //Determines if the total angular momentum should be conserved upon merging or fragmenting impact. If tam_bool is 0, then the total momentum
+                                     //is conserved instead. Since falcON preserves the total momentum by construction, choosing 0 is best when falcON_bool is 1
 
 /******** Booleans relative to the physical effects taken into account in the simulation ********/
 #define J2_bool                  0   //Determines if the contribution from the symmetrical equatorial bulge is taken into account in the simulation
