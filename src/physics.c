@@ -47,13 +47,13 @@ void vector_field(struct moonlet * moonlets){
       /******** Stores the accelerations into the velocity fields of moonlets ********/
       
       
-      int k,p;
-      typ rk,r2,r3,r5;
-      typ X,Y,Z,aX,aY,aZ,K;
-      typ mu,mk;
-      typ Xp,Yp,Zp,mp,DX,DY,DZ,D,D3,rp,rp3,softening,Rk,Rp;
-      typ X0,Y0,Z0,m0,R0,X1,Y1,Z1,m1,R1,X2,Y2,Z2,m2,R2;
-      
+      int k, p;
+      typ rk, r2, r3, r5;
+      typ X, Y, Z, aX, aY, aZ, K;
+      typ mu, mk;
+      typ Xp, Yp, Zp, mp, DX, DY, DZ, D, D3, rp, rp3, softening, Rk, Rp;
+      typ X0, Y0, Z0, m0, R0, X1, Y1, Z1, m1, R1, X2, Y2, Z2, m2, R2;
+      typ r_sun, r_sun2, X_sun, Y_sun, Z_sun, KK;
       
       /******** Getting the coordinates of the three largest moonlets. Useful only when treating mutual gravitational interactions with the O(N) mesh algorithm ********/
       if (mutual_bool && mesh_bool && !force_naive_bool){
@@ -88,7 +88,7 @@ void vector_field(struct moonlet * moonlets){
                   Y  = (moonlets + k) -> y;
                   Z  = (moonlets + k) -> z;
                   mk = (moonlets + k) -> mass;
-                  rk = sqrt(X*X+Y*Y+Z*Z);
+                  rk = sqrt(X*X + Y*Y + Z*Z);
                   r3 = rk*rk*rk;
                   
                   mu = G*Mearth;
@@ -102,16 +102,26 @@ void vector_field(struct moonlet * moonlets){
                         r2 = rk*rk;
                         r5 = r3*r2;
                         K  = G*Mearth*Rearth*Rearth*J2/r5;
-                        /******** Updating acceleration of moonlet k ********/
-                        aX += K*(-1.5*X+7.5/r2*Z*Z*X);
-                        aY += K*(-1.5*Y+7.5/r2*Z*Z*Y);
-                        aZ += K*(-4.5*Z+7.5/r2*Z*Z*Z);
+                        /******** Updating the acceleration of moonlet k ********/
+                        aX += K*(-1.5*X + 7.5/r2*Z*Z*X);
+                        aY += K*(-1.5*Y + 7.5/r2*Z*Z*Y);
+                        aZ += K*(-4.5*Z + 7.5/r2*Z*Z*Z);
                   }
                   
                   
-                  /******** Contribution from the Sun ********/
+                  /******** Contribution from the star or companion star ********/
                   if (Sun_bool){
-                  
+                        X_sun      = *sun_vector;
+                        Y_sun      = *(sun_vector + 1);
+                        Z_sun      = *(sun_vector + 2);
+                        r_sun2     = X_sun*X_sun + Y_sun*Y_sun + Z_sun*Z_sun;
+                        r_sun      = sqrt(r_sun2);
+                        K          = G*star_mass/(r_sun*r_sun2);
+                        KK         = 3.0*(X*X_sun + Y*Y_sun + Z*Z_sun)/r_sun2;
+                        /******** Updating the acceleration of moonlet k ********/
+                        aX -= K*(X - KK*X_sun);
+                        aY -= K*(Y - KK*Y_sun);
+                        aZ -= K*(Z - KK*Z_sun);
                   }
                   
                   
@@ -137,12 +147,12 @@ void vector_field(struct moonlet * moonlets){
                                     rp = sqrt(Xp*Xp+Yp*Yp+Zp*Zp);
                                     rp3= rp*rp*rp;
 
-                                    /******** Updating acceleration of moonlet k ********/
+                                    /******** Updating the acceleration of moonlet k ********/
                                     aX -= G*mp*DX/D3;
                                     aY -= G*mp*DY/D3;
                                     aZ -= G*mp*DZ/D3;
                                     
-                                    /******** Updating acceleration of moonlet p ********/
+                                    /******** Updating the acceleration of moonlet p ********/
                                     (moonlets + p) -> vx  += G*mk*DX/D3; //dV/dt=A
                                     (moonlets + p) -> vy  += G*mk*DY/D3;
                                     (moonlets + p) -> vz  += G*mk*DZ/D3;
@@ -165,11 +175,11 @@ void vector_field(struct moonlet * moonlets){
                                     softening = softening_parameter*(Rk + R0);
                                     D  = sqrt(DX*DX+DY*DY+DZ*DZ+softening*softening);
                                     D3 = D*D*D;
-                                    /******** Updating acceleration of moonlet k ********/
+                                    /******** Updating the acceleration of moonlet k ********/
                                     aX -= G*m0*DX/D3;
                                     aY -= G*m0*DY/D3;
                                     aZ -= G*m0*DZ/D3;
-                                    /******** Updating acceleration of moonlet 0 ********/
+                                    /******** Updating the acceleration of moonlet 0 ********/
                                     moonlets -> vx += G*mk*DX/D3;
                                     moonlets -> vy += G*mk*DY/D3;
                                     moonlets -> vz += G*mk*DZ/D3;
@@ -183,11 +193,11 @@ void vector_field(struct moonlet * moonlets){
                                     softening = softening_parameter*(Rk + R1);
                                     D  = sqrt(DX*DX+DY*DY+DZ*DZ+softening*softening);
                                     D3 = D*D*D;
-                                    /******** Updating acceleration of moonlet k ********/
+                                    /******** Updating the acceleration of moonlet k ********/
                                     aX -= G*m1*DX/D3;
                                     aY -= G*m1*DY/D3;
                                     aZ -= G*m1*DZ/D3;
-                                    /******** Updating acceleration of moonlet 1 ********/
+                                    /******** Updating the acceleration of moonlet 1 ********/
                                     (moonlets + 1) -> vx += G*mk*DX/D3;
                                     (moonlets + 1) -> vy += G*mk*DY/D3;
                                     (moonlets + 1) -> vz += G*mk*DZ/D3;
@@ -201,11 +211,11 @@ void vector_field(struct moonlet * moonlets){
                                     softening = softening_parameter*(Rk + R2);
                                     D  = sqrt(DX*DX+DY*DY+DZ*DZ+softening*softening);
                                     D3 = D*D*D;
-                                    /******** Updating acceleration of moonlet k ********/
+                                    /******** Updating the acceleration of moonlet k ********/
                                     aX -= G*m2*DX/D3;
                                     aY -= G*m2*DY/D3;
                                     aZ -= G*m2*DZ/D3;
-                                    /******** Updating acceleration of moonlet 2 ********/
+                                    /******** Updating the acceleration of moonlet 2 ********/
                                     (moonlets + 2) -> vx += G*mk*DX/D3;
                                     (moonlets + 2) -> vy += G*mk*DY/D3;
                                     (moonlets + 2) -> vz += G*mk*DZ/D3;
@@ -214,9 +224,9 @@ void vector_field(struct moonlet * moonlets){
                   }
                   
                   /******** Actualizing the acceleration of moonlet k ********/
-                  (moonlets+k) -> vx = aX; //dV/dt=A
-                  (moonlets+k) -> vy = aY;
-                  (moonlets+k) -> vz = aZ;
+                  (moonlets + k) -> vx = aX; //dV/dt=A
+                  (moonlets + k) -> vy = aY;
+                  (moonlets + k) -> vz = aZ;
                   
             }     
       }
@@ -238,8 +248,8 @@ void vector_field(struct moonlet * moonlets){
             for (k = 0; k <= largest_id; k ++){
                   if (exists[k]){
                         (moonlets + k) -> vx += C1Moonlets[3*k]  ;
-                        (moonlets + k) -> vy += C1Moonlets[3*k+1];
-                        (moonlets + k) -> vz += C1Moonlets[3*k+2];
+                        (moonlets + k) -> vy += C1Moonlets[3*k + 1];
+                        (moonlets + k) -> vz += C1Moonlets[3*k + 2];
                   }
             }
       }
@@ -302,10 +312,10 @@ void vector_field(struct moonlet * moonlets){
             
             for (j = 0; j < how_many_pairs; j ++){ //I go over all such pairs. The expected value of how_many_pairs is 0.5*N*how_many_neighbours = O(N)
                   
-                  k = (pairs+j)->fst; //The array "pairs" was updated by the function mesh in collision.c
-                  p = (pairs+j)->snd;
+                  k = (pairs + j) -> fst; //The array "pairs" was updated by the function mesh in collision.c
+                  p = (pairs + j) -> snd;
                   
-                  if (*(exists+k) && *(exists+p) && k > 2 && p > 2){
+                  if (*(exists + k) && *(exists + p) && k > 2 && p > 2){
                   
                         /******** Getting the positions, masses and radii ********/
                         X  = (moonlets + k) -> x;
@@ -353,7 +363,7 @@ void tides(struct moonlet * X){
       three_largest_moonlets(X); //Only the three largest moonlets raise tides. I retrieve their indexes
       typ largest_positions [9]; //Positions  of the three largest moonlets at t - Delta t
       typ largest_velocities[9]; //Velocities of the three largest moonlets at t
-      int j,k;
+      int j, k;
       
       /******** Estimating the velocities in the middle of the kick phase ********/
       for (k = 0; k <= 2; k ++){
@@ -416,10 +426,6 @@ void tides(struct moonlet * X){
                                     (xx + three_largest_indexes[k]) -> vy += factor*(rj2*yk - 5.0/rk2*scalar_product*scalar_product*yk + 2.0*scalar_product*yj);
                                     (xx + three_largest_indexes[k]) -> vz += factor*(rj2*zk - 5.0/rk2*scalar_product*scalar_product*zk + 2.0*scalar_product*zj);
                                     SideralOmega -= 3.0*k2*timestep*G*mj*mk*Rearth3/(dimensionless_moi*Mearth*rj5rk5)*scalar_product*(xk*yj - yk*xj);
-                                    ax = factor*(rj2*xk - 5.0/rk2*scalar_product*scalar_product*xk + 2.0*scalar_product*xj);
-                                    ay = factor*(rj2*yk - 5.0/rk2*scalar_product*scalar_product*yk + 2.0*scalar_product*yj);
-                                    az = factor*(rj2*zk - 5.0/rk2*scalar_product*scalar_product*zk + 2.0*scalar_product*zj);
-                                    cross_product(mk*xk, mk*yk, mk*zk, ax, ay, az, dg);
                               }
                         }
                   }

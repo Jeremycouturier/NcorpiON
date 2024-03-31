@@ -80,7 +80,7 @@
 /******** Physical constants relative to perturbations from the star (or companion star) that the central body is orbiting. Unimportant if Sun_bool is 0 ********/
 #define star_semi_major 23481.066    //The semi-major axis of the orbit of the central body around its star or its companion star in simulation units (central body radius).
 #define star_mass 332946.0434581987  //The mass of the star or companion star in simulation units (mass of the central body).
-#define obliquity 0.4091051767       //The obliquity (in radians) of the central body on its orbital plane.
+#define obliquity 0.0//0.4091051767  //The obliquity (in radians) of the central body on its orbital plane.
                                      
 /******** Physical constants relative to the inner fluid disk. Unimportant if inner_fluid_disk_bool is 0 ********/
 #define inner_mass 0.006888          //Mass of the inner fluid disk at t = 0. 

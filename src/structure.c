@@ -55,7 +55,7 @@ typ * tam_loss;
 typ * approach;
 int * did_collide;
 int * already_in_tree;
-typ sun_vector[3];
+typ * sun_vector;
 
 
 /******** Declaring external variables ********/
@@ -414,6 +414,7 @@ void array_initialization(){
       three_largest_indexes      = (int *)malloc(3 * sizeof(int)); //Array of the indexes of the three largest moonlets
 
       if (Sun_bool){
+            sun_vector = (typ *)malloc(3 * sizeof(typ));
             *sun_vector       = star_semi_major;
             *(sun_vector + 1) = 0.0;
             *(sun_vector + 2) = 0.0;
@@ -466,6 +467,10 @@ void deallocation(){
             modified_cells = NULL;
             free(pairs);
             pairs = NULL;
+      }
+      if (Sun_bool){
+            free(sun_vector);
+            sun_vector = NULL;
       }
       free(three_largest_indexes);
       three_largest_indexes = NULL;

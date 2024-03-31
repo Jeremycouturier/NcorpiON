@@ -131,7 +131,7 @@ extern int * did_collide;                 //The k^th cell contains 1 if moonlet 
 
 
 /******** array relative to pertubations from the star or companion star ********/
-extern typ sun_vector[3];                 //The position of the star in the geocentric reference frame. Unused if Sun_bool is 0
+extern typ * sun_vector;                  //The position of the star in the geocentric reference frame. Unused if Sun_bool is 0
 
 
 /******** Global array of output files ********/
