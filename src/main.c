@@ -120,8 +120,15 @@ int main(){
             char frag_bl[10]; 
             char inner_bl[10];
             char sideralPeriod[30];
+            char evectionResonance[30];
             if (J2_bool){ //The second zonal harmonic is passed to the python script
                   sprintf(sideralPeriod, "%.13lf", Tearth);
+                  if (Sun_bool){ //The position of the evection resonance is passed to the python script 
+                        sprintf(evectionResonance, "%.13lf", evection_resonance);
+                  }
+                  else{
+                        sprintf(evectionResonance, "%.13lf", 0.0);
+                  }
             }
             else{
                   sprintf(sideralPeriod, "%.13lf", 999999999.0);
@@ -152,7 +159,9 @@ int main(){
             strcat(to_system, " ");
             strcat(to_system, frag_bl);
             strcat(to_system, " ");
-            strcat(to_system, sideralPeriod);      
+            strcat(to_system, sideralPeriod);
+            strcat(to_system, " ");
+            strcat(to_system, evectionResonance);      
             int status = system(to_system);
             
             /******** Assembling the images into a gif and a mp4 ********/

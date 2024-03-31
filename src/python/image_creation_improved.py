@@ -38,10 +38,11 @@ import numpy as np
 import matplotlib.image as image
 import sys
 
-path           = str(sys.argv[4])   #The path indicated in the file src/parameters.h
-inner_bl       = int(sys.argv[5])   #Boolean indicating whether or not the simulation featured an inner fluid disk
-frag_bl        = int(sys.argv[6])   #Boolean indicating whether or not the simulation used the fragmentation model of NcorpiON
-sideral_period = float(sys.argv[7]) #Sideral period of the central body. Needed to draw the correct figure of the central body.
+path               = str(sys.argv[4])   #The path indicated in the file src/parameters.h
+inner_bl           = int(sys.argv[5])   #Boolean indicating whether or not the simulation featured an inner fluid disk
+frag_bl            = int(sys.argv[6])   #Boolean indicating whether or not the simulation used the fragmentation model of NcorpiON
+sideral_period     = float(sys.argv[7]) #Sideral period of the central body. Needed to draw the correct figure of the central body.
+evection_resonance = float(sys.argv[8]) #The position of the evection resonance
 surface_orbital_period_in_days = 0.0585745105636311 #Proportionality constant between the simulation's unit of time and 24 hours : surface orbital period/1 day.
                                                     #This value is for the Earth.
 
@@ -89,7 +90,7 @@ def draw_oblate_Earth(rad, sideral_period): #The sideral period is given in unit
       tps=np.linspace(0.0,2.0*m.pi,250)
       x=rad*np.sin(tps)*(1.0+eps_20*P2costheta(tps))
       y=rad*np.cos(tps)*(1.0+eps_20*P2costheta(tps))
-      py.plot(x,y,linestyle="-",color="grey", linewidth=4.0)
+      py.plot(x,y,linestyle="-",color="grey", linewidth = 4.0)
 
 
 def artisanal_colorbar(bottom,top,left,right):
@@ -156,7 +157,7 @@ def draw_moonlet(sma, ecc, inc, rad, p, maxR1, maxR2, maxR3, largest_index_1, la
       
 def make_image(sma, ecc, inc, rad, sta, q):
       py.xticks([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])
-      draw_oblate_Earth(1.0,sideral_period)
+      draw_oblate_Earth(1.0, sideral_period)
       artisanal_colorbar(asini_min+0.05*(asini_max-asini_min),asini_max-0.05*(asini_max-asini_min),acosi_max*0.94,acosi_max*0.96)
       maxR1 = 0.0
       maxR2 = 0.0
@@ -171,12 +172,6 @@ def make_image(sma, ecc, inc, rad, sta, q):
       draw_moonlet(sma, ecc, inc, rad, largest_index_3, 0.0, 0.0, 0.0, 0, 0, 0)
       py.text(0.08,asini_max*0.94,"t = " + str(round(float(sta[0]),3)) + " = " + str(round(float(sta[0])*surface_orbital_period_in_days,3)) + " days", alpha=0.4, fontsize=20)
       py.text(0.08,asini_max*0.88,"N = " + sta[1], alpha=0.4, fontsize=20)
-      #if (frag_bl and inner_bl):
-      #      py.text(0.08,asini_max*0.82,"Collisions = " + sta[2] + ",  (m, sc, hf, ff) = (" + sta[6]+", "+ sta[7]+", "+ sta[8]+", "+ sta[9]+")", alpha=0.4, fontsize=20)
-      #elif (frag_bl):
-      #      py.text(0.08,asini_max*0.82,"Collisions = " + sta[2] + ",  (m, sc, hf, ff) = (" + sta[5]+", "+ sta[6]+", "+ sta[7]+", "+ sta[8]+")", alpha=0.4, fontsize=20)
-      #else:
-      #      py.text(0.08,asini_max*0.82,"Collisions = " + sta[2], alpha=0.4, fontsize=20)
       py.text(0.08,asini_max*0.82,"Collisions = " + sta[2], alpha=0.4, fontsize=20)
       py.text(0.08,asini_max*0.76,"Largest radii = (" + str(round(maxR1,3)) + ", " + str(round(maxR2,3)) + ", " + str(round(maxR3,3)) + ")" + r" $R_{\oplus}$", alpha=0.4, fontsize=20)
       if (inner_bl):
@@ -188,6 +183,8 @@ def make_image(sma, ecc, inc, rad, sta, q):
       py.text(0.08,asini_max*0.59,"thickest: R > 0.12",  alpha=0.4, fontsize=8)
       py.text(0.08,asini_max*0.56,"single pixel (barely visible): R < 0.001", alpha=0.4, fontsize=8)
       py.text(0.08,asini_max*0.53,"Everything is at scale",  alpha=0.4, fontsize=8)
+      if (evection_resonance != 0.0):
+            py.vlines(evection_resonance, asini_min, asini_max, colors='black', linestyles='dashed', linewidth = 0.5, alpha=0.4)
       py.axis('square')
       py.xlim([acosi_min,acosi_max])
       py.ylim([asini_min,asini_max])

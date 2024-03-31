@@ -28,12 +28,12 @@
 
 n_thread=8
 mkdir -p $2gif &&
-python3 python/image_creation_improved.py 0 $n_thread $1 $2 $3 $4 $5 &
-python3 python/image_creation_improved.py 1 $n_thread $1 $2 $3 $4 $5 &
-python3 python/image_creation_improved.py 2 $n_thread $1 $2 $3 $4 $5 &
-python3 python/image_creation_improved.py 3 $n_thread $1 $2 $3 $4 $5 &
-python3 python/image_creation_improved.py 4 $n_thread $1 $2 $3 $4 $5 &
-python3 python/image_creation_improved.py 5 $n_thread $1 $2 $3 $4 $5 &
-python3 python/image_creation_improved.py 6 $n_thread $1 $2 $3 $4 $5 &
-python3 python/image_creation_improved.py 7 $n_thread $1 $2 $3 $4 $5 &
+python3 python/image_creation_improved.py 0 $n_thread $1 $2 $3 $4 $5 $6 &
+python3 python/image_creation_improved.py 1 $n_thread $1 $2 $3 $4 $5 $6 &
+python3 python/image_creation_improved.py 2 $n_thread $1 $2 $3 $4 $5 $6 &
+python3 python/image_creation_improved.py 3 $n_thread $1 $2 $3 $4 $5 $6 &
+python3 python/image_creation_improved.py 4 $n_thread $1 $2 $3 $4 $5 $6 &
+python3 python/image_creation_improved.py 5 $n_thread $1 $2 $3 $4 $5 $6 &
+python3 python/image_creation_improved.py 6 $n_thread $1 $2 $3 $4 $5 $6 &
+python3 python/image_creation_improved.py 7 $n_thread $1 $2 $3 $4 $5 $6 &
 wait

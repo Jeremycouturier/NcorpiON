@@ -87,6 +87,7 @@ typ time_between_spawn;
 typ fluid_disk_Sigma;
 typ SideralOmega;
 typ star_mean_motion;
+typ evection_resonance;
 
 
 typ * ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega){
@@ -308,6 +309,7 @@ void variable_initialization(){
       IndexPeanoHilbertOrder = N_0;
       SideralOmega           = 2.0*M_PI/Tearth;
       star_mean_motion       = sqrt(G*(Mearth + star_mass)/(star_semi_major*star_semi_major*star_semi_major));
+      evection_resonance     = pow(1.5*sqrt(Mearth/star_mass)*J2, 2.0/7.0)*pow(star_semi_major/Rearth, 3.0/7.0)*Rearth;
       if(!brute_force_bool){
             typ sinsigma = sin(inclination_max);
             gam = pow(sma_max*sma_max*sma_max-sma_min*sma_min*sma_min,1.0/3.0)*pow(4.0*M_PI*how_many_neighbours*sinsigma/(((typ) N_0)*81.0),1.0/3.0); //The mesh-size for the O(N) 

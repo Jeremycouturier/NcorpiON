@@ -53,7 +53,7 @@
 /******** Put / at the end of the path. The path must exist.                                      ********/
 /*********************************************************************************************************/
 
-#define path "/home/jeremy/Documents/NcorpiON_simulation/tides/"
+#define path "/home/jeremy/Documents/NcorpiON_simulation/test/"
 
 
 
@@ -95,12 +95,12 @@
 /*******************************************************/
 
 /******** General parameters ********/
-#define N_max 30                     //The maximum number of moonlets that the simulation can handle. An error will occur if the number of moonlets ever exceeds N_max.
-#define N_0 3                        //The initial number of moonlets. Must be less than or equal to N_max
+#define N_max 3000                   //The maximum number of moonlets that the simulation can handle. An error will occur if the number of moonlets ever exceeds N_max.
+#define N_0 300                      //The initial number of moonlets. Must be less than or equal to N_max
 #define M_0 0.02214                  //Total (expected) moonlet mass at t = 0
-#define t_end 16777216.0             //Total simulation time      (in surface orbital period)
+#define t_end 1.0                    //Total simulation time      (in surface orbital period)
 #define time_step 0.0078125          //Timestep of the simulation (in surface orbital period)
-#define output_step 8192             //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
+#define output_step 2                //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define radius_stddev 0.57           //Standard deviation of moonlet's radii at t = 0 (drawn uniformly), in units of the mean radius. Must be less than 1/sqrt(3) to prevent negative radius
 #define eccentricity_min 0.0         //Minimal eccentricity             for a moonlet at t = 0
 #define eccentricity_max 0.4         //Maximal eccentricity             for a moonlet at t = 0
@@ -194,19 +194,19 @@
 /****************************************/
 
 /******** Booleans relative to the simulation ********/
-#define write_to_files_bool      0   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
-#define make_animation_bool      0   //Determines if animations of the simulation are produced. write_to_files_bool must be 1
+#define write_to_files_bool      1   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
+#define make_animation_bool      1   //Determines if animations of the simulation are produced. write_to_files_bool must be 1
 #define seed_bool                1   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
 #define tam_bool                 0   //Determines if the total angular momentum should be conserved upon merging or fragmenting impact. If tam_bool is 0, then the total momentum
                                      //is conserved instead. Since falcON preserves the total momentum by construction, choosing 0 is best when falcON_bool is 1
 
 /******** Booleans relative to the physical effects taken into account in the simulation ********/
-#define J2_bool                  0   //Determines if the contribution from the symmetrical equatorial bulge is taken into account in the simulation
-#define Sun_bool                 0   //Determines if the perturbations from the Sun (or star) are taken into account in the simulation
+#define J2_bool                  1   //Determines if the contribution from the symmetrical equatorial bulge is taken into account in the simulation
+#define Sun_bool                 1   //Determines if the perturbations from the Sun (or star) are taken into account in the simulation
 #define inner_fluid_disk_bool    0   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which moonlets spawn). See Salmon & Canup 2012
 #define central_tides_bool       1   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
-#define collision_bool           0   //Determines if the moonlets are able to collide
-#define mutual_bool              0   //Determines if there are mutual gravitational interactions between the moonlets.                         
+#define collision_bool           1   //Determines if the moonlets are able to collide
+#define mutual_bool              1   //Determines if there are mutual gravitational interactions between the moonlets.                         
 
 /******** Booleans relative to collision resolution. Exactly one of them must be 1 ********/
 #define elastic_collision_bool   0   //Determines if the collisions are all elastic.

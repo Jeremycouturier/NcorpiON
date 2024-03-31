@@ -48,6 +48,7 @@ extern typ time_between_spawn;       //The characteristic timescale between moon
 extern typ fluid_disk_Sigma;         //The mass of the inner fluid disk per unit area
 extern typ SideralOmega;             //The sideral rotation frequency of the central body
 extern typ star_mean_motion;         //The mean motion of the central body around its star or companion star
+extern typ evection_resonance;       //The position of the evection resonance. To be fed to python for image production
 
 
 
