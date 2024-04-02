@@ -53,6 +53,9 @@ void file_closing();
 void display(struct moonlet * moonlets, typ * aei);
 
 
+void first_line_of_stat();
+
+
 void end_of_timestep(struct moonlet * moonlets, int progressed, typ t);
 
 

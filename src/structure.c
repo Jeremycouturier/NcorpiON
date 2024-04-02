@@ -268,7 +268,7 @@ struct moonlet * populate(typ M, typ dR){
       int k;
       m = M/((typ) N_0);
       mean_rad = pow(3.0*m/(4.0*M_PI*density*(1.0+3.0*radius_stddev*radius_stddev)), 1.0/3.0);
-      for (k=0; k<N_0; k++){
+      for (k = 0; k < N_0; k ++){
             a               = rdm(sma_min, sma_max);
             e               = rdm(eccentricity_min, eccentricity_max);
             i               = rdm(inclination_min, inclination_max);
@@ -278,7 +278,11 @@ struct moonlet * populate(typ M, typ dR){
             rad             = rdm((1.0-sqrt(3.0)*radius_stddev)*mean_rad, (1.0+sqrt(3.0)*radius_stddev)*mean_rad);
             *(moonlets + k) = init(a, e, i, nu, omega, Omega, rad);
       }
-      for (k=N_0; k<N_max; k++){ //Filling the unused cells of the moonlet array with whatever
+      for (k = N_0; k < N_max; k ++){ //Filling the unused cells of the moonlet array with whatever
+            *(moonlets + k) = init(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+      }
+      
+      for (int k = N_0; k < N_max; k ++){ //Filling the unused cells of the moonlet array with whatever
             *(moonlets + k) = init(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
       }
       
@@ -365,11 +369,11 @@ void array_initialization(){
       int p;
 
       /******** Initializing the array exists with 1 if the kth cell of the array moonlets contains a moonlet, 0 otherwise ********/
-      for (p = 0; p < N_0; p++){
-            *(exists+p) = 1;
+      for (p = 0; p < N_0; p ++){
+            *(exists + p) = 1;
       }
-      for (p = N_0; p < N_max; p++){
-            *(exists+p) = 0;
+      for (p = N_0; p < N_max; p ++){
+            *(exists + p) = 0;
       }
       
       free_indexes = (int *)malloc(N_max*sizeof(int));

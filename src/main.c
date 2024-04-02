@@ -119,19 +119,20 @@ int main(){
             printf("Producing the images for the animations\n");
             char frag_bl[10]; 
             char inner_bl[10];
-            char sideralPeriod[30];
-            char evectionResonance[30];
+            char J2_bl[10];
+            char Sun_bl[10];
+            char tides_bl[10];
             if (J2_bool){ //The second zonal harmonic is passed to the python script
-                  sprintf(sideralPeriod, "%.13lf", Tearth);
-                  if (Sun_bool){ //The position of the evection resonance is passed to the python script 
-                        sprintf(evectionResonance, "%.13lf", evection_resonance);
-                  }
-                  else{
-                        sprintf(evectionResonance, "%.13lf", 0.0);
-                  }
+                  sprintf(J2_bl, "%d", 1);
             }
             else{
-                  sprintf(sideralPeriod, "%.13lf", 999999999.0);
+                  sprintf(J2_bl, "%d", 0);
+            }
+            if (Sun_bool){ //The user decision on taking into account perturbations from the sun is passed to the python script
+                  sprintf(Sun_bl, "%d", 1);
+            }
+            else{
+                  sprintf(Sun_bl, "%d", 0);
             }
             if (fragmentation_bool && collision_bool){ //The user decision to use NcorpiON's fragmentation model is passed to the python script
                   sprintf(frag_bl, "%d", 1);
@@ -144,6 +145,12 @@ int main(){
             }
             else{
                   sprintf(inner_bl, "%d", 0);
+            }
+            if (central_tides_bool){ //The user decision to consider tides on the central body is passed to the python script
+                  sprintf(tides_bl, "%d", 1);
+            }
+            else{
+                  sprintf(tides_bl, "%d", 0);
             }
             
             int n_images = (int) (t_end/(timestep*(typ) output_step)); //The number of images to produce
@@ -159,9 +166,11 @@ int main(){
             strcat(to_system, " ");
             strcat(to_system, frag_bl);
             strcat(to_system, " ");
-            strcat(to_system, sideralPeriod);
+            strcat(to_system, J2_bl);
             strcat(to_system, " ");
-            strcat(to_system, evectionResonance);      
+            strcat(to_system, Sun_bl);
+            strcat(to_system, " ");
+            strcat(to_system, tides_bl);
             int status = system(to_system);
             
             /******** Assembling the images into a gif and a mp4 ********/

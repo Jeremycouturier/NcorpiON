@@ -38,13 +38,15 @@ import numpy as np
 import matplotlib.image as image
 import sys
 
-path               = str(sys.argv[4])   #The path indicated in the file src/parameters.h
-inner_bl           = int(sys.argv[5])   #Boolean indicating whether or not the simulation featured an inner fluid disk
-frag_bl            = int(sys.argv[6])   #Boolean indicating whether or not the simulation used the fragmentation model of NcorpiON
-sideral_period     = float(sys.argv[7]) #Sideral period of the central body. Needed to draw the correct figure of the central body.
-evection_resonance = float(sys.argv[8]) #The position of the evection resonance
+path     = str(sys.argv[4])   #The path indicated in the file src/parameters.h
+inner_bl = int(sys.argv[5])   #Boolean indicating whether or not the simulation featured an inner fluid disk
+frag_bl  = int(sys.argv[6])   #Boolean indicating whether or not the simulation used the fragmentation model of NcorpiON
+J2_bl    = float(sys.argv[7]) #Boolean indicating whether or not the simulation featured the J2
+sun_bl   = int(sys.argv[8])   #Boolean indicating whether or not the simulation used perturbation from the star
+tides_bl = int(sys.argv[9])   #Boolean indicating whether or not the simulation had tides raised on the central body
 surface_orbital_period_in_days = 0.0585745105636311 #Proportionality constant between the simulation's unit of time and 24 hours : surface orbital period/1 day.
-                                                    #This value is for the Earth.
+                                                    #The current value is for the Earth.
+      
 
 acosi_min = 0.0 #Left border of the image
 acosi_max = 16.0 #Right border of the image
@@ -156,7 +158,9 @@ def draw_moonlet(sma, ecc, inc, rad, p, maxR1, maxR2, maxR3, largest_index_1, la
 
       
 def make_image(sma, ecc, inc, rad, sta, q):
+      where_to_plot = 0.65
       py.xticks([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])
+      sideral_period = float(sta[10])
       draw_oblate_Earth(1.0, sideral_period)
       artisanal_colorbar(asini_min+0.05*(asini_max-asini_min),asini_max-0.05*(asini_max-asini_min),acosi_max*0.94,acosi_max*0.96)
       maxR1 = 0.0
@@ -165,7 +169,11 @@ def make_image(sma, ecc, inc, rad, sta, q):
       largest_index_1 = 0
       largest_index_2 = 0
       largest_index_3 = 0
-      for p in range(len(sma)):
+      if (int(sta[1]) == 1):
+            the_range = 1
+      else:
+            the_range = len(sma)
+      for p in range(the_range):
             (maxR1,maxR2,maxR3,largest_index_1,largest_index_2,largest_index_3) = draw_moonlet(sma,ecc,inc,rad,p,maxR1,maxR2,maxR3,largest_index_1,largest_index_2,largest_index_3)
       draw_moonlet(sma, ecc, inc, rad, largest_index_1, 0.0, 0.0, 0.0, 0, 0, 0)
       draw_moonlet(sma, ecc, inc, rad, largest_index_2, 0.0, 0.0, 0.0, 0, 0, 0)
@@ -178,13 +186,19 @@ def make_image(sma, ecc, inc, rad, sta, q):
             py.text(0.08,asini_max*0.70,"(Moonlet mass, Inner disk mass) = (" + str(round(float(sta[4]),4))+", "+str(round(float(sta[5]),4))+")"+r" $M_{\oplus}$", alpha=0.4, fontsize=20)
       else:
             py.text(0.08,asini_max*0.70,"Moonlet mass = " + str(round(float(sta[4]),4)) + r" $M_{\oplus}$", alpha=0.4, fontsize=20)
-      py.text(0.08,asini_max*0.65,"thin: R < 0.06",  alpha=0.4, fontsize=8)
-      py.text(0.08,asini_max*0.62,"thick: R > 0.06",  alpha=0.4, fontsize=8)
-      py.text(0.08,asini_max*0.59,"thickest: R > 0.12",  alpha=0.4, fontsize=8)
-      py.text(0.08,asini_max*0.56,"single pixel (barely visible): R < 0.001", alpha=0.4, fontsize=8)
-      py.text(0.08,asini_max*0.53,"Everything is at scale",  alpha=0.4, fontsize=8)
+      if (tides_bl):
+            py.text(0.08,asini_max*0.64,"Length of day = " + str(round(float(sta[10]),4)) + " = " + str(round(float(sta[10])*surface_orbital_period_in_days*24,4))+" hours"
+            , alpha=0.4, fontsize=20)
+            where_to_plot = 0.59
+      py.text(0.08,asini_max*where_to_plot,"thin: R < 0.06", alpha=0.4, fontsize=8)
+      py.text(0.08,asini_max*(where_to_plot-0.03),"thick: R > 0.06", alpha=0.4, fontsize=8)
+      py.text(0.08,asini_max*(where_to_plot-2*0.03),"thickest: R > 0.12", alpha=0.4, fontsize=8)
+      py.text(0.08,asini_max*(where_to_plot-3*0.03),"single pixel (barely visible): R < 0.001", alpha=0.4, fontsize=8)
+      py.text(0.08,asini_max*(where_to_plot-4*0.03),"Everything is at scale", alpha=0.4, fontsize=8)
+      evection_resonance = float(sta[12])
       if (evection_resonance != 0.0):
             py.vlines(evection_resonance, asini_min, asini_max, colors='black', linestyles='dashed', linewidth = 0.5, alpha=0.4)
+            py.text(evection_resonance*1.003,asini_max*0.82,"Evection resonance", rotation=-90, alpha=0.4, fontsize=8)
       py.axis('square')
       py.xlim([acosi_min,acosi_max])
       py.ylim([asini_min,asini_max])
@@ -206,7 +220,13 @@ sma = np.float64(np.array(a.readline().strip().split()))
 ecc = np.float64(np.array(e.readline().strip().split()))
 inc = np.float64(np.array(i.readline().strip().split()))
 rad = np.float64(np.array(R.readline().strip().split()))
+S.readline().strip().split() #Skipping the first line of stat.txt
 sta = np.array(S.readline().strip().split())
+if (int(sta[1]) == 1):
+      sma = np.array([sma])
+      ecc = np.array([ecc])
+      inc = np.array([inc])
+      rad = np.array([rad])
 
 for j in range(int(sys.argv[3])):
       if (j % n_thread == mod):
@@ -217,6 +237,11 @@ for j in range(int(sys.argv[3])):
       inc = np.float64(np.array(i.readline().strip().split()))
       rad = np.float64(np.array(R.readline().strip().split()))
       sta = np.array(S.readline().strip().split())
+      if (int(sta[1]) == 1):
+            sma = np.array([sma])
+            ecc = np.array([ecc])
+            inc = np.array([inc])
+            rad = np.array([rad])
            
      
             

@@ -205,10 +205,10 @@ void display(struct moonlet * moonlets, typ * aei){
       /******** x.txt to vz.txt contain the cartesian coordinates, while a.txt, e.txt and i.txt contains the orbital elements   ********/
       /******** In each file, a time step is printed on a single line. For example, a line of e.txt contains the eccentricities ********/
       /******** of the N moonlets that existed at that time. The columns of stat.txt are time, total number of moonlets, total  ********/
-      /******** number of collisions, radius of the largest moonlet and total mass of the moonlets. If there is an inner fluid  ********/
-      /******** disk, its mass is given in an additional column. If collisions are resolved by fragmentation, four additional   ********/
-      /******** columns give the number of mergers, super-catastrophic collisions, half fragmentations and full fragmentations. ********/
-      /******** If tides are taken into account, the length of day on the central body is plotted in an additional column.      ********/
+      /******** number of collisions, radius of the largest moonlet, total mass of the moonlets, inner fluid disk mass, number  ********/
+      /******** of mergers, of super-catastrophic collisions, of half-fragmentations, of full-fragmentations, length of day,    ********/
+      /******** value of the J2 and semi-major axis of the evection resonance (assuming everything is planar). If the J2 or     ********/
+      /******** perturbations from the star are not taken into account, then 0.0 is displayed for the evection resonance.       ********/
       /******** Files other that stat.txt have a variable number of columns due to the variable number of moonlets throughout   ********/
       /******** the simulation.                                                                                                 ********/
       
@@ -278,11 +278,32 @@ void display(struct moonlet * moonlets, typ * aei){
             inner_fluid_disk_mass = fluid_disk_Sigma*M_PI*(Rroche*Rroche - Rearth*Rearth);
             fprintf(filestat, " %.13lf", inner_fluid_disk_mass);
       }
+      else{
+            fprintf(filestat, " %.1lf", 0.0);
+      }
       if (collision_bool && fragmentation_bool){
             fprintf(filestat, " %d %d %d %d", merger_count, super_catastrophic_count, half_fragmentation_count, full_fragmentation_count);
       }
-      if (central_tides_bool){
+      else{
+            fprintf(filestat, " %d %d %d %d", 0, 0, 0, 0);
+      }
+      if (central_tides_bool || J2_bool){
             fprintf(filestat, " %.13lf", 2.0*M_PI/SideralOmega);
+      }
+      else{
+            fprintf(filestat, " %.1lf", 999999999.9);
+      }
+      if (J2_bool){
+            fprintf(filestat, " %.13lf", J2);
+      }
+      else{
+            fprintf(filestat, " %.1lf", 0.0);
+      }
+      if (Sun_bool && J2_bool){
+            fprintf(filestat, " %.13lf", evection_resonance);
+      }
+      else{
+            fprintf(filestat, " %.1lf", 0.0);
       }
       fprintf(filex,   "\n");
       fprintf(filey,   "\n");
@@ -296,6 +317,19 @@ void display(struct moonlet * moonlets, typ * aei){
       fprintf(filei,   "\n");
       fprintf(filestat,"\n");  
 
+}
+
+
+void first_line_of_stat(){
+
+      /******** Fills the first line of the file stat.txt with indications about the content of the columns ********/
+      
+      FILE * filestat;
+      filestat = *(files + 10);
+      
+      fprintf(filestat, "Time, N, number of collisions, largest radius, total moonlet mass, inner fluid disk mass");
+      fprintf(filestat, ", number of mergers, of super-catastrophic collisions, of half-fragmentations, of full-fragmentations");
+      fprintf(filestat, ", length of day, J2, evection resonance\n");
 }
 
 
@@ -351,6 +385,9 @@ void end_of_timestep(struct moonlet * moonlets, int progressed, typ t){
             printf("                  Largest moonlet radius = %.8lf\n", maxR);
             if (central_tides_bool){
                   printf("                  Length of day = %.13lf\n", 2.0*M_PI/SideralOmega);
+                  if (J2_bool && Sun_bool){
+                        printf("                  Evection resonance at a = %.13lf\n", evection_resonance);
+                  }
             }
             if (collision_bool){
                   printf("                  Total collisions = %d\n", collision_count);
@@ -363,7 +400,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed, typ t){
                         printf("                  Merger = %.2lf %% | Super-catastrophic = %.2lf %% | Partially fragmented = %.2lf %% | Fully fragmented = %.2lf %%\n", 
                         mrg, spc, hfr, ffr);
                   }
-            }    
+            }
       }
       
       /******** Resetting global variables relative to the boxdot tree ********/
@@ -460,6 +497,19 @@ void end_of_timestep(struct moonlet * moonlets, int progressed, typ t){
             *(sun_vector + 1) = star_semi_major * sin(t*star_mean_motion) * cos(obliquity);
             *(sun_vector + 2) = star_semi_major * sin(t*star_mean_motion) * sin(obliquity);
       }
+      
+      /******** Updating the J2 and the position of the evection resonance ********/
+      if (central_tides_bool && J2_bool){
+            if (J2_value == 0.0){
+                  J2 = 0.5*SideralOmega*SideralOmega*Rearth*Rearth*Rearth/(G*Mearth);
+            }
+            else{
+                  J2 = J2_value*SideralOmega*SideralOmega*Tearth*Tearth/(4.0*M_PI*M_PI);
+            }
+            if (Sun_bool){
+                  evection_resonance = pow(1.5*sqrt(Mearth/star_mass)*J2, 2.0/7.0)*pow(star_semi_major/Rearth, 3.0/7.0)*Rearth;
+            }
+      }
 }
 
 
@@ -490,6 +540,7 @@ int integration_tree(typ t){
       
       printf("progress = %.1lf %%\n", 0.0);
       if (write_to_files_bool){
+            first_line_of_stat();
             display(moonlets, aei);
       }
       
@@ -652,6 +703,7 @@ int integration_mesh(typ t){
       
       printf("progress = %.1lf %%\n", 0.0);
       if (write_to_files_bool){
+            first_line_of_stat();
             display(moonlets, aei);
       }
       
@@ -791,6 +843,7 @@ int integration_brute_force_SABA1(typ t){
       
       printf("progress = %.1lf %%\n", 0.0);
       if (write_to_files_bool){
+            first_line_of_stat();
             display(moonlets, aei);
       }
       

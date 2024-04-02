@@ -53,7 +53,7 @@
 /******** Put / at the end of the path. The path must exist.                                      ********/
 /*********************************************************************************************************/
 
-#define path "/home/jeremy/Documents/NcorpiON_simulation/test/"
+#define path "./ncorpion/"
 
 
 
@@ -74,7 +74,7 @@
 
 /******** Physical constants relative to tides raised on the central body. Unimportant if central_tides_bool is 0. The constant timelag model is used ********/
 #define k2 1.5                       //Second Love number of the central body. Here the value is for a fluid body (zero shear modulus)
-#define Delta_t 0.1185574            //The timelag between stress and response. Here 10 minutes. In units of the orbital period at the surface of the central body.
+#define Delta_t 0.0004856//0.1185574 //The timelag between stress and response. Here 10 minutes. In units of the orbital period at the surface of the central body.
 #define dimensionless_moi 0.3307     //The moment of inertia of the central body, in simulation units (in units of its mass times its radius squared).
 
 /******** Physical constants relative to perturbations from the star (or companion star) that the central body is orbiting. Unimportant if Sun_bool is 0 ********/
@@ -83,7 +83,7 @@
 #define obliquity 0.0//0.4091051767  //The obliquity (in radians) of the central body on its orbital plane.
                                      
 /******** Physical constants relative to the inner fluid disk. Unimportant if inner_fluid_disk_bool is 0 ********/
-#define inner_mass 0.006888          //Mass of the inner fluid disk at t = 0. 
+#define inner_mass 0.014             //Mass of the inner fluid disk at t = 0. 
 #define f_tilde 0.3                  //A parameter controlling the mass of moonlets spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
 #define Rroche 2.9                   //The Roche radius where moonlets spawn from the inner fluid disk. The radius of tidal disruption is low_dumping_threshold defined below
                                      //Must be larger than low_dumping_threshold and than Rearth.
@@ -95,17 +95,17 @@
 /*******************************************************/
 
 /******** General parameters ********/
-#define N_max 3000                   //The maximum number of moonlets that the simulation can handle. An error will occur if the number of moonlets ever exceeds N_max.
-#define N_0 300                      //The initial number of moonlets. Must be less than or equal to N_max
-#define M_0 0.02214                  //Total (expected) moonlet mass at t = 0
-#define t_end 1.0                    //Total simulation time      (in surface orbital period)
+#define N_max 10000                  //The maximum number of moonlets that the simulation can handle. An error will occur if the number of moonlets ever exceeds N_max.
+#define N_0 1000                     //The initial number of moonlets. Must be less than or equal to N_max
+#define M_0 0.014                    //Total (expected) moonlet mass at t = 0
+#define t_end 2048.0                 //Total simulation time      (in surface orbital period)
 #define time_step 0.0078125          //Timestep of the simulation (in surface orbital period)
-#define output_step 2                //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
+#define output_step 128              //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define radius_stddev 0.57           //Standard deviation of moonlet's radii at t = 0 (drawn uniformly), in units of the mean radius. Must be less than 1/sqrt(3) to prevent negative radius
 #define eccentricity_min 0.0         //Minimal eccentricity             for a moonlet at t = 0
-#define eccentricity_max 0.4         //Maximal eccentricity             for a moonlet at t = 0
-#define sma_min 3.0                  //Minimal semi-major axis          for a moonlet at t = 0
-#define sma_max 15.0                 //Maximal semi-major axis          for a moonlet at t = 0
+#define eccentricity_max 0.2         //Maximal eccentricity             for a moonlet at t = 0
+#define sma_min 2.9                  //Minimal semi-major axis          for a moonlet at t = 0
+#define sma_max 14.0                 //Maximal semi-major axis          for a moonlet at t = 0
 #define inclination_min 0.0          //Minimal inclination (in radians) for a moonlet at t = 0 with respect to the central body's equator
 #define inclination_max 0.174533     //Maximal inclination (in radians) for a moonlet at t = 0 with respect to the central body's equator
 #define low_dumping_threshold 2.0    //Threshold (in central mass radii) below  which moonlets are dumped from the simulation (collision with the Earth or disruption by tidal forces)
@@ -196,15 +196,15 @@
 /******** Booleans relative to the simulation ********/
 #define write_to_files_bool      1   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
 #define make_animation_bool      1   //Determines if animations of the simulation are produced. write_to_files_bool must be 1
-#define seed_bool                1   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
+#define seed_bool                0   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
 #define tam_bool                 0   //Determines if the total angular momentum should be conserved upon merging or fragmenting impact. If tam_bool is 0, then the total momentum
                                      //is conserved instead. Since falcON preserves the total momentum by construction, choosing 0 is best when falcON_bool is 1
 
 /******** Booleans relative to the physical effects taken into account in the simulation ********/
-#define J2_bool                  1   //Determines if the contribution from the symmetrical equatorial bulge is taken into account in the simulation
-#define Sun_bool                 1   //Determines if the perturbations from the Sun (or star) are taken into account in the simulation
+#define J2_bool                  0   //Determines if the contribution from the symmetrical equatorial bulge is taken into account in the simulation
+#define Sun_bool                 0   //Determines if the perturbations from the Sun (or star) are taken into account in the simulation
 #define inner_fluid_disk_bool    0   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which moonlets spawn). See Salmon & Canup 2012
-#define central_tides_bool       1   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
+#define central_tides_bool       0   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
 #define collision_bool           1   //Determines if the moonlets are able to collide
 #define mutual_bool              1   //Determines if there are mutual gravitational interactions between the moonlets.                         
 
@@ -216,8 +216,8 @@
                                      //depending on the relative velocity and according to the fragmentation model of NcorpiON. 
 
 /******** Booleans relative to the treatment of mutual interactions (collisions and self-gravity). Exactly one of them must be 1. ********/
-#define brute_force_bool         1   //Determines if a brute-force method should be used for mutual interactions.
-#define falcON_bool              0   //Determines if falcON algorithm     should be used for mutual interactions. (Often the best speed/accuracy compromise for large N)
+#define brute_force_bool         0   //Determines if a brute-force method should be used for mutual interactions.
+#define falcON_bool              1   //Determines if falcON algorithm     should be used for mutual interactions. (Often the best speed/accuracy compromise for large N)
 #define standard_tree_bool       0   //Determines if a standard tree code should be used for mutual interactions. (Significantly slower than falcON for the same accuracy).
 #define mesh_bool                0   //Determines if the  mesh algorithm  should be used for mutual interactions. (Fastest but gravity with neighbours and three largest moonlets only).
 
