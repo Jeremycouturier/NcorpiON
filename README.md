@@ -39,30 +39,24 @@ on Red Hat based distros to install it. You will also need python with matplotli
 
 ## Simulation
 
-To run a simulation, you need to update the file ```src/parameters.h``` (see <https://ncorpion.com/#setup> for details)
+To run a simulation, you first need to update the file ```src/parameters.h``` (see <https://ncorpion.com/#setup> for details)
 
-In order to simulate and to produce an animation, first run
+Then, you can run the simulation and produce an animation with
 
-	./ncorpion.sh number_of_images some_path
+	./ncorpion.sh
 	
-where the path ```some_path``` is the same as given in ```src/parameters.h```. This will run the simulation and create the images of the animation.
-The number of images depends on the length of the simulation and on the
-frequency of outputs chosen in the file ```src/parameters.h```. Then, once all the images have been produced, assemble the animation with
+The output of the simulation, as well as the two animations ```ncorpion.mp4``` and ```ncorpion.gif``` can now be found at the location given in the file ```src/parameters.h```
 
-	./ncorpion_animation.sh some_path
-	
-This will return two files ```ncorpion.mp4``` and ```ncorpion.gif``` in ```some_path/gif```
-
-In order to simulate without producing any animation, run
+In order to simulate without producing any animation, you can either run
 
 	make clean && make && make clean && ./ncorpion
 	
-The files of the numerical simulation can then be found in ```some_path```.
+or simply set the boolean ```make_animation_bool``` to ```0``` in the parameter file.
 
 
 ## Documentation
 
-The full documentation of NcorpiON is available at <https://ncorpion.com>
+A more complete documentation of NcorpiON is available at <https://ncorpion.com>
 
 
 ## Acknowledgments
