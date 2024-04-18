@@ -147,6 +147,9 @@ typ * ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega);
 void cart2aei(struct moonlet * moonlets, int id, typ * aei);
 
 
+void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp);
+
+
 struct moonlet init(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ rad);
 
 

@@ -101,56 +101,56 @@ typ * ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega){
       typ r; //Moonlet's distance to Earth's center
       typ n; //Moonlet's mean motion
       typ mu; // Gravitational parameter
-      typ cosnu=cos(nu);
-      typ sinnu=sin(nu);
-      typ cosomega=cos(omega);
-      typ sinomega=sin(omega);
-      typ cosi=cos(i);
-      typ sini=sin(i);
-      typ cosOmega=cos(Omega);
-      typ sinOmega=sin(Omega);
+      typ cosnu    = cos(nu);
+      typ sinnu    = sin(nu);
+      typ cosomega = cos(omega);
+      typ sinomega = sin(omega);
+      typ cosi     = cos(i);
+      typ sini     = sin(i);
+      typ cosOmega = cos(Omega);
+      typ sinOmega = sin(Omega);
 
       /********  In the orbital plane (see Laskar & Robutel 1995)  ********/
-      r=a*(1.0-e*e)/(1.0+e*cosnu);
-      mu=G*Mearth;
+      r  = a*(1.0-e*e)/(1.0+e*cosnu);
+      mu = G*Mearth;
       if (J2_bool){ //Using the geometric elliptical elements instead of the osculating ones in case of an oblate Earth. See Greenberg (1981)
             mu = mu*(1.0+1.5*J2*Rearth*Rearth/(a*a));
       }
-      n=sqrt(mu/(a*a*a));
-      X=r*cosnu;
-      Y=r*sinnu;
-      Z=0.0;
-      vX=-n*a/sqrt(1.0-e*e)*sinnu;
-      vY=n*a/sqrt(1.0-e*e)*(e+cosnu);
-      vZ=0.0;
+      n  = sqrt(mu/(a*a*a));
+      X  = r*cosnu;
+      Y  = r*sinnu;
+      Z  = 0.0;
+      vX = -n*a/sqrt(1.0-e*e)*sinnu;
+      vY = n*a/sqrt(1.0-e*e)*(e+cosnu);
+      vZ = 0.0;
       
       /********  Rotations to convert to reference plane (see Laskar & Robutel 1995)  ********/
       X_buff=X; Y_buff=Y; vX_buff=vX; vY_buff=vY;
-      X=cosomega*X_buff-sinomega*Y_buff;
-      vX=cosomega*vX_buff-sinomega*vY_buff;
-      Y=sinomega*X_buff+cosomega*Y_buff;
-      vY=sinomega*vX_buff+cosomega*vY_buff;
+      X  = cosomega*X_buff-sinomega*Y_buff;
+      vX = cosomega*vX_buff-sinomega*vY_buff;
+      Y  = sinomega*X_buff+cosomega*Y_buff;
+      vY = sinomega*vX_buff+cosomega*vY_buff;
       
       Y_buff=Y; Z_buff=Z; vY_buff=vY; vZ_buff=vZ;
-      Y=cosi*Y_buff-sini*Z_buff;
-      vY=cosi*vY_buff-sini*vZ_buff;
-      Z=sini*Y_buff+cosi*Z_buff;
-      vZ=sini*vY_buff+cosi*vZ_buff;
+      Y  = cosi*Y_buff-sini*Z_buff;
+      vY = cosi*vY_buff-sini*vZ_buff;
+      Z  = sini*Y_buff+cosi*Z_buff;
+      vZ = sini*vY_buff+cosi*vZ_buff;
       
       X_buff=X; Y_buff=Y; vX_buff=vX; vY_buff=vY;
-      X=cosOmega*X_buff-sinOmega*Y_buff;
-      vX=cosOmega*vX_buff-sinOmega*vY_buff;
-      Y=sinOmega*X_buff+cosOmega*Y_buff;
-      vY=sinOmega*vX_buff+cosOmega*vY_buff;
+      X  = cosOmega*X_buff-sinOmega*Y_buff;
+      vX = cosOmega*vX_buff-sinOmega*vY_buff;
+      Y  = sinOmega*X_buff+cosOmega*Y_buff;
+      vY = sinOmega*vX_buff+cosOmega*vY_buff;
       
       /********  Returning the cartesian coordinates  ********/
       typ * cart=(typ *)malloc(sizeof(typ)*6);
-      *cart=X;
-      *(cart+1)=Y;
-      *(cart+2)=Z;
-      *(cart+3)=vX;
-      *(cart+4)=vY;
-      *(cart+5)=vZ;
+      *cart     = X;
+      *(cart+1) = Y;
+      *(cart+2) = Z;
+      *(cart+3) = vX;
+      *(cart+4) = vY;
+      *(cart+5) = vZ;
       return cart;
 
 }
@@ -173,15 +173,15 @@ void cart2aei(struct moonlet * moonlets, int id, typ * aei){
       vZ = (moonlets + id) -> vz;
       
       /******** Getting the semimajor axis from the orbital energy ********/
-      r  = sqrt(X*X+Y*Y+Z*Z);
-      v2 = vX*vX+vY*vY+vZ*vZ;
+      r  = sqrt(X*X + Y*Y + Z*Z);
+      v2 = vX*vX + vY*vY + vZ*vZ;
       mu = G*Mearth;
-      a  = mu*r/(2.0*mu-r*v2);
+      a  = mu*r/(2.0*mu - r*v2);
       
       /******** If the Earth is oblate, correcting Kepler third law (See Greenberg, 1981) ********/
       if (J2_bool){
-            mu = mu*(1.0+1.5*J2*Rearth*Rearth/(a*a));
-            a = mu*r/(2.0*mu-r*v2);
+            mu = mu*(1.0 + 1.5*J2*Rearth*Rearth/(a*a));
+            a = mu*r/(2.0*mu - r*v2);
       }
       
       /******** Getting the eccentricity from the momentum ********/
@@ -204,12 +204,110 @@ void cart2aei(struct moonlet * moonlets, int id, typ * aei){
 }
 
 
+void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp){
+
+      /******** Computes the elliptic elements a, l, k, h, q & p where a is the semi-major axis and l is the mean      ********/
+      /******** longitude. k, h, q & p are defined as k+ih = e*exp(i*varpi) and q+ip = sin(I/2)*exp(i*Omega). The      ********/
+      /******** eccentricity e, inclination I, longitude of the pericentre varpi and longitude of the ascending node   ********/
+      /******** Omega are straightforward to obtain from k, h, q & p, but these variables are better since they are    ********/
+      /******** regular even et zero eccentricity and inclination. We have e = sqrt(k^2+h^2), sin(I/2) = sqrt(q^2+p^2),********/
+      /******** varpi = atan2(h,k) and Omega = atan2(p,q). The cartesian coordinates are those of moonlet n° id        ********/
+      /******** The elliptic elements a,l,k,h,q,p are written in the vector alkhqp. This vector is overwritten         ********/
+      /******** This function originally comes from the IMCCE lab (Paris Observatory) and was adapted for NcorpiON     ********/
+
+      typ X, Y, Z, vX, vY, vZ, R, V2, RV, C1, C2, C3, DC, CC, AA, aux0;
+      typ a11, a12, a21, a22, c11, c12, c21, c22, K1, H1, K2, H2, K, H;
+      typ CMU, SMU, FAC1, FAC2, b12, b22, sinF, cosF, F, USQA, aux1;
+
+      /******** Getting the cartesian coordinates ********/
+      X  = (moonlets + id) -> x;
+      Y  = (moonlets + id) -> y;
+      Z  = (moonlets + id) -> z;
+      vX = (moonlets + id) -> vx;
+      vY = (moonlets + id) -> vy;
+      vZ = (moonlets + id) -> vz;
+
+      /******** Computing the semi-major axis ********/
+      CMU = G*Mearth;
+      R   = sqrt(X*X + Y*Y + Z*Z);
+      V2  = vX*vX + vY*vY + vZ*vZ;
+      AA  = R*CMU/(2.0*CMU - R*V2); //Division by zero if the trajectory is perfectly parabolic.
+      if (J2_bool && AA > 0.0){     //If the Earth is oblate and the trajectory is elliptic, correcting Kepler third law (See Greenberg, 1981)
+            CMU *= 1.0 + 1.5*J2*Rearth*Rearth/(AA*AA);
+            AA = R*CMU/(2.0*CMU - R*V2);
+      }
+      *alkhqp = AA;
+
+      /******** Normalizing the velocities (Adopting the convention of J. Laskar's 2004 lectures notes) ********/
+      SMU = sqrt(CMU);
+      vX /= SMU;
+      vY /= SMU;
+      vZ /= SMU;
+
+      /******** Computing the angular momentum ********/
+      V2 = vX*vX + vY*vY + vZ*vZ;
+      RV = X*vX  + Y*vY  + Z*vZ;
+      C1 = Y*vZ  - Z*vY;
+      C2 = Z*vX  - X*vZ;
+      C3 = X*vY  - Y*vX;
+      CC = C1*C1 + C2*C2 + C3*C3;
+      DC = sqrt(CC);
+
+      /******** Computing (q, p) ********/
+      aux0          = sqrt(2.0*(CC + DC*C3));
+      *(alkhqp + 4) = -C2/aux0;
+      *(alkhqp + 5) =  C1/aux0;
+
+      /******** Computing the matrix coefficients needed for (k, h) ********/
+      a11 = V2 - 1.0/R;
+      a12 = RV/(R*DC);
+      a21 = -RV;
+      a22 = DC - R/DC;
+
+      /******** Computing (k, h) ********/
+      c11  =  X*a11  + vX*a21;
+      c12  =  X*a12  + vX*a22;
+      c21  =  Y*a11  + vY*a21;
+      c22  =  Y*a12  + vY*a22;
+      FAC1 =  C1/(DC + C3);
+      FAC2 =  C2/(DC + C3);
+      K1   =  c11 - FAC1*(Z*a11 + vZ*a21);
+      H1   = -c12 + FAC1*(Z*a12 + vZ*a22);
+      H2   =  c21 - FAC2*(Z*a11 + vZ*a21);
+      K2   =  c22 - FAC2*(Z*a12 + vZ*a22);
+      K    =  0.5*(K1 + K2);
+      H    =  0.5*(H1 + H2);
+      *(alkhqp + 2) = K;
+      *(alkhqp + 3) = H;
+
+      /******** Computing the mean longitude l = M + varpi ********/
+      USQA = sqrt(2.0/R - V2);
+      if ((USQA) >= 0.0){ //elliptic case
+            b12  = vX - FAC1*vZ;
+            b22  = vY - FAC2*vZ;
+            aux1 = (R*V2 - 1.0)/(1.0 + DC*USQA);
+            sinF = -b12*R*USQA + H*aux1;
+            cosF =  b22*R*USQA + K*aux1;
+            F    =  atan2(sinF, cosF);
+            *(alkhqp + 1) = F - RV*USQA;
+      }
+      else{ //Hyperbolic case
+            USQA  = sqrt(-(2.0/R - V2));
+            typ E = atanh(RV*USQA/(R*V2 - 1.0));
+            typ M = sqrt(K*K + H*H) * sinh(E) - E;
+            *(alkhqp + 1) = M + atan2(H, K);
+      }
+}
+
+
+
 /******************************************/
 /******** Initialization functions ********/
 /******************************************/
 
 
-struct moonlet init(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ rad){      //Initializes a moonlet
+struct moonlet init(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ rad){
+
 
       /******** a is the semi-major axis, e is the eccentricity, i is the inclination, nu is the true anomaly,     ********/
       /******** omega is the argument of periapsis, Omega is the longitude of the ascending node and m is the mass ********/
@@ -220,27 +318,29 @@ struct moonlet init(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ rad){
       mlt.mass = m;                                     //Initializing the mass
       
       typ * cart = ell2cart(a, e, i, nu, omega, Omega); //Computing the cartesian coordinates from the orbital elements
-      mlt.x  = * cart;                                      //Initializing the cartesian coordinates
-      mlt.y  = *(cart+1);
-      mlt.z  = *(cart+2);
-      mlt.vx = *(cart+3);
-      mlt.vy = *(cart+4);
-      mlt.vz = *(cart+5);
+      mlt.x  = * cart;                                  //Initializing the cartesian coordinates
+      mlt.y  = *(cart + 1);
+      mlt.z  = *(cart + 2);
+      mlt.vx = *(cart + 3);
+      mlt.vy = *(cart + 4);
+      mlt.vz = *(cart + 5);
       free(cart);
-      cart=NULL;
+      cart = NULL;
       
       return mlt;
 
 }
 
 
-typ rdm(typ min, typ max){      //Returns a random number between min and max according to a (a priori) uniform distribution
+typ rdm(typ min, typ max){
       
-      /******** Generating the random number ********/
-      typ MyRand = ((typ) rand())/((typ) RAND_MAX);  //between 0 and 1
-      MyRand = min+(max-min)*MyRand;                 //between min and max
-      return MyRand;
+      /******** Returns a random number between min and max according to a uniform distribution ********/
 
+      /******** Generating the random number ********/
+      typ MyRand = ((typ) rand())/((typ) RAND_MAX); //between 0 and 1
+      MyRand = min + (max - min)*MyRand;            //between min and max
+
+      return MyRand;
 }
 
 
@@ -267,7 +367,7 @@ struct moonlet * populate(typ M, typ dR){
       typ a, e, i, nu, omega, Omega, rad, m, mean_rad;
       int k;
       m = M/((typ) N_0);
-      mean_rad = pow(3.0*m/(4.0*M_PI*density*(1.0+3.0*radius_stddev*radius_stddev)), 1.0/3.0);
+      mean_rad = pow(3.0*m/(4.0*M_PI*density*(1.0 + 3.0*radius_stddev*radius_stddev)), 1.0/3.0);
       for (k = 0; k < N_0; k ++){
             a               = rdm(sma_min, sma_max);
             e               = rdm(eccentricity_min, eccentricity_max);
@@ -275,7 +375,7 @@ struct moonlet * populate(typ M, typ dR){
             nu              = rdm(0.0, 2.0*M_PI);
             omega           = rdm(0.0, 2.0*M_PI);
             Omega           = rdm(0.0, 2.0*M_PI);
-            rad             = rdm((1.0-sqrt(3.0)*radius_stddev)*mean_rad, (1.0+sqrt(3.0)*radius_stddev)*mean_rad);
+            rad             = rdm((1.0 - sqrt(3.0)*radius_stddev)*mean_rad, (1.0 + sqrt(3.0)*radius_stddev)*mean_rad);
             *(moonlets + k) = init(a, e, i, nu, omega, Omega, rad);
       }
       for (k = N_0; k < N_max; k ++){ //Filling the unused cells of the moonlet array with whatever
@@ -302,7 +402,7 @@ void variable_initialization(){
             J2 = J2_value;
       }
       timestep               = time_step;
-      largest_id             = N_0-1;
+      largest_id             = N_0 - 1;
       first_passage          = 1;
       time_elapsed           = 0.0;
       how_many_free          = 0;
