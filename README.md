@@ -1,7 +1,7 @@
 # Welcome to NcorpiON
 
 NcorpiON is an N-body software dedicated to the simulation of any gravitational system, and in particular collisional and fragmenting systems. It is very fast and can realistically handle fragmentations.
-NcorpiON has been specifically designed to be both fast and precise in system where the number $N$ of bodies is large.
+NcorpiON has been specifically designed to be both fast and precise in systems where the number $N$ of bodies is large.
 
 ## Features
 
@@ -29,7 +29,7 @@ or if you prefer, you can simply download this repository to your computer. Usin
 
 ## Setting up a simulation
 
-In order to set up your simulation, all you have to do is to update the file ```src/parameters.h``` with your preferences. It is used to define the behavior of NcorpiON. In this file, you can decide
+In order to set up your simulation, all you have to do is to update the file ```src/parameters.h``` with your preferences. This file is used to define the behavior of NcorpiON. From there, you can decide
 
 - Which module you want to use for mutual interactions (collisions and mutual gravity)
 - How collisions should be resolved
@@ -81,14 +81,14 @@ Depending on your needs, REBOUND could be more adapted to your N-body problem th
 
       ./ncorpion.sh
       
-from within the ```src``` directory.
+from within the ```src``` directory. Note that the 3D visualization will make the simulation vastly slower.
 
 
 ## 2D animations
 
-The production of images for the 2D animations use python (with libraries numpy and matplotlib). The assembly of these images into animations requires ```ffmpeg``` to be installed on your system. Run
+The production of images for the 2D animations uses python (with libraries numpy and matplotlib). The assembly of these images into animations requires ```ffmpeg``` to be installed on your system. Run
 
-	sudo apt-get update && sudo apt-get install ffmpeg
+      sudo apt install ffmpeg
 	
 on Debian based distros or
 
@@ -113,7 +113,7 @@ This FFM algorithm is a considerable improvement of the Barnes-Hut tree code, si
 Using NcorpiON for a N-body numerical integration is thus very relevant for a system with large N where precision on the computation of mutual gravity is still needed.
 
 In a N-body simulation with large N, collisions can be numerous and can lead to the fragmentation of the bodies. NcorpiON features a fragmentation module based on the litterature on crater scaling and ejecta models
-to realistically render impacts between the bodies. Using NcorpiON is therefore relavant in a system with numerous collisions, like a protoplanetary disk for example.
+to realistically render impacts between the bodies. Using NcorpiON is therefore relevant in a system with numerous collisions, like a protoplanetary disk for example.
 
 
 ## Official website
