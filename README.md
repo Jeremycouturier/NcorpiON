@@ -22,7 +22,7 @@ NcorpiON has been specifically designed to be both fast and precise in systems w
 
 The installation is straightforward. You can install NcorpiON with the ```git``` command
 
-	git clone git@github.com:Jeremycouturier/NcorpiON.git
+	git clone https://github.com/Jeremycouturier/NcorpiON.git
 	
 or if you prefer, you can simply download this repository to your computer. Using ```git``` is recommended so you can later on get updates by running ```git pull```
 
