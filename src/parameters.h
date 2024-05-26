@@ -39,8 +39,7 @@
 /******** Put / at the end of the path. The path must exist and be absolute.               ********/
 /**************************************************************************************************/
 
-//#define pth "/home/jeremy/Documents/NcorpiON_simulation/ScottHull/simulation73_t=0-768/"
-#define pth "/home/jeremy/Documents/NcorpiON_simulation/test/"
+#define pth "/home/user/Documents/NcorpiON/"
 
 
 
@@ -49,9 +48,9 @@
 /**************************************************************************/
 
 /******** General booleans relative to the simulation ********/
-#define write_to_files_bool      1   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
+#define write_to_files_bool      0   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
                                      //You can also set this boolean to 0 if you only want to 3D visualize the simulation in your browser.
-#define make_animation_bool      1   //Determines if animations of the simulation are produced. write_to_files_bool and write_elliptic_bool must both be set to 1
+#define make_animation_bool      0   //Determines if animations of the simulation are produced. write_to_files_bool and write_elliptic_bool must both be set to 1
 #define write_cartesian_bool     0   //Determines if the cartesian elements x, y, z, vx, vy, vz   should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
 #define write_elliptic_bool      1   //Determines if the elliptic  elements a, lambda, k, h, q, p should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
                                      //If write_to_files_bool is 1 but both write_cartesian_bool and write_elliptic_bool are 0, then only radius.txt, mass.txt and stat.txt are output
@@ -70,16 +69,16 @@
 #define seed_bool                1   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
 #define one_collision_only_bool  0   //Determines if bodies are only allowed to collide once per timestep. If 0, there is no restriction on the number of collisions a body can experience
                                      //during a timestep. Setting first to 1 and then to 0 is a good way to know if the timestep is adapted to the bodies' mean free path.
-#define openGL_bool              0   //Determines if a 3D real-time visualization of the simulation is enabled. You must match openGL_bool to the same value in the makefile
+#define openGL_bool              1   //Determines if a 3D real-time visualization of the simulation is enabled. You must match openGL_bool to the same value in the makefile
 #define resume_simulation_bool   0   //Determines if, at the end of the simulation, NcorpiON generates a file named init.txt that can be used to resume the simulation. The file init.txt
                                      //is stored at the path indicated above. To resume the simulation, you need to set random_initial_bool to 0, initial_cartesian_bool to 1, and N_0 to
                                      //the number of lines of init.txt. If init.txt already exists in path pth, it will be overwritten. Simulation's variables should be updated.
 
 /******** Booleans relative to interactions with the central mass or a distant object. Set to 0 if central_mass_bool is 0 ********/
-#define J2_bool                  1   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
+#define J2_bool                  0   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
 #define Sun_bool                 0   //Determines if the perturbations from a distant object that the system orbits (or is orbited by) are taken into account in the simulation
 #define central_tides_bool       0   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
-#define inner_fluid_disk_bool    1   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which bodies spawn). See Salmon & Canup 2012
+#define inner_fluid_disk_bool    0   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which bodies spawn). See Salmon & Canup 2012
                                      //If set to 1, its mass is added to that of the central body when computing gravitational interactions and when preserving the total momemtum
 
 /******** Booleans relative to mutual interactions between the bodies ********/
@@ -122,12 +121,12 @@
 #define J2_value 0.0                 //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body)
                                      //where Omega is the sideral frequency and Omega_crit = sqrt(G*M_unit/R_unit^3)
 #define k2 1.5                       //Second Love number of the central body. Here the value is for a fluid body (zero shear modulus). The constant timelag model is used
-#define Delta_t 0.0002428//0.1185574 //The timelag between stress and response. Here 10 minutes. In units of the orbital period at the surface of the central body.
+#define Delta_t 0.0002428            //The timelag between stress and response. Here 10 minutes. In units of the orbital period at the surface of the central body.
 #define dimensionless_moi 0.3307     //The moment of inertia of the central body, in simulation units (in units of its mass times its radius squared).
 #define star_semi_major 23481.066    //The semi-major axis of the orbit of the system around the distant object in simulation units.
 #define star_mass 332946.0434581987  //The mass of the distant object in simulation units.
-#define obliquity 0.0//0.4091051767  //The angle between the simulation's reference plane and the orbit of the distant object.
-#define inner_mass 0.014//0.0161414706381//0.0168959129267//0.0172169270831//0.014             //Mass of the inner fluid disk at t = 0.
+#define obliquity 0.0                //The angle between the simulation's reference plane and the orbit of the distant object.
+#define inner_mass 0.014             //Mass of the inner fluid disk at t = 0.
 #define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
 #define f_tilde 0.3                  //A parameter controlling the mass of bodies spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
 #define Rroche 2.9                   //The Roche radius where bodies spawn from the inner fluid disk (in simulation's units). The radius of tidal disruption is low_dumping_threshold
@@ -141,10 +140,10 @@
 
 /******** General parameters ********/
 #define N_max 15000                  //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
-#define N_0 1000//4587//5784//6156//12745 //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
-#define t_end 2.0                    //Total simulation length    (in simulation's units)
+#define N_0 1000                     //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
+#define t_end 256.0                  //Total simulation length    (in simulation's units)
 #define time_step 0.015625           //Timestep of the simulation (in simulation's units)
-#define output_step 1                //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
+#define output_step 32               //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define low_dumping_threshold 2.0    //Threshold (in simulation's units) below  which bodies are dumped from the simulation. Unimportant if central_mass_bool is 0.
 #define high_dumping_threshold 128.0 //Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
 
@@ -155,8 +154,8 @@
 #define switch_to_brute_force 0      //Threshold for N below which the program switches to the brute-force method for mutual interactions. Unimportant if brute_force_bool is 1
 
 /******** Bounds for initial conditions. Unimportant if random_initial_bool is 0. The initial conditions are drawn uniformly at random between these bounds ********/
-#define radius_min 0.01//0.02//0.0              //Minimal radius                   of a body at t = 0
-#define radius_max 0.05//0.08//0.043288          //Maximal radius                   of a body at t = 0
+#define radius_min 0.01              //Minimal radius                   of a body at t = 0
+#define radius_max 0.06              //Maximal radius                   of a body at t = 0
 #define density_min 0.1448           //Minimal density                  of a body at t = 0
 #define density_max 0.1448           //Maximal density                  of a body at t = 0
 #define eccentricity_min 0.0         //Minimal eccentricity             of a body at t = 0
