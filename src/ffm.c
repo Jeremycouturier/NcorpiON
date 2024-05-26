@@ -21,7 +21,7 @@
 /******** GNU General Public License for more details.                         ********/
 /********                                                                      ********/
 /******** You should have received a copy of the GNU General Public License    ********/
-/******** along with rebound.  If not, see <http://www.gnu.org/licenses/>.     ********/
+/******** along with NcorpiON.  If not, see <http://www.gnu.org/licenses/>.    ********/
 /**************************************************************************************/
 /**************************************************************************************/
 /**************************************************************************************/
@@ -220,9 +220,9 @@ int OctantFromDigit[48][8] = {
       { 3, 2, 0, 1, 5, 4, 6, 7}
 };
 
-/*********************************************************************************************************************/
-/******** First, I implement functions allowing to put moonlets in a tree-like structure called boxdot       ********/
-/*********************************************************************************************************************/
+/************************************************************************************************************/
+/******** First, I implement functions allowing to put bodies in a tree-like structure called boxdot ********/
+/************************************************************************************************************/
 
 typ fast_pow(typ x, int power){
 
@@ -236,7 +236,7 @@ typ fast_pow(typ x, int power){
                   current_power /= 2;
             }
             else {
-                  current_power = (current_power-1)/2;
+                  current_power = (current_power - 1)/2;
                   to_be_multiplied_by *= to_be_returned;
             }
             to_be_returned *= to_be_returned;
@@ -247,30 +247,30 @@ typ fast_pow(typ x, int power){
 
 void subdivision(struct boxdot * BoxDot, struct moonlet * moonlets){
 
-      /******** Auxiliary function to add_boxdot.            ********/
-      /******** Adds the moonlets of BoxDot to its children. ********/
+      /******** Auxiliary function to add_boxdot.          ********/
+      /******** Adds the bodies of BoxDot to its children. ********/
 
-      int a; //The current moonlet
+      int a; //The current body
       typ x, y, z, xa, ya, za, D; //Coordinates
-      int octant; //The octant where the moonlet must go
-      struct chain * dots = BoxDot -> dots; //Chain of ids of moonlets inside BoxDot
+      int octant; //The octant where the body must go
+      struct chain * dots = BoxDot -> dots; //Chain of ids of bodies inside BoxDot
       int index = dots -> how_many - 1; //The index of a in BoxDot -> dots
       
       /******** Getting the box coordinates ********/
       x = (BoxDot -> corner)[0];
       y = (BoxDot -> corner)[1];
       z = (BoxDot -> corner)[2];
-      D = BoxDot -> sidelength / 2.0;
+      D =  BoxDot -> sidelength/2.0;
 
       while (dots != NULL){
-            a = (dots -> ids)[index]; //The moonlet's id
+            a = (dots -> ids)[index]; //The body's id
             
-            /******** Getting the moonlet coordinates ********/
+            /******** Getting the body's coordinates ********/
             xa = (moonlets + a) -> x;
             ya = (moonlets + a) -> y;
             za = (moonlets + a) -> z;
             
-            octant = get_octant(x, y, z, xa, ya, za, D); //Retrieving the octant where the moonlet belongs
+            octant = get_octant(x, y, z, xa, ya, za, D); //Retrieving the octant where the body belongs
             
             /******** Initializing the child if necessary ********/
             if ((BoxDot -> oct)[octant] == NULL){
@@ -278,13 +278,13 @@ void subdivision(struct boxdot * BoxDot, struct moonlet * moonlets){
                   get_corner_coordinates(x, y, z, D, octant, corner);
                   create_boxdot(&((BoxDot -> oct)[octant]), corner, D);
                   fill_boxdot_int((BoxDot -> oct)[octant], BoxDot, octant);
-                  how_many_cells++;
+                  how_many_cells ++;
             }
             
             add_boxdot((BoxDot -> oct)[octant], moonlets, a); //The while loop of add_boxdot will never be reached.
-                                                              //subdivision will be called again by add_boxdot only if all moonlets of BoxDot go into the same octant
-            /******** Switching to the next moonlet ********/                                                  
-            index--;
+                                                              //subdivision will be called again by add_boxdot only if all the bodies of BoxDot go into the same octant
+            /******** Switching to the next body ********/                                                  
+            index --;
             if (index < 0){
                   dots = dots -> queue;
                   index = max_ids_per_node - 1;
@@ -295,12 +295,12 @@ void subdivision(struct boxdot * BoxDot, struct moonlet * moonlets){
 
 void add_boxdot(struct boxdot * BoxDot, struct moonlet * moonlets, int a){
 
-      /******** Adds moonlet a to the boxdot BoxDot, and to its descendants.  ********/
-      /******** It is assumed that it has been checked, prior to calling this ********/
-      /******** function, that the moonlet a belongs to the boxdot BoxDot.    ********/
-      /******** It is also assumed that BoxDot was previously initialized.    ********/
+      /******** Adds body a to the boxdot BoxDot, and to its descendants.    ********/
+      /******** It is assumed that it has been checked, prior to calling     ********/
+      /******** this function, that the body a belongs to the boxdot BoxDot. ********/
+      /******** It is also assumed that BoxDot was previously initialized.   ********/
       
-      int n = BoxDot -> how_many; //Number of moonlets currently in BoxDot
+      int n = BoxDot -> how_many; //Number of bodies currently in BoxDot
       BoxDot -> dots = Add(a, BoxDot -> dots);
       
       if (n < subdivision_threshold || BoxDot -> level == level_max - 1){ //That box has no children and don't need any or it is too deep to be divided
@@ -324,7 +324,7 @@ void add_boxdot(struct boxdot * BoxDot, struct moonlet * moonlets, int a){
       y = (BoxDot -> corner)[1];
       z = (BoxDot -> corner)[2];
       
-      /******** Retrieving the moonlet coordinates ********/
+      /******** Retrieving the body's coordinates ********/
       typ xa, ya, za;
       xa = (moonlets + a) -> x;
       ya = (moonlets + a) -> y;
@@ -332,7 +332,7 @@ void add_boxdot(struct boxdot * BoxDot, struct moonlet * moonlets, int a){
       
       int octant;
       
-      while (1){ //While the box has children, I keep getting deeper into the tree
+      while (1){ //While the box has children, I keep getting deeper into the tree. The while loop will be escaped thanks to the return instructions.
             D /= 2.0;
             octant = get_octant(x, y, z, xa, ya, za, D); //Retrieving the corresponding octant
             
@@ -341,11 +341,11 @@ void add_boxdot(struct boxdot * BoxDot, struct moonlet * moonlets, int a){
                   get_corner_coordinates(x, y, z, D, octant, corner);
                   create_boxdot(&((BoxDot -> oct)[octant]), corner, D);
                   fill_boxdot_int((BoxDot -> oct)[octant], BoxDot, octant);
-                  how_many_cells++;
+                  how_many_cells ++;
             }
             
             BoxDot = (BoxDot -> oct)[octant]; //The new considered box is now the child
-            n = BoxDot -> how_many;           //Retrieving the number of moonlets it contains
+            n = BoxDot -> how_many;           //Retrieving the number of bodies it contains
             BoxDot -> dots = Add(a, BoxDot -> dots);
             
             if (n < subdivision_threshold || BoxDot -> level == level_max - 1){ //That box has no children and don't need any or it is too deep to be divided
@@ -370,11 +370,11 @@ void add_boxdot(struct boxdot * BoxDot, struct moonlet * moonlets, int a){
 struct boxdot * root_cell(struct moonlet * moonlets){
 
       /******** Creates and initializes the root cell ********/
-      /******** Adds all moonlets to it               ********/
+      /******** Adds all bodies to it                 ********/
       
       int i, a;
-      typ x, y, z; //Moonlet coordinates
-      for (i = 0; i <= largest_id; i++){
+      typ x, y, z; //Body's coordinates
+      for (i = 0; i <= largest_id; i ++){
             already_in_tree[i] = 0;
       }
       
@@ -383,28 +383,28 @@ struct boxdot * root_cell(struct moonlet * moonlets){
       typ corner[3] = {-root_sidelength/2.0, -root_sidelength/2.0, root_sidelength/2.0};
       create_boxdot(&root, corner, root_sidelength);
       root -> rotation = 0;
-      root -> level = 0; //The root cell is at level 0
-      how_many_cells++;
+      root -> level    = 0; //The root cell is at level 0
+      how_many_cells ++;
       
       /******** Adding all moonlets to it ********/
-      for (i = 0; i < IndexPeanoHilbertOrder; i++){ //Adding the moonlets in Hilbert order
-            a = PeanoHilbertOrder[i];
-            if (*(exists+a)){
+      for (i = 0; i < IndexPeanoHilbertOrder; i++){ //Adding the bodies in Hilbert order
+            a = PeanoHilbertOrder[i];  
+            if (*(exists + a)){
                   x = (moonlets + a) -> x;
                   y = (moonlets + a) -> y;
                   z = (moonlets + a) -> z;
-                  if (absolute(x) <= root_sidelength/2.0 && absolute(y) <= root_sidelength/2.0 && absolute(z) <= root_sidelength/2.0){ //If moonlet a belongs to the root cell
+                  if (fabs(x) <= root_sidelength/2.0 && fabs(y) <= root_sidelength/2.0 && fabs(z) <= root_sidelength/2.0){ //If body a belongs to the root cell
                         add_boxdot(root, moonlets, a);
                   }
                   already_in_tree[a] = 1;
             }
       }
-      for (i = 0; i <= largest_id; i++){ //Adding the few remaining moonlets in random order
+      for (i = 0; i <= largest_id; i++){ //Adding the few remaining bodies in random order
             if (exists[i] && !already_in_tree[i]){
                   x = (moonlets + i) -> x;
                   y = (moonlets + i) -> y;
                   z = (moonlets + i) -> z;
-                  if (absolute(x) <= root_sidelength/2.0 && absolute(y) <= root_sidelength/2.0 && absolute(z) <= root_sidelength/2.0){ //If moonlet i belongs to the root cell
+                  if (fabs(x) <= root_sidelength/2.0 && fabs(y) <= root_sidelength/2.0 && fabs(z) <= root_sidelength/2.0){ //If body i belongs to the root cell
                         add_boxdot(root, moonlets, i);
                   }
             }
@@ -415,7 +415,7 @@ struct boxdot * root_cell(struct moonlet * moonlets){
 
 
 /***********************************************************************************************************************/
-/******** I now link the boxdot tree to a simple array containing the multipole moments and field tensor C^(n) ********/
+/******** I now link the boxdot tree to a simple array containing the multipole moments and field tensor C^(n)  ********/
 /******** Each node of the boxdot tree is attributed a unique id that respects the Hilbert-Peano order and that ********/
 /******** corresponds to its index position into the aforementioned array.                                      ********/
 /******** The three phases of Dehnen's algorithm are performed on that array instead of on the boxdot tree      ********/
@@ -442,11 +442,11 @@ void fill_boxdot_int(struct boxdot * BoxDot, struct boxdot * Parent, int octantC
 
 struct node * flattree_init(struct boxdot * BoxDot){
 
-      /******** This function, when called on the root cell, initializes its unique id and that of all its descendants            ********/
-      /******** It is assumed that the global variable cell_id is 0 prior to calling this function and that the global variable   ********/
-      /******** how_many_cells is the total number of cells. This function also returns an array FlatTree on which the three      ********/
-      /******** stages of Dehnen's FalcON algorithm are performed, and initializes the fields idFirstChild, how_many_children,    ********/
-      /******** idParent, how_many_dots, dots, sidelength and corner of each node of FlatTree                                     ********/
+      /******** This function, when called on the root cell, initializes its unique id and that of all its descendants          ********/
+      /******** It is assumed that the global variable cell_id is 0 prior to calling this function and that the global variable ********/
+      /******** how_many_cells is the total number of cells. This function also returns an array FlatTree on which the three    ********/
+      /******** stages of Dehnen's FalcON algorithm are performed, and initializes the fields idFirstChild, how_many_children,  ********/
+      /******** idParent, how_many_dots, dots, sidelength and corner of each node of FlatTree                                   ********/
       
       int p;
       int octant;
@@ -474,7 +474,7 @@ struct node * flattree_init(struct boxdot * BoxDot){
       int j = 0; // j is the index of where to store a node to be treated
       
       stack[j] = BoxDot;
-      j++;
+      j ++;
       
       struct boxdot * to_be_treated;
       struct boxdot * child;
@@ -485,7 +485,7 @@ struct node * flattree_init(struct boxdot * BoxDot){
             rotation = to_be_treated -> rotation;
             D = to_be_treated -> sidelength;
             
-            for (p = 0; p < 8; p++){ // p is the Hilbert-Peano digit
+            for (p = 0; p < 8; p ++){ // p is the Hilbert-Peano digit
                   octant = OctantFromDigit[rotation][p];
                   child = (to_be_treated -> oct)[octant];
                   if (child != NULL){
@@ -505,12 +505,12 @@ struct node * flattree_init(struct boxdot * BoxDot){
             
             /******** Initializing the field array dots ********/
             dots = (int *)malloc(how_many_dots * sizeof(int));
-            (FlatTree + cell_id) -> dots              = dots;
+            (FlatTree + cell_id) -> dots = dots;
             if (dots == NULL){
                   fprintf(stderr, "Error : Could not allocate memory for %d dots in function flattree_init.\n", how_many_dots);
                   abort();
             }
-            ch = to_be_treated -> dots;
+            ch = to_be_treated -> dots;                   
             index = ch -> how_many - 1;
             for (p = 0; p < how_many_dots; p++){
                   *(dots + p) = (ch -> ids)[index];
@@ -518,7 +518,7 @@ struct node * flattree_init(struct boxdot * BoxDot){
                         PeanoHilbertOrder[IndexPeanoHilbertOrder] = (ch -> ids)[index];
                         IndexPeanoHilbertOrder ++;
                   }
-                  /******** Switching to the next moonlet ********/                                                  
+                  /******** Switching to the next body ********/                                                  
                   index --;
                   if (index < 0){
                         ch = ch -> queue;
@@ -537,7 +537,7 @@ struct node * flattree_init(struct boxdot * BoxDot){
                   (FlatTree + cell_id) -> idFirstChild = -1;
             }
             how_many_child = 0;
-            isFirstChild = 1;
+            isFirstChild   = 1;
             cell_id ++;
       }
 
@@ -548,6 +548,7 @@ struct node * flattree_init(struct boxdot * BoxDot){
       }
       free(stack);
       stack = NULL;
+      
       return FlatTree;
 }
 
@@ -557,37 +558,37 @@ void tensor_initialization(){
       int p;
 
       /******** Allocating and initializing the global FlatTree C^(m) and M^(n) ********/
-      for (p = 0; p <= 3*largest_id+2; p++){
-            *(C1Moonlets+p) = 0.0;
+      for (p = 0; p <= 3*largest_id + 2; p ++){
+            *(C1Moonlets + p) = 0.0;
       }
       if (expansion_order >= 2){
             C2FlatTree = (typ *)malloc(how_many_cells * 6 * sizeof(typ));
-            for (p = 0; p < 6 * how_many_cells; p++){
-                  *(C2FlatTree+p) = 0.0;
+            for (p = 0; p < 6 * how_many_cells; p ++){
+                  *(C2FlatTree + p) = 0.0;
             }
             if (expansion_order >= 3){
                   C3FlatTree = (typ *)malloc(how_many_cells * 10 * sizeof(typ));
                   M2FlatTree = (typ *)malloc(how_many_cells * 6  * sizeof(typ));
-                  for (p = 0; p < 10 * how_many_cells; p++){
-                        *(C3FlatTree+p) = 0.0;
+                  for (p = 0; p < 10 * how_many_cells; p ++){
+                        *(C3FlatTree + p) = 0.0;
                   }
                   if (expansion_order >= 4){
                         C4FlatTree = (typ *)malloc(how_many_cells * 15 * sizeof(typ));
                         M3FlatTree = (typ *)malloc(how_many_cells * 10 * sizeof(typ));
-                        for (p = 0; p < 15 * how_many_cells; p++){
-                              *(C4FlatTree+p) = 0.0;
+                        for (p = 0; p < 15 * how_many_cells; p ++){
+                              *(C4FlatTree + p) = 0.0;
                         }
                         if (expansion_order >= 5){
                               C5FlatTree = (typ *)malloc(how_many_cells * 21 * sizeof(typ));
                               M4FlatTree = (typ *)malloc(how_many_cells * 15 * sizeof(typ));
-                              for (p = 0; p < 21 * how_many_cells; p++){
-                                    *(C5FlatTree+p) = 0.0;
+                              for (p = 0; p < 21 * how_many_cells; p ++){
+                                    *(C5FlatTree + p) = 0.0;
                               }
                               if (expansion_order >= 6){
                                     C6FlatTree = (typ *)malloc(how_many_cells * 28 * sizeof(typ));
                                     M5FlatTree = (typ *)malloc(how_many_cells * 21 * sizeof(typ));
-                                    for (p = 0; p < 28 * how_many_cells; p++){
-                                          *(C6FlatTree+p) = 0.0;
+                                    for (p = 0; p < 28 * how_many_cells; p ++){
+                                          *(C6FlatTree + p) = 0.0;
                                     }
                               }
                         }
@@ -644,7 +645,7 @@ void get_s1_s2_s3(int k, int n, int * s1, int * s2, int * s3){
       /******** of symmetrical tensor T^(n). For example, if k = 12 and n = 5, then s1 = 1, s2 = 2 and s3 = 2. Therefore, when ********/
       /******** the tensor T^(5) is stored in an array T5[21], then T5[12] stores T_12233 and all the permutations             ********/
       
-      int n1 = (int) integral(0.5*(sqrt(1.0+8.0*(typ) k)-1.0));
+      int n1 = (int) floor(0.5*(sqrt(1.0+8.0*(typ) k)-1.0));
       int n2 = k - (n1*(n1 + 1))/2;
       *s1 = n - n1;
       *s2 = n1 - n2;
@@ -657,7 +658,7 @@ void get_s2_s3(int k, int * s2, int * s3){
 
       /******** Same as above but depends only on k and computes s2 and s3 only ********/
       
-      int n1 = (int) integral(0.5*(sqrt(1.0+8.0*(typ) k)-1.0));
+      int n1 = (int) floor(0.5*(sqrt(1.0+8.0*(typ) k)-1.0));
       int n2 = k - (n1*(n1 + 1))/2;
       *s2 = n1 - n2;
       *s3 = n2;
@@ -777,8 +778,10 @@ void k_from_indexes(int * k, int * ijklmn){
 
       /******** Inverse of function indexes_from_kn. Retrieves k from the indexes ********/
       
+      
+      int i;
       int s2 = 0, s3 = 0;
-      for (int i = 0; i < 6; i++){
+      for (i = 0; i < 6; i++){
             if (ijklmn[i] == 2){
                   s2++;
             }
@@ -838,8 +841,8 @@ void perm_from_kn_init(){
       int perm = 0;
       int k, n;
       
-      for (k = 0; k < 28; k++){
-            for (n = 0; n < 7; n++){
+      for (k = 0; k < 28; k ++){
+            for (n = 0; n < 7; n ++){
                   permutation_from_kn(k, n, &perm);
                   perm_from_kn[k][n] = perm;
             }
@@ -851,8 +854,8 @@ void q1_from_q2q3(int * q1, int q2, int q3){
       /******** Function auxiliary to inner_product. Gives q1 as a function of q2 and q3 ********/
 
       int n1_2, n1_3, n2_2, n2_3, n1, n2, s2_2, s2_3, s3_2, s3_3, s2, s3;
-      n1_2 = (int) integral(0.5*(sqrt(1.0+8.0*(typ) q2)-1.0));
-      n1_3 = (int) integral(0.5*(sqrt(1.0+8.0*(typ) q3)-1.0));
+      n1_2 = (int) floor(0.5*(sqrt(1.0+8.0*(typ) q2) - 1.0));
+      n1_3 = (int) floor(0.5*(sqrt(1.0+8.0*(typ) q3) - 1.0));
       n2_2 = q2 - (n1_2*(n1_2 + 1))/2;
       n2_3 = q3 - (n1_3*(n1_3 + 1))/2;
       s2_2 = n1_2 - n2_2;
@@ -872,8 +875,8 @@ void q1fromq2q3_init(){
       /******** Stores the return value of q1_from_q2q3 into the array q1fromq2q3 ********/
 
       int q1, q2, q3;
-      for (q2 = 0; q2 < 28; q2++){
-            for (q3 = 0; q3 < 28; q3++){
+      for (q2 = 0; q2 < 28; q2 ++){
+            for (q3 = 0; q3 < 28; q3 ++){
                   q1_from_q2q3(&q1, q2, q3);
                   q1fromq2q3[q2][q3] = q1;
             }
@@ -900,13 +903,13 @@ void get_com(struct node * FlatTree, struct moonlet * moonlets, int a){
       typ M0 = 0.0; //The cell's mass
       typ com[3] = {0.0, 0.0, 0.0}; //The cell's center of mass
       
-      typ x, y, z; //The current moonlet's coordinates
-      typ m; //The current moonlet's mass
+      typ x, y, z;  //The current body's coordinates
+      typ m;        //The current body's mass
       
-      int * dots = (FlatTree + a) -> dots; //All the moonlets in that cell
+      int * dots = (FlatTree + a) -> dots; //All the bodies in that cell
       int how_many_dots = (FlatTree + a) -> how_many_dots;
       int i;
-      int j; //Id of the current moonlet
+      int j; //Id of the current body
       
       for (i = 0; i < how_many_dots; i++){
             j = dots[i];
@@ -915,14 +918,14 @@ void get_com(struct node * FlatTree, struct moonlet * moonlets, int a){
             y = (moonlets + j) -> y;
             z = (moonlets + j) -> z;
             
-            M0 += m;
+            M0     += m;
             com[0] += m*x;
             com[1] += m*y;
             com[2] += m*z;
       }
       
       /******** Initializing the relevant fields ********/
-      (FlatTree + a) -> M0 = M0;
+      (FlatTree + a)  -> M0      = M0;
       ((FlatTree + a) -> com)[0] = com[0]/M0;
       ((FlatTree + a) -> com)[1] = com[1]/M0;
       ((FlatTree + a) -> com)[2] = com[2]/M0;
@@ -949,10 +952,10 @@ void get_rmax(struct node * FlatTree, struct moonlet * moonlets, int a){
       
       typ dx, dy, dz; //Distance with a dot along each axis
       
-      int * dots = (FlatTree + a) -> dots; //All the moonlets in that cell
+      int * dots = (FlatTree + a) -> dots; //All the bodies in that cell
       int how_many_dots = (FlatTree + a) -> how_many_dots;
       int i;
-      int j; //Id of the moonlet whose distance to the center of mass is to be computed
+      int j; //Id of the body whose distance to the center of mass is to be computed
       
       for (i = 0; i < how_many_dots; i++){
             j = dots[i];
@@ -1004,7 +1007,7 @@ void get_tolerance_parameter(struct node * FlatTree, int a, typ precision){
             dfX0 = (2.0*theta_power+power*one_theta*theta_power/theta)/one_theta_3;
             dtheta = -fX0/dfX0;
             theta += dtheta;
-            current_precision = absolute(dtheta/theta);
+            current_precision = fabs(dtheta/theta);
             nstep++;
             
             /******** If the method gets lost, I try to put it back on track ********/
@@ -1088,24 +1091,24 @@ void get_Mn(struct node * FlatTree, struct moonlet * moonlets, int a){
       typ com[3];
       com[0] = ((FlatTree + a) -> com)[0];  com[1] = ((FlatTree + a) -> com)[1];  com[2] = ((FlatTree + a) -> com)[2];  
       
-      typ M2[6] =  {0., 0., 0., 0., 0., 0.}; //The 6 distinct components of the quadrupole
-      typ M3[10] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}; //The 10 distinct components of the octupole
-      typ M4[15] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}; //The 15 distinct components of the fourth multipole moment
+      typ M2[6] =  {0., 0., 0., 0., 0., 0.};                                                             //The 6  distinct components of the quadrupole
+      typ M3[10] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};                                             //The 10 distinct components of the octupole
+      typ M4[15] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};                         //The 15 distinct components of the fourth multipole moment
       typ M5[21] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}; //The 21 distinct components of the fifth multipole moment
       
                                 
-      typ m; //The moonlet's mass
+      typ m; //The body's mass
       
-      int * dots = (FlatTree + a) -> dots; //All the moonlets in that cell
+      int * dots = (FlatTree + a) -> dots; //All the bodies in that cell
       int how_many_dots = (FlatTree + a) -> how_many_dots;
       int i;
-      int p; //Id of the current moonlet
+      int p; //Id of the current body
       int k; //Array index
       typ dX[3]; // x_i - com
       
       for (i = 0; i < how_many_dots; i++){
-            p = dots[i];
-            m = (moonlets + p) -> mass;
+            p     = dots[i];
+            m     = (moonlets + p) -> mass;
             dX[0] = (moonlets + p) -> x - com[0];
             dX[1] = (moonlets + p) -> y - com[1];
             dX[2] = (moonlets + p) -> z - com[2];
@@ -1163,13 +1166,14 @@ void get_com_from_children(struct node * FlatTree, int a){
 
       int idFirstChild = (FlatTree + a) -> idFirstChild;
       int idLastChild  = idFirstChild + (FlatTree + a) -> how_many_children;
+      int i;
       
       typ M0 = 0.0;
       typ com[3] = {0.0, 0.0, 0.0};
       typ M0_child;
       typ * com_child; //Center of mass of a child
       
-      for (int i = idFirstChild; i < idLastChild; i++){
+      for (i = idFirstChild; i < idLastChild; i++){
             M0_child = (FlatTree + i) -> M0;
             com_child = (FlatTree + i) -> com;
             
@@ -1225,7 +1229,7 @@ void get_rmax_from_children(struct node * FlatTree, int a){
       typ max_ri = 0.0;
 
       /******** Eq. (9) of Dehnen (2002) ********/
-      for (int i = idFirstChild; i < idLastChild; i++){
+      for (i = idFirstChild; i < idLastChild; i++){
             com_child = (FlatTree + i) -> com;
             rmax_child = (FlatTree + i) -> r_max;
             com_difference[0] = com[0] - com_child[0];
@@ -1249,10 +1253,10 @@ void get_rmax_from_children(struct node * FlatTree, int a){
 
 void get_Mn_from_children(struct node * FlatTree, int a){
 
-      /******** Computes the multipole moments of node a of FlatTree from that of its children        ********/
-      /******** Initializes the corresponding fields of (FlatTree + a)                                ********/
-      /******** This function is called only if the expansion order is at least 3 and if              ********/
-      /******** FlatTree + a has at least child_multipole_threshold times more children than moonlets ********/
+      /******** Computes the multipole moments of node a of FlatTree from that of its children      ********/
+      /******** Initializes the corresponding fields of (FlatTree + a)                              ********/
+      /******** This function is called only if the expansion order is at least 3 and if            ********/
+      /******** FlatTree + a has at least child_multipole_threshold times more children than bodies ********/
 
       int idFirstChild = (FlatTree + a) -> idFirstChild;
       int idLastChild  = idFirstChild + (FlatTree + a) -> how_many_children;
@@ -1268,9 +1272,9 @@ void get_Mn_from_children(struct node * FlatTree, int a){
       int i, j, k, l, m;
       int * array_of_ijklm;
       
-      typ M2[6] =  {0., 0., 0., 0., 0., 0.}; //The 6 distinct components of the quadrupole
-      typ M3[10] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}; //The 10 distinct components of the octupole
-      typ M4[15] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}; //The 15 distinct components of the fourth multipole moment
+      typ M2[6] =  {0., 0., 0., 0., 0., 0.};                                                             //The 6 distinct components of the quadrupole
+      typ M3[10] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};                                             //The 10 distinct components of the octupole
+      typ M4[15] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};                         //The 15 distinct components of the fourth multipole moment
       typ M5[21] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}; //The 21 distinct components of the fifth multipole moment
       
       for (p = idFirstChild; p < idLastChild; p++){
@@ -1398,7 +1402,7 @@ void com_flattree(struct node * FlatTree, struct moonlet * moonlets){
       for (i = 0; i < cell_id; i++){
             how_many_children = (FlatTree + i) -> how_many_children;
             if (how_many_children == 0){ //If the node has no children
-                  get_com(FlatTree, moonlets, i);
+                  get_com(FlatTree, moonlets, i);                  
             }
             else{ //If the node has children
                   stack[j] = i;
@@ -1464,12 +1468,11 @@ void rmax_flattree(struct node * FlatTree, struct moonlet * moonlets){
 }
 
 
-void rcrit_flattree(struct node * FlatTree, struct moonlet * moonlets){
+void rcrit_flattree(struct node * FlatTree){
 
       /******** Computes and initializes r_crit for all the nodes of FlatTree ********/
       
       int i;
-      
       
       /******** I travel the flattree and compute the tolerance parameter theta and r_crit for each node ********/
       for (i = 0; i < cell_id; i++){
@@ -1489,8 +1492,8 @@ void multipole_flattree(struct node * FlatTree, struct moonlet * moonlets){
       int how_many_children;
       int how_many_dots;
       
-      /******** I travel the flattree. If a node is childless or contains few moonlets, I compute ********/
-      /******** its multipole moments. Otherwise, I store it in the stack for future treatment    ********/
+      /******** I travel the flattree. If a node is childless or contains few bodies, I compute ********/
+      /******** its multipole moments. Otherwise, I store it in the stack for future treatment  ********/
       for (i = 0; i < cell_id; i++){
             how_many_children = (FlatTree + i) -> how_many_children;
             if (how_many_children == 0){ //If the node has no children
@@ -1534,9 +1537,9 @@ void multipole_flattree(struct node * FlatTree, struct moonlet * moonlets){
 void gradR(typ * R, typ * grad, int p){
 
       /******** This function computes the p^th gradient of G/R, for p >= 0, and stores it into grad ********/
-      /******** The vector R must be given under the form R = {Rx, Ry, Rz}                           ********/
+      /******** The vector R has three components and is of the form R = {Rx, Ry, Rz}                ********/
       /******** It is assumed that the array grad is indexed from 0 to (p+1)(p+2)/2 - 1,             ********/
-      /******** corresponding to the (p+1)(p+2)/2 independent components of the tensor grad^(p)(1/R) ********/
+      /******** corresponding to the (p+1)(p+2)/2 independent components of the tensor grad^(p)(G/R) ********/
 
       typ R1 = R[0], R2 = R[1], R3 = R[2];
       typ R12, R13, R14, R15, R22, R23, R24, R25, R32, R33, R34, R35;
@@ -1559,17 +1562,17 @@ void gradR(typ * R, typ * grad, int p){
             *grad = G/normR;
       }
       else if (p == 1){
-            normR3 = normR*normR*normR;
-            D1 = -1.0*G/normR3;
+            normR3  = normR*normR*normR;
+            D1      = -1.0*G/normR3;
             grad[0] = D1*R1;
             grad[1] = D1*R2;
             grad[2] = D1*R3;
       }
       else if (p == 2){
-            normR3 = normR*normR*normR;
-            normR5 = normR3*normR*normR;
-            D1 = -1.0*G/normR3;
-            D2 = 3.0*G/normR5;
+            normR3  = normR*normR*normR;
+            normR5  = normR3*normR*normR;
+            D1      = -1.0*G/normR3;
+            D2      =  3.0*G/normR5;
             grad[0] = D2*R1*R1 + D1;
             grad[1] = D2*R1*R2;
             grad[2] = D2*R1*R3;
@@ -1578,11 +1581,11 @@ void gradR(typ * R, typ * grad, int p){
             grad[5] = D2*R3*R3 + D1;
       }
       else if (p == 3){
-            normR5 = normR*normR*normR*normR*normR;
-            normR7 = normR5*normR*normR;
-            D2 = 3.0*G/normR5;
-            D3 = -15.0*G/normR7;
-            R12 = R1*R1;  R22 = R2*R2;  R32 = R3*R3;
+            normR5  = normR*normR*normR*normR*normR;
+            normR7  = normR5*normR*normR;
+            D2      =   3.0*G/normR5;
+            D3      = -15.0*G/normR7;
+            R12     = R1*R1;  R22 = R2*R2;  R32 = R3*R3;
             grad[0] = D3*R12*R1 + 3.0*D2*R1;
             grad[1] = D3*R12*R2 +     D2*R2;
             grad[2] = D3*R12*R3 +     D2*R3;
@@ -1595,15 +1598,15 @@ void gradR(typ * R, typ * grad, int p){
             grad[9] = D3*R32*R3 + 3.0*D2*R3;
       }
       else if (p == 4){
-            normR5 = normR*normR*normR*normR*normR;
-            normR7 = normR5*normR*normR;
-            normR9 = normR7*normR*normR;
-            D2 = 3.0*G/normR5;
-            D3 = -15.0*G/normR7;
-            D4 = 105.0*G/normR9;
-            R12 = R1*R1;   R22 = R2*R2;   R32 = R3*R3;
-            R13 = R12*R1;  R23 = R22*R2;  R33 = R32*R3;
-            R1_R2 = R1*R2; R1_R3 = R1*R3; R2_R3 = R2*R3;
+            normR5   = normR*normR*normR*normR*normR;
+            normR7   = normR5*normR*normR;
+            normR9   = normR7*normR*normR;
+            D2       =   3.0*G/normR5;
+            D3       = -15.0*G/normR7;
+            D4       = 105.0*G/normR9;
+            R12      = R1*R1;   R22 = R2*R2;   R32 = R3*R3;
+            R13      = R12*R1;  R23 = R22*R2;  R33 = R32*R3;
+            R1_R2    = R1*R2; R1_R3 = R1*R3; R2_R3 = R2*R3;
             grad[0]  = D4*R12*R12 + 6.0*D3*R12 +   3.0*D2;
             grad[1]  = D4*R13*R2  + 3.0*D3*R1_R2;
             grad[2]  = D4*R13*R3  + 3.0*D3*R1_R3;
@@ -1621,16 +1624,16 @@ void gradR(typ * R, typ * grad, int p){
             grad[14] = D4*R32*R32 + 6.0*D3*R32 +   3.0*D2;
       }
       else if (p == 5){
-            normR7 = normR*normR*normR*normR*normR*normR*normR;
-            normR9 = normR7*normR*normR;
-            normR11 = normR9*normR*normR;
-            D3 = -15.0*G/normR7;
-            D4 = 105.0*G/normR9;
-            D5 = -945.0*G/normR11;
-            R12 = R1*R1;    R22 = R2*R2;    R32 = R3*R3;
-            R13 = R12*R1;   R23 = R22*R2;   R33 = R32*R3;
-            R14 = R12*R12;  R24 = R22*R22;  R34 = R32*R32;
-            R1_R2 = R1*R2; R1_R3 = R1*R3; R2_R3 = R2*R3;
+            normR7   = normR*normR*normR*normR*normR*normR*normR;
+            normR9   = normR7*normR*normR;
+            normR11  = normR9*normR*normR;
+            D3       =  -15.0*G/normR7;
+            D4       =  105.0*G/normR9;
+            D5       = -945.0*G/normR11;
+            R12      = R1*R1;    R22 = R2*R2;    R32 = R3*R3;
+            R13      = R12*R1;   R23 = R22*R2;   R33 = R32*R3;
+            R14      = R12*R12;  R24 = R22*R22;  R34 = R32*R32;
+            R1_R2    = R1*R2; R1_R3 = R1*R3; R2_R3 = R2*R3;
             grad[0]  = D5*R13*R12 +  10.0*D4*R13 +             15.0*D3*R1;
             grad[1]  = D5*R14*R2  +   6.0*D4*R12*R2 +           3.0*D3*R2;
             grad[2]  = D5*R14*R3  +   6.0*D4*R12*R3 +           3.0*D3*R3;
@@ -1654,19 +1657,19 @@ void gradR(typ * R, typ * grad, int p){
             grad[20] = D5*R33*R32 +  10.0*D4*R33 +             15.0*D3*R3;
       }
       else if (p == 6){
-            normR7 = normR*normR*normR*normR*normR*normR*normR;
-            normR9 = normR7*normR*normR;
-            normR11 = normR9*normR*normR;
-            normR13 = normR11*normR*normR;
-            D3 = -15.0*G/normR7;
-            D4 = 105.0*G/normR9;
-            D5 = -945.0*G/normR11;
-            D6 = 10395.0*G/normR13;
-            R12 = R1*R1;    R22 = R2*R2;    R32 = R3*R3;
-            R13 = R12*R1;   R23 = R22*R2;   R33 = R32*R3;
-            R14 = R12*R12;  R24 = R22*R22;  R34 = R32*R32;
-            R15 = R13*R12;  R25 = R23*R22;  R35 = R33*R32;
-            R1_R2 = R1*R2; R1_R3 = R1*R3; R2_R3 = R2*R3;
+            normR7   = normR*normR*normR*normR*normR*normR*normR;
+            normR9   = normR7*normR*normR;
+            normR11  = normR9*normR*normR;
+            normR13  = normR11*normR*normR;
+            D3       =   -15.0*G/normR7;
+            D4       =   105.0*G/normR9;
+            D5       =  -945.0*G/normR11;
+            D6       = 10395.0*G/normR13;
+            R12      = R1*R1;    R22 = R2*R2;    R32 = R3*R3;
+            R13      = R12*R1;   R23 = R22*R2;   R33 = R32*R3;
+            R14      = R12*R12;  R24 = R22*R22;  R34 = R32*R32;
+            R15      = R13*R12;  R25 = R23*R22;  R35 = R33*R32;
+            R1_R2    = R1*R2;  R1_R3 = R1*R3;  R2_R3 = R2*R3;
             grad[0]  = D6*R13*R13 +  15.0*D5*R14 +                  45.0*D4*R12 +          15.0*D3;
             grad[1]  = D6*R15*R2 +   10.0*D5*R13*R2 +               15.0*D4*R1_R2;
             grad[2]  = D6*R15*R3 +   10.0*D5*R13*R3 +               15.0*D4*R1_R3;
@@ -1701,14 +1704,14 @@ void gradR(typ * R, typ * grad, int p){
 
 void inner_product(typ * T1, typ * T2, typ * T3, int p, int q, typ factor){
 
-      /******** Computes the inner product between the tensor T1 of order p+q (max 6) and the tensor T2          ********/
+      /******** Computes the inner product between the tensor T1 of order p + q (max 6) and the tensor T2        ********/
       /******** of order p. The result is accumulated into the tensor T3 of order q with a factor factor.        ********/
       /******** T1, T2 and T3 are assumed to be arrays of sizes (p+q+1)(p+q+2)/2, (p+1)(p+2)/2 and (q+1)(q+2)/2. ********/
       /******** The tensor T3 is not overwritten                                                                 ********/
 
       int q1, q2, q3; //Indexes into the arrays T1, T2 and T3
-      int T2_size = ((p+1)*(p+2))/2;
-      int T3_size = ((q+1)*(q+2))/2;
+      int T2_size = ((p + 1)*(p + 2))/2;
+      int T3_size = ((q + 1)*(q + 2))/2;
       int perm; //Number of tensor index permutations
       
       for (q3 = 0; q3 < T3_size; q3++){ //Looping over the components of the tensor to be computed
@@ -1731,15 +1734,15 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
 
       /******** Performs the tree walk of Dehnen's algorithm, called the interaction phase      ********/
       /******** This function computes the tensors C^(m) between interacting cells, or the      ********/
-      /******** acceleration C^(1) in case of interaction between moonlets, but does not pass   ********/
+      /******** acceleration C^(1) in case of interaction between bodies, but does not pass     ********/
       /******** the C^(m) down the tree. It is assumed that the array C1Moonlets, whose indexes ********/
-      /******** 3*a to 3*a+2 contain the acceleration of moonlet a, is given initialized to 0.0 ********/
+      /******** 3*a to 3*a+2 contain the acceleration of body a, is given initialized to 0.0    ********/
       /******** Similarly, it is assumed that the C^(m) are 0.0 upon calling this function      ********/
       
       
       /******** It is hard to tell in advance how many pairs will be treated by the tree walk   ********/
       /******** I expect it will be at most factor * cell_id, but that might have to be changed ********/
-      int factor = (int) integral(250.0 * 0.5 / theta_min);
+      int factor = (int) floor(250.0 * 0.5 / theta_min);
       struct pair * stack = (struct pair *)malloc(factor * cell_id * sizeof(struct pair)); //Stack of pairs of ids of nodes that have to be treated
       if (stack == NULL){
             fprintf(stderr, "Error : Cannot allocate memory for the stack in function Cm_flattree.\n");
@@ -1750,10 +1753,10 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
       int j = 0; //Index of where to put a pair in the stack
       int a, b;  //Ids of the nodes of the current pair
       int p, q;  //Loop indexes
-      int s, u;  //Moonlet indexes
-      int * dots_a; //All the moonlets in cell a
-      int * dots_b; //All the moonlets in cell b
-      int Na, Nb; //Number of moonlets in cells a and b
+      int s, u;  //Body indexes
+      int * dots_a; //All the bodies in cell a
+      int * dots_b; //All the bodies in cell b
+      int Na, Nb; //Number of bodies in cells a and b
       int how_many_children_a, how_many_children_b; //Number of children of cells a and b
       int idFirstChild; //Id of first child
       int idLastChild;  //Id of last child
@@ -1763,16 +1766,16 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
       typ * M2_b, * M3_b, * M4_b, * M5_b; //Node b's multipole moments
       typ R[3];  //com_a - com_b
       typ grad[3], grad2[6], grad3[10], grad4[15], grad5[21], grad6[28]; //p^th gradient of G/R
-      typ C1_a[3], C2_a[6], C3_a[10], C4_a[15], C5_a[21], C6_a[28]; //p^th order interaction tensor of node a
-      typ C1_b[3], C2_b[6], C3_b[10], C4_b[15], C5_b[21], C6_b[28]; //p^th order interaction tensor of node b
+      typ C1_a[3],  C2_a[6],  C3_a[10],  C4_a[15],  C5_a[21],  C6_a[28]; //p^th order interaction tensor of node a
+      typ C1_b[3],  C2_b[6],  C3_b[10],  C4_b[15],  C5_b[21],  C6_b[28]; //p^th order interaction tensor of node b
       typ r_crit_a, r_crit_b; // Critical radii of node a and b
-      typ ms, Rs, xs, ys, zs, mu, Ru, xu, yu, zu, dx, dy, dz, r, r3, softening; //moonlet coordinates
+      typ ms, Rs, xs, ys, zs, mu, Ru, xu, yu, zu, dx, dy, dz, r, r3, softening; //Body coordinates
       typ omega2_x, omega2_y, omega2_z;
       
       /******** Putting the pair (root_cell, root_cell) in the stack ********/
       (stack + j) -> fst = 0;
       (stack + j) -> snd = 0;
-      j++;
+      j ++;
       
       
       /******** I travel the stack of pairs of nodes. At each pair, if NaNb < N_cc_pre, I treat it brute-forcely,  ********/
@@ -1844,8 +1847,8 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                         dots_b = (FlatTree + b) -> dots;
                         for (p = 0; p < Na; p++){
                               for (q = 0; q < Nb; q++){
-                                    s = dots_a[p]; //Id of first  moonlet
-                                    u = dots_b[q]; //Id of second moonlet
+                                    s = dots_a[p]; //Id of first  body
+                                    u = dots_b[q]; //Id of second body
                                     ms = (moonlets + s) -> mass;
                                     Rs = (moonlets + s) -> radius;
                                     xs = (moonlets + s) -> x;
@@ -1967,23 +1970,23 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                               ((FlatTree + b) -> C1)[0] += C1_b[0];  ((FlatTree + b) -> C1)[1] += C1_b[1];  ((FlatTree + b) -> C1)[2] += C1_b[2];
                               if(expansion_order >= 2){
                                     for (p = 0; p < 6; p++){
-                                          C2FlatTree[6*a+p] += C2_a[p];  C2FlatTree[6*b+p] += C2_b[p];
+                                          C2FlatTree[6*a + p] += C2_a[p];  C2FlatTree[6*b + p] += C2_b[p];
                                     }
                                     if(expansion_order >= 3){
                                           for (p = 0; p < 10; p++){
-                                                C3FlatTree[10*a+p] += C3_a[p];  C3FlatTree[10*b+p] += C3_b[p];
+                                                C3FlatTree[10*a + p] += C3_a[p];  C3FlatTree[10*b + p] += C3_b[p];
                                           }
                                           if(expansion_order >= 4){
                                                 for (p = 0; p < 15; p++){
-                                                      C4FlatTree[15*a+p] += C4_a[p];  C4FlatTree[15*b+p] += C4_b[p];
+                                                      C4FlatTree[15*a + p] += C4_a[p];  C4FlatTree[15*b + p] += C4_b[p];
                                                 }
                                                 if(expansion_order >= 5){
                                                       for (p = 0; p < 21; p++){
-                                                            C5FlatTree[21*a+p] += C5_a[p];  C5FlatTree[21*b+p] += C5_b[p];
+                                                            C5FlatTree[21*a + p] += C5_a[p];  C5FlatTree[21*b + p] += C5_b[p];
                                                       }
                                                       if(expansion_order >= 6){
                                                             for (p = 0; p < 28; p++){
-                                                                  C6FlatTree[28*a+p] += C6_a[p];  C6FlatTree[28*b+p] += C6_b[p];
+                                                                  C6FlatTree[28*a + p] += C6_a[p];  C6FlatTree[28*b + p] += C6_b[p];
                                                             }
                                                       }
                                                 }
@@ -1999,8 +2002,8 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                                     dots_b = (FlatTree + b) -> dots;
                                     for (p = 0; p < Na; p++){
                                           for (q = 0; q < Nb; q++){
-                                                s = dots_a[p]; //Id of first  moonlet
-                                                u = dots_b[q]; //Id of second moonlet
+                                                s = dots_a[p]; //Id of first  body
+                                                u = dots_b[q]; //Id of second body
                                                 ms = (moonlets + s) -> mass;
                                                 Rs = (moonlets + s) -> radius;
                                                 xs = (moonlets + s) -> x;
@@ -2020,12 +2023,12 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                                                 omega2_x = G*dx/r3;
                                                 omega2_y = G*dy/r3;
                                                 omega2_z = G*dz/r3;
-                                                C1Moonlets[3*s]   -= mu*omega2_x;
-                                                C1Moonlets[3*s+1] -= mu*omega2_y;
-                                                C1Moonlets[3*s+2] -= mu*omega2_z;
-                                                C1Moonlets[3*u]   += ms*omega2_x;
-                                                C1Moonlets[3*u+1] += ms*omega2_y;
-                                                C1Moonlets[3*u+2] += ms*omega2_z;
+                                                C1Moonlets[3*s]     -= mu*omega2_x;
+                                                C1Moonlets[3*s + 1] -= mu*omega2_y;
+                                                C1Moonlets[3*s + 2] -= mu*omega2_z;
+                                                C1Moonlets[3*u]     += ms*omega2_x;
+                                                C1Moonlets[3*u + 1] += ms*omega2_y;
+                                                C1Moonlets[3*u + 2] += ms*omega2_z;
                                           }
                                     }
                               }
@@ -2094,21 +2097,20 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
 
       /******** Performs the third stage of Dehnen's algorithm, called the evaluation phase, ********/
       /******** where the C^(m) are passed down the three and the accelerations C^(1) of     ********/
-      /******** each moonlet computed. It is assumed that this function follows Cm_flattree  ********/
+      /******** each body computed. It is assumed that this function follows Cm_flattree     ********/
       
       int * stack = (int *)malloc(cell_id * sizeof(int)); //Stack of pairs of ids of nodes that have to be treated
       int i = 0; //Index in the stack of the current id
       int j = 0; //Index of where to put an id in the stack
       int a;     //Id of the current node
-      int p, q;     //Loop indexes
-      int b;     //Moonlet index
-      int * dots;//All the moonlets in the current cell
-      int Na;    //Number of moonlets in cells a and b
+      int p, q;  //Loop indexes
+      int b;     //Body index
+      int * dots;//All the bodies in the current cell
+      int Na;    //Number of bodies in cells a and b
       int how_many_children; //Number of children of the current node
-      int idFirstChild; //Id of first child
+      int idFirstChild; //Id of first child 
       int idLastChild;  //Id of last child
       int idParent;
-      typ M0;     //Node' mass
       typ * com, * com_parent; //centers of mass of the cell and of its parent
       typ R[3];  //com - com_parent
       typ X2[6], X3[10], X4[15], X5[21];
@@ -2125,11 +2127,12 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
             /******** If the node has a parent, I shift and accumulate its C^(n) ********/
             idParent = (FlatTree + a) -> idParent;
             if (idParent != -1){
-                  C1 =  (FlatTree + a)        -> C1;
-                  C1p = (FlatTree + idParent) -> C1;
+                  C1  = (FlatTree + a)        -> C1;
+                  C1p = (FlatTree + idParent) -> C1;  
                   C1[0] += C1p[0]; C1[1] += C1p[1]; C1[2] += C1p[2];
+                  
                   if (expansion_order >= 2){
-                        com = (FlatTree + a) -> com;
+                        com        = (FlatTree + a) -> com;
                         com_parent = (FlatTree + idParent) -> com;
                         R[0] = com[0] - com_parent[0];
                         R[1] = com[1] - com_parent[1];
@@ -2217,15 +2220,15 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
                   }
             }
             
-            /******** If the node has no children, I shift and accumulate its C^(n) to its moonlets ********/
+            /******** If the node has no children, I shift and accumulate its C^(n) to its body ********/
             else{
                   Na = (FlatTree + a) -> how_many_dots;
                   dots = (FlatTree + a) -> dots;
                   com = (FlatTree + a) -> com;
                   for (p = 0; p < Na; p++){
                         b = dots[p];
-                        C1 = (FlatTree + a) -> C1;
-                        C1Moonlets[3*b] += C1[0];  C1Moonlets[3*b+1] += C1[1];  C1Moonlets[3*b+2] += C1[2];
+                        C1 = (FlatTree + a) -> C1;                       
+                        C1Moonlets[3*b] += C1[0];  C1Moonlets[3*b + 1] += C1[1];  C1Moonlets[3*b + 2] += C1[2];
                         
                         if (expansion_order >= 2){
                               C2 = C2FlatTree + 6*a;
@@ -2286,11 +2289,11 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
 
 void standard_tree_acceleration(struct node * FlatTree, struct moonlet * moonlets, int b){
 
-      /******** Computes the acceleration of moonlet b from the multipole moments of the       ********/
+      /******** Computes the acceleration of body b from the multipole moments of the          ********/
       /******** flattree FlatTree. Stores the result into C1Moonlets[3*b] to C1Moonlets[3*b+2] ********/
       /******** This is the standard tree code at expansion order expansion_order              ********/
       
-      /******** Retrieving the moonlet's coordinates ********/
+      /******** Retrieving the bodies's coordinates ********/
       typ X, Y, Z, Rb;
       X  = (moonlets + b) -> x;
       Y  = (moonlets + b) -> y;
@@ -2306,7 +2309,7 @@ void standard_tree_acceleration(struct node * FlatTree, struct moonlet * moonlet
       typ * M3;
       typ * M4;
       typ * M5;
-      typ R[3];  //moonlet's position - center of mass
+      typ R[3];  //bodies's position - center of mass
       typ distance; // |R|
       typ r_crit; // Critical distance for well-separation
       int * stack = (int *)malloc(cell_id * sizeof(int)); //Stack of ids of nodes that have to be considered
@@ -2318,16 +2321,16 @@ void standard_tree_acceleration(struct node * FlatTree, struct moonlet * moonlet
       int how_many_dots;
       int idFirstChild;
       int idLastChild;
-      int * dots; //All the moonlets in that cell
-      int index; //Index of a moonlet in dots
+      int * dots; //All the bodies in that cell
+      int index; //Index of a body in dots
       typ m, Rad, x, y, z, dx, dy, dz, r, r3, softening;
       
       stack[j] = 0;
       j++;
       
-      /******** At each node, if it has at most N_cb_pre moonlets, I treat it directly, otherwise,     ********/
-      /******** if it is well-separated, I treat it by multipole expansion, otherwise, if it has at    ********/
-      /******** most N_cb_post moonlets or no children, I treat it directly, otherwise, I subdivise it ********/
+      /******** At each node, if it has at most N_cb_pre bodies, I treat it directly, otherwise,     ********/
+      /******** if it is well-separated, I treat it by multipole expansion, otherwise, if it has at  ********/
+      /******** most N_cb_post bodies or no children, I treat it directly, otherwise, I subdivise it ********/
       while (j > i){
             a = stack[i];
             how_many_dots = (FlatTree + a) -> how_many_dots;
@@ -2335,7 +2338,7 @@ void standard_tree_acceleration(struct node * FlatTree, struct moonlet * moonlet
                   dots = (FlatTree + a) -> dots;
                   for (index = 0; index < how_many_dots; index++){
                         k = dots[index];
-                        if (k != b){ //If the moonlet is different from moonlet b, I accumulate its contribution to the acceleration
+                        if (k != b){ //If the body is different from body b, I accumulate its contribution to the acceleration
                               m   = (moonlets + k) -> mass;
                               Rad = (moonlets + k) -> radius;
                               x   = (moonlets + k) -> x;
@@ -2396,7 +2399,7 @@ void standard_tree_acceleration(struct node * FlatTree, struct moonlet * moonlet
                               dots = (FlatTree + a) -> dots;
                               for (index = 0; index < how_many_dots; index++){
                                     k = dots[index];
-                                    if (k != b){ //If the moonlet is different from moonlet b, I accumulate its contribution to the acceleration
+                                    if (k != b){ //If the body is different from body b, I accumulate its contribution to the acceleration
                                           m   = (moonlets + k) -> mass;
                                           Rad = (moonlets + k) -> radius;
                                           x   = (moonlets + k) -> x;
@@ -2460,14 +2463,14 @@ void create_boxdot(struct boxdot ** BoxDot, typ * corner_coordinates, typ D){
       (*BoxDot) -> dots = NULL;
       struct boxdot ** octants = (*BoxDot) -> oct;
       int i;
-      for (i=0; i<8; i++){
-            *(octants+i) = NULL;
+      for (i = 0; i < 8; i ++){
+            *(octants + i) = NULL;
       }
       (*BoxDot)  -> sidelength = D;
-      (*BoxDot)  -> how_many = 0;
-      ((*BoxDot) -> corner)[0] = *corner_coordinates;
-      ((*BoxDot) -> corner)[1] = *(corner_coordinates+1);
-      ((*BoxDot) -> corner)[2] = *(corner_coordinates+2);
+      (*BoxDot)  -> how_many   = 0;
+      ((*BoxDot) -> corner)[0] = * corner_coordinates;
+      ((*BoxDot) -> corner)[1] = *(corner_coordinates + 1);
+      ((*BoxDot) -> corner)[2] = *(corner_coordinates + 2);
 }
 
 
@@ -2495,11 +2498,11 @@ void clear_boxdot(struct boxdot ** BoxDot){
       struct boxdot * to_be_deleted;
       struct boxdot * octant;
       
-      while (j>i){ //While there are still nodes to be deleted
+      while (j > i){ //While there are still nodes to be deleted
             
             to_be_deleted = stack[i];
             clear_chain(&(to_be_deleted -> dots)); //Clearing the chain of dots
-            for (p=0; p<8; p++){ //Adding to the stack the children of the current node
+            for (p = 0; p < 8; p++){ //Adding to the stack the children of the current node
                   octant = (to_be_deleted -> oct)[p];
                   if (octant != NULL){
                         stack[j] = octant;
@@ -2508,7 +2511,7 @@ void clear_boxdot(struct boxdot ** BoxDot){
             }
             free(to_be_deleted);
             to_be_deleted = NULL;
-            i++;
+            i ++;
       }
       
       /******** Making sure that the stack was big enough. To be removed when the code is robust ********/
@@ -2523,44 +2526,44 @@ void clear_boxdot(struct boxdot ** BoxDot){
 
 int get_octant(typ x, typ y, typ z, typ xa, typ ya, typ za, typ D){
 
-      /******** Returns the octant in which a moonlet with coordinates xyz_a   ********/
+      /******** Returns the octant in which a body with coordinates xyz_a      ********/
       /******** should go, given the corner coordinates xyz of the parent cell ********/
       /******** D is half the parent sidelength                                ********/
       
       int octant;
       
-      if (xa < x+D){ //Moonlet is in octant 0, 2, 4 or 6
-            if (ya < y+D){ //Moonlet is in octant 0 or 2
-                  if (za > z-D){ //Moonlet is in octant 0
+      if (xa < x + D){             //Body is in octant 0, 2, 4 or 6
+            if (ya < y + D){       //Body is in octant 0 or 2
+                  if (za > z - D){ //Body is in octant 0
                         octant = 0;
                   }
-                  else{ //Moonlet is in octant 2
+                  else{            //Body is in octant 2
                         octant = 2;
                   }
             }
-            else{ //Moonlet is in octant 4 or 6
-                  if (za > z-D){ //Moonlet is in octant 4
+            else{                  //Body is in octant 4 or 6
+                  if (za > z - D){ //Body is in octant 4
                         octant = 4;
                   }
-                  else{ //Moonlet is in octant 6
+                  else{            //Body is in octant 6
                         octant = 6;
                   }
             }
       }
-      else { //Moonlet is in octant 1, 3, 5 or 7
-            if (ya < y+D){ //Moonlet is in octant 1 or 3
-                  if (za > z-D){ //Moonlet is in octant 1
+      else {                       //Body is in octant 1, 3, 5 or 7
+            if (ya < y + D){       //Body is in octant 1 or 3
+                  if (za > z - D){ //Body is in octant 1
                         octant = 1;
                   }
-                  else{ //Moonlet is in octant 3
+                  else{            //Body is in octant 3
                         octant = 3;
                   }
             }
-            else{ //Moonlet is in octant 5 or 7
-                  if (za > z-D){ //Moonlet is in octant 5
+            else{                  //Body is in octant 5 or 7
+                  if (za > z - D){ //Body is in octant 5
                         octant = 5;
                   }
-                  else{ //Moonlet is in octant 7
+                  else{            //Body is in octant 7
                         octant = 7;
                   }
             }
@@ -2578,34 +2581,34 @@ void get_corner_coordinates(typ X, typ Y, typ Z, typ D, int i, typ * corner){
       
       /******** Retrieving the child's coordinates ********/
       if (i == 0){
-            x=X;  y=Y;  z=Z;
+            x = X;  y = Y;  z = Z;
       }
-      else if (i==1){
-            x=X+D;  y=Y;  z=Z;
+      else if (i == 1){
+            x = X + D;  y = Y;  z = Z;
       }
-      else if (i==2){
-            x=X;  y=Y;  z=Z-D;
+      else if (i == 2){
+            x = X;  y = Y;  z = Z - D;
       }
-      else if (i==3){
-            x=X+D;  y=Y;  z=Z-D;
+      else if (i == 3){
+            x = X + D;  y = Y;  z = Z - D;
       }
-      else if (i==4){
-            x=X;  y=Y+D;  z=Z;
+      else if (i == 4){
+            x = X;  y = Y + D;  z = Z;
       }
-      else if (i==5){
-            x=X+D;  y=Y+D;  z=Z;
+      else if (i == 5){
+            x = X + D;  y = Y + D;  z = Z;
       }
-      else if (i==6){
-            x=X;  y=Y+D;  z=Z-D;
+      else if (i == 6){
+            x = X;  y = Y + D;  z = Z - D;
       }
       else{
-            x=X+D;  y=Y+D;  z=Z-D;
+            x = X + D;  y = Y + D;  z = Z - D;
       }
       
       /******** Returning the child's coordinates ********/
-      *corner     = x;
-      *(corner+1) = y;
-      *(corner+2) = z;
+      *corner       = x;
+      *(corner + 1) = y;
+      *(corner + 2) = z;
 }
 
 void print_boxdot(struct boxdot * BoxDot){
@@ -2620,7 +2623,7 @@ void print_boxdot(struct boxdot * BoxDot){
       int rotation;
       typ distance;
       typ previous_center[3] = {0.0, 0.0, 0.0};
-      typ center[3] = {0.0, 0.0, 0.0};
+      typ center[3]          = {0.0, 0.0, 0.0};
       
       /******** Stack of nodes still to be printed ********/
       struct boxdot ** stack = (struct boxdot **)malloc(how_many_cells*sizeof(struct boxdot *));
@@ -2638,14 +2641,14 @@ void print_boxdot(struct boxdot * BoxDot){
             D = to_be_printed -> sidelength;
             rotation = to_be_printed -> rotation;
             center[0] = corner[0]+D/2.0;  center[1] = corner[1]+D/2.0;  center[2] = corner[2]-D/2.0;
-            distance = sqrt((center[0]-previous_center[0])*(center[0]-previous_center[0]) + (center[1]-previous_center[1])*(center[1]-previous_center[1]) + 
+            distance  = sqrt((center[0]-previous_center[0])*(center[0]-previous_center[0]) + (center[1]-previous_center[1])*(center[1]-previous_center[1]) + 
             (center[2]-previous_center[2])*(center[2]-previous_center[2]));
             previous_center[0] = center[0];  previous_center[1] = center[1];  previous_center[2] = center[2];
             
             printf("Node n° %d : N = %d, id = %d, level = %d, distance from previous node = %.6lf, center = {x,y,z} = {%.6lf, %.6lf, %.6lf}\n", i, 
             to_be_printed -> how_many, to_be_printed -> id, to_be_printed -> level, distance, center[0], center[1], center[2]);
             
-            for (p=0; p<8; p++){ // p is the Hilbert-Peano digit
+            for (p = 0; p < 8; p ++){ // p is the Hilbert-Peano digit
                   octant = OctantFromDigit[rotation][p];
                   child = (to_be_printed -> oct)[octant];
                   if (child != NULL){

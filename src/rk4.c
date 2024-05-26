@@ -2,7 +2,7 @@
 /**************************************************************************************/
 /**************************************************************************************/
 /******** @file    rk4.c                                                       ********/
-/******** @brief   Unlike name-suggested, implements a Leapfrog integrator     ********/
+/******** @brief   Manages different aspects of the numerical integration      ********/
 /******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
 /********                                                                      ********/
 /******** @section 	LICENSE                                                ********/
@@ -21,7 +21,7 @@
 /******** GNU General Public License for more details.                         ********/
 /********                                                                      ********/
 /******** You should have received a copy of the GNU General Public License    ********/
-/******** along with rebound.  If not, see <http://www.gnu.org/licenses/>.     ********/
+/******** along with NcorpiON.  If not, see <http://www.gnu.org/licenses/>.    ********/
 /**************************************************************************************/
 /**************************************************************************************/
 /**************************************************************************************/
@@ -36,6 +36,7 @@
 #include "physics.h"
 #include "ffm.h"
 #include "collision.h"
+#include "display.h"
 #include <errno.h>
 #include <math.h>
 #include <string.h>
@@ -46,7 +47,7 @@ FILE ** files;
 struct node * FlatTree;
 
 
-void kick(struct moonlet * X, void (*F)(struct moonlet *)){
+void kick(struct moonlet * X, struct moonlet * C, void (*F)(struct moonlet *)){
 
       /******** Performs the kick of the leapfrog method   ********/
       /******** F is the vector field such that dX/dt=F(X) ********/
@@ -55,12 +56,12 @@ void kick(struct moonlet * X, void (*F)(struct moonlet *)){
       
       
       for(i = 0; i <= largest_id; i ++){            
-            if(*(exists+i)){ //Checking whether or not there is a moonlet in the i^th cell of the moonlet array
+            if(*(exists + i)){ //Checking whether or not there is a body in the i^th cell of the body array
             
                   /******** xx = X ********/
                   *(xx + i) = *(X + i);
             }
-      }     
+      }
       
       /******** xx = F(X) = dX/dt ********/
       (*F)(xx);
@@ -72,16 +73,19 @@ void kick(struct moonlet * X, void (*F)(struct moonlet *)){
       
       /******** Applying the kick ********/
       for(i = 0; i <= largest_id; i ++){            
-            if(*(exists+i)){ //Checking whether or not there is a moonlet in the ith cell of the moonlet array
+            if(*(exists + i)){ //Checking whether or not there is a body in the ith cell of the body array
                   (X + i) -> vx += timestep * (xx + i) -> vx;
                   (X + i) -> vy += timestep * (xx + i) -> vy;
                   (X + i) -> vz += timestep * (xx + i) -> vz;
             }
       }
+      if (central_mass_bool){ //Applying the kick to the central body
+            C -> vx += timestep * CM_acc[0];  C -> vy += timestep * CM_acc[1];  C -> vz += timestep * CM_acc[2];
+      }
 }
 
 
-void drift(struct moonlet * X){
+void drift(struct moonlet * X, struct moonlet * C){
 
       /******** Performs the drift of the leapfrog method                          ********/
       /******** When this function is called, collision have already been resolved ********/
@@ -89,251 +93,20 @@ void drift(struct moonlet * X){
       int i;
       
       
-      for(i=0; i<=largest_id; i++){            
-            if(*(exists+i)){ //Checking whether or not there is a moonlet in the i^th cell of the moonlet array
+      for(i = 0; i <= largest_id; i ++){            
+            if(*(exists + i)){ //Checking whether or not there is a body in the i^th cell of the body array        
                   (X + i) -> x += timestep * (X + i) -> vx;
                   (X + i) -> y += timestep * (X + i) -> vy;
                   (X + i) -> z += timestep * (X + i) -> vz;
             }
       }
+      if (central_mass_bool){ //Applying the drift to the central body
+            C -> x += timestep * C -> vx;  C -> y += timestep * C -> vy;  C -> z += timestep * C -> vz;
+      }
 }
 
 
-FILE ** file_opening(){
-
-      /******** Opens the files given as arguments to the function display ********/      
-      
-      
-      /******** Initializing the paths towards the files ********/
-      char filex_path[200]; char filey_path[200]; char filez_path[200]; char filevx_path[200]; char filevy_path[200]; char filevz_path[200]; char filerad_path[200];
-      char filea_path[200]; char filee_path[200]; char filei_path[200]; char filestat_path[200];
-      
-      strcpy(filex_path,   path); //The string "path" is defined in structure.h
-      strcpy(filey_path,   path);
-      strcpy(filez_path,   path);
-      strcpy(filevx_path,  path);
-      strcpy(filevy_path,  path);
-      strcpy(filevz_path,  path);
-      strcpy(filerad_path, path);
-      strcpy(filea_path,   path);
-      strcpy(filee_path,   path);
-      strcpy(filei_path,   path);
-      strcpy(filestat_path,path);
-      
-      strcat(filex_path,       "x.txt");
-      strcat(filey_path,       "y.txt");
-      strcat(filez_path,       "z.txt");
-      strcat(filevx_path,     "vx.txt");
-      strcat(filevy_path,     "vy.txt");
-      strcat(filevz_path,     "vz.txt");
-      strcat(filerad_path,"radius.txt");
-      strcat(filea_path,       "a.txt");
-      strcat(filee_path,       "e.txt");
-      strcat(filei_path,       "i.txt");
-      strcat(filestat_path, "stat.txt");
-      
-      
-      /******** Creating and opening the files ********/
-      FILE * filex;  FILE * filey;  FILE * filez;  FILE * filevx;  FILE * filevy;  FILE * filevz;  FILE * filerad;  FILE * filea;  FILE * filee;  FILE * filei;  FILE * filestat;
-      filex   = fopen(filex_path,   "w");
-      filey   = fopen(filey_path,   "w");
-      filez   = fopen(filez_path,   "w");
-      filevx  = fopen(filevx_path,  "w");
-      filevy  = fopen(filevy_path,  "w");
-      filevz  = fopen(filevz_path,  "w");
-      filerad = fopen(filerad_path, "w");
-      filea   = fopen(filea_path,   "w");
-      filee   = fopen(filee_path,   "w");
-      filei   = fopen(filei_path,   "w");
-      filestat= fopen(filestat_path,"w");
-      if (filex==NULL || filey==NULL || filez==NULL || filevx==NULL || filevy==NULL || filevz==NULL || filerad==NULL || filea==NULL || filee==NULL || filei==NULL || filestat==NULL){
-            fprintf(stderr, "Error : Can't create or open output files.\n");
-            abort();
-      }
-      
-      /******** Defining and initializing the array of 6 files ********/
-      files = (FILE **)malloc(11*sizeof(FILE *));
-      if (files == NULL){
-            fprintf(stderr, "Error : Can't allocate file array.\n");
-            abort();
-      }
-      * files       = filex;
-      *(files + 1)  = filey;
-      *(files + 2)  = filez;
-      *(files + 3)  = filevx;
-      *(files + 4)  = filevy;
-      *(files + 5)  = filevz;
-      *(files + 6)  = filerad;
-      *(files + 7)  = filea;
-      *(files + 8)  = filee;
-      *(files + 9)  = filei;
-      *(files + 10) = filestat;
-      
-
-      return files;
-
-}
-
-
-void file_closing(){
-
-      /******** Closes the files passed as argument to "display" ********/
-
-
-      /******** Closing the files ********/
-      fclose(* files);
-      fclose(*(files + 1));
-      fclose(*(files + 2));
-      fclose(*(files + 3));
-      fclose(*(files + 4));
-      fclose(*(files + 5));
-      fclose(*(files + 6));
-      fclose(*(files + 7));
-      fclose(*(files + 8));
-      fclose(*(files + 9));
-      fclose(*(files + 10));
-      free(files);
-      files = NULL;
-
-}
-
-
-void display(struct moonlet * moonlets, typ * aei){
-
-      /******** Outputs the moonlets to the output files.                                                                       ********/
-      /******** The output occurs on 11 files named x.txt, y.txt, ... vz.txt, radius.txt, a.txt, e.txt, i.txt and stat.txt.     ********/
-      /******** x.txt to vz.txt contain the cartesian coordinates, while a.txt, e.txt and i.txt contains the orbital elements   ********/
-      /******** In each file, a time step is printed on a single line. For example, a line of e.txt contains the eccentricities ********/
-      /******** of the N moonlets that existed at that time. The columns of stat.txt are time, total number of moonlets, total  ********/
-      /******** number of collisions, radius of the largest moonlet, total mass of the moonlets, inner fluid disk mass, number  ********/
-      /******** of mergers, of super-catastrophic collisions, of half-fragmentations, of full-fragmentations, length of day,    ********/
-      /******** value of the J2 and semi-major axis of the evection resonance (assuming everything is planar). If the J2 or     ********/
-      /******** perturbations from the star are not taken into account, then 0.0 is displayed for the evection resonance.       ********/
-      /******** Files other that stat.txt have a variable number of columns due to the variable number of moonlets throughout   ********/
-      /******** the simulation.                                                                                                 ********/
-      
-      
-      FILE * filex;
-      FILE * filey;
-      FILE * filez;
-      FILE * filevx;
-      FILE * filevy;
-      FILE * filevz;
-      FILE * filerad;
-      FILE * filea;
-      FILE * filee;
-      FILE * filei;
-      FILE * filestat;
-  
-      
-      /******** Defining the 11 files ********/
-      filex    = * files;
-      filey    = *(files + 1);
-      filez    = *(files + 2);
-      filevx   = *(files + 3);
-      filevy   = *(files + 4);
-      filevz   = *(files + 5);
-      filerad  = *(files + 6);
-      filea    = *(files + 7);
-      filee    = *(files + 8);
-      filei    = *(files + 9);
-      filestat = *(files + 10);
-
-      
-      /******** Writing to the files ********/
-      int p;
-      typ X,Y,Z,vX,vY,vZ,m,R;
-      typ total_mass = 0.0;
-      typ inner_fluid_disk_mass;
-      typ maxR = 0.0;
-      for (p = 0; p <= largest_id; p ++){
-            if(*(exists + p)){
-                  cart2aei(moonlets, p, aei);
-                  X  = (moonlets + p) ->      x;
-                  Y  = (moonlets + p) ->      y;
-                  Z  = (moonlets + p) ->      z;
-                  vX = (moonlets + p) ->     vx;
-                  vY = (moonlets + p) ->     vy;
-                  vZ = (moonlets + p) ->     vz;
-                  m  = (moonlets + p) ->   mass;
-                  R  = (moonlets + p) -> radius;
-                  fprintf(filex,   "%.13lf ",        X);
-                  fprintf(filey,   "%.13lf ",        Y);
-                  fprintf(filez,   "%.13lf ",        Z);
-                  fprintf(filevx,  "%.13lf ",       vX);
-                  fprintf(filevy,  "%.13lf ",       vY);
-                  fprintf(filevz,  "%.13lf ",       vZ);
-                  fprintf(filerad, "%.13lf ",        R);
-                  fprintf(filea,   "%.13lf ",     *aei);
-                  fprintf(filee,   "%.13lf ", *(aei+1));
-                  fprintf(filei,   "%.13lf ", *(aei+2));
-                  total_mass += m;
-                  if (R > maxR){
-                        maxR = R;
-                  }
-            }
-      }
-      fprintf(filestat, "%.13lf %d %d %.13lf %.13lf", time_elapsed, how_many_moonlets, collision_count, maxR, total_mass);
-      if (inner_fluid_disk_bool){
-            inner_fluid_disk_mass = fluid_disk_Sigma*M_PI*(Rroche*Rroche - Rearth*Rearth);
-            fprintf(filestat, " %.13lf", inner_fluid_disk_mass);
-      }
-      else{
-            fprintf(filestat, " %.1lf", 0.0);
-      }
-      if (collision_bool && fragmentation_bool){
-            fprintf(filestat, " %d %d %d %d", merger_count, super_catastrophic_count, half_fragmentation_count, full_fragmentation_count);
-      }
-      else{
-            fprintf(filestat, " %d %d %d %d", 0, 0, 0, 0);
-      }
-      if (central_tides_bool || J2_bool){
-            fprintf(filestat, " %.13lf", 2.0*M_PI/SideralOmega);
-      }
-      else{
-            fprintf(filestat, " %.1lf", 999999999.9);
-      }
-      if (J2_bool){
-            fprintf(filestat, " %.13lf", J2);
-      }
-      else{
-            fprintf(filestat, " %.1lf", 0.0);
-      }
-      if (Sun_bool && J2_bool){
-            fprintf(filestat, " %.13lf", evection_resonance);
-      }
-      else{
-            fprintf(filestat, " %.1lf", 0.0);
-      }
-      fprintf(filex,   "\n");
-      fprintf(filey,   "\n");
-      fprintf(filez,   "\n");
-      fprintf(filevx,  "\n");
-      fprintf(filevy,  "\n");
-      fprintf(filevz,  "\n");
-      fprintf(filerad, "\n");
-      fprintf(filea,   "\n");
-      fprintf(filee,   "\n");
-      fprintf(filei,   "\n");
-      fprintf(filestat,"\n");  
-
-}
-
-
-void first_line_of_stat(){
-
-      /******** Fills the first line of the file stat.txt with indications about the content of the columns ********/
-      
-      FILE * filestat;
-      filestat = *(files + 10);
-      
-      fprintf(filestat, "Time, N, number of collisions, largest radius, total moonlet mass, inner fluid disk mass");
-      fprintf(filestat, ", number of mergers, of super-catastrophic collisions, of half-fragmentations, of full-fragmentations");
-      fprintf(filestat, ", length of day, J2, evection resonance\n");
-}
-
-
-void end_of_timestep(struct moonlet * moonlets, int progressed, typ t){
+void end_of_timestep(struct moonlet * moonlets, int progressed){
 
       /******** Takes care of the end of the timestep by reinitializing the hash table, trees and everything   ********/
       /******** that needs to be. Updates the mesh-size gam to match the desired expected number of neighbours ********/
@@ -343,26 +116,44 @@ void end_of_timestep(struct moonlet * moonlets, int progressed, typ t){
       
       int index;
       int j;
-      typ X,Y,Z,vX,vY,vZ,m,R;
+      typ X, Y, Z, vX, vY, vZ, m, R, M;
+      typ XX, YY, ZZ, DX, DY, DZ;
+      typ com[6];
       
       first_passage = 1;
 
-      /******** Removing from the simulation the moonlets that need to be removed ********/
+      /******** Removing from the simulation the bodies that need to be removed ********/
       how_many_moonlets = 0;
       typ total_mass    = 0.0;
       typ maxR          = 0.0;
+      XX                = (central_mass_bool ? CM.x : 0.);
+      YY                = (central_mass_bool ? CM.y : 0.);
+      ZZ                = (central_mass_bool ? CM.z : 0.);
       for (j = 0; j <= largest_id; j++){
-            if (*(exists+j)){
-                  X = (moonlets + j) -> x;
-                  Y = (moonlets + j) -> y;
-                  Z = (moonlets + j) -> z;
-                  R = (moonlets + j) -> radius;
-                  m = (moonlets + j) -> mass;
-                  if (X*X+Y*Y+Z*Z < low_dumping_threshold*low_dumping_threshold || X*X+Y*Y+Z*Z > high_dumping_threshold*high_dumping_threshold){
-                        lose_moonlet(j);
-                        if (inner_fluid_disk_bool && X*X+Y*Y+Z*Z < low_dumping_threshold*low_dumping_threshold){
-                              fluid_disk_Sigma += m/(M_PI*(Rroche*Rroche - Rearth*Rearth)); //The mass of the dumped moonlet is added to the inner fluid disk
+            if (*(exists + j)){
+                  X  = (moonlets + j) -> x;
+                  Y  = (moonlets + j) -> y;
+                  Z  = (moonlets + j) -> z;
+                  R  = (moonlets + j) -> radius;
+                  m  = (moonlets + j) -> mass;
+                  DX = X - XX;  DY = Y - YY;  DZ = Z - ZZ;
+                  if (DX*DX + DY*DY + DZ*DZ < low_dumping_threshold*low_dumping_threshold && central_mass_bool){ //Merging the body with the central body or the inner fluid disk
+                        vX       = (moonlets + j) -> vx;
+                        vY       = (moonlets + j) -> vy;
+                        vZ       = (moonlets + j) -> vz;
+                        CM.mass += m;
+                        M        = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit) : CM.mass);
+                        CM.x    *= (M - m)/M;  CM.y *= (M - m)/M;  CM.z *= (M - m)/M;  CM.vx *= (M - m)/M;  CM.vy *= (M - m)/M;  CM.vz *= (M - m)/M;
+                        CM.x    += m*X/M;      CM.y += m*Y/M;      CM.z += m*Z/M;      CM.vx += m*vX/M;     CM.vy += m*vY/M;     CM.vz += m*vZ/M;
+                        if (inner_fluid_disk_bool){
+                              fluid_disk_Sigma += m/(M_PI*(Rroche*Rroche - R_unit*R_unit)); //The mass of the dumped body is added to the inner fluid disk
+                              CM.mass -= m;
                         }
+                        lose_moonlet(j);                      
+                  }
+                  else if (DX*DX + DY*DY + DZ*DZ > high_dumping_threshold*high_dumping_threshold){
+                        lose_moonlet(j);
+                        need_to_reduce_COM_bool = 1;
                   }
                   if (R > maxR){
                         maxR = R;
@@ -372,18 +163,47 @@ void end_of_timestep(struct moonlet * moonlets, int progressed, typ t){
             }
       }
       
+      /******** Reducing the center of mass if needed (a super-catastrophic disruption happened or a body crossed the high_dumping_threshold) ********/
+      if ((need_to_reduce_COM_bool && reduce_to_COM_bool) || progressed){
+      
+            total_momentum(moonlets, com); //Getting the speed and position of the center of mass
+            if (need_to_reduce_COM_bool && reduce_to_COM_bool){
+                  if (central_mass_bool){
+                        CM.x -= com[0];  CM.y -= com[1];  CM.z -= com[2];  CM.vx -= com[3];  CM.vy -= com[4];  CM.vz -= com[5];
+                  }
+                  for (j = 0; j <= largest_id; j ++){
+                        if (*(exists + j)){
+                              (moonlets + j) -> x  -= com[0];
+                              (moonlets + j) -> y  -= com[1];
+                              (moonlets + j) -> z  -= com[2];
+                              (moonlets + j) -> vx -= com[3];
+                              (moonlets + j) -> vy -= com[4];
+                              (moonlets + j) -> vz -= com[5];
+                        }
+                  }
+                  need_to_reduce_COM_bool = 0;
+                  com[0] = 0.;  com[1] = 0.;  com[2] = 0.;  com[3] = 0.;  com[4] = 0.;  com[5] = 0.;
+            }
+      }
+      
       /******** If the simulation progressed by at least 0.1%, I display useful informations ********/
       if (progressed){
-            printf("                  N = %d   (largest moonlet id = %d)\n", how_many_moonlets, largest_id);
-            if (inner_fluid_disk_bool){
-                  typ disk_mass = M_PI*(Rroche*Rroche - Rearth*Rearth)*fluid_disk_Sigma;
-                  printf("                  Moonlet mass = %.8lf,  Inner fluid disk mass = %.8lf,  Total = %.8lf\n", total_mass, disk_mass, disk_mass + total_mass);
+            printf("                  N = %d   (largest id in the body array = %d)\n", how_many_moonlets, largest_id);
+            if (inner_fluid_disk_bool && central_mass_bool){
+                  typ disk_mass = M_PI*(Rroche*Rroche - R_unit*R_unit)*fluid_disk_Sigma;
+                  printf("                  Central mass = %.8lf,  Bodies mass = %.8lf,  Fluid disk mass = %.8lf,  Bodies + disk = %.8lf\n",
+                  CM.mass, total_mass, disk_mass, disk_mass + total_mass);
             }
             else{
-                  printf("                  Moonlet mass = %.8lf\n", total_mass);
+                  if (central_mass_bool){
+                        printf("                  Central mass = %.8lf,  Bodies mass = %.8lf\n", CM.mass, total_mass);
+                  }
+                  else{
+                        printf("                  Bodies mass = %.8lf\n", total_mass);
+                  }
             }
-            printf("                  Largest moonlet radius = %.8lf\n", maxR);
-            if (central_tides_bool){
+            printf("                  Largest body radius = %.8lf\n", maxR);
+            if (central_tides_bool && central_mass_bool){
                   printf("                  Length of day = %.13lf\n", 2.0*M_PI/SideralOmega);
                   if (J2_bool && Sun_bool){
                         printf("                  Evection resonance at a = %.13lf\n", evection_resonance);
@@ -401,6 +221,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed, typ t){
                         mrg, spc, hfr, ffr);
                   }
             }
+            printf("                  COM = (%.9lf, %.9lf,  %.9lf,  %.9lf,  %.9lf,  %.9lf)\n", com[0], com[1], com[2], com[3], com[4], com[5]);
       }
       
       /******** Resetting global variables relative to the boxdot tree ********/
@@ -417,9 +238,9 @@ void end_of_timestep(struct moonlet * moonlets, int progressed, typ t){
       }
       
       /******** Reinitializing the array did_collide ********/
-      if (collision_bool){
+      if (collision_bool && one_collision_only_bool){
             for (j = 0; j <= largest_id; j++){
-                  *(did_collide+j) = 0;
+                  *(did_collide + j) = 0;
             }
       }
       
@@ -455,7 +276,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed, typ t){
             total_neighbours = 0;
       }
       
-      /******** If there are very few moonlets, I switch to the brute-force algorithm ********/
+      /******** If there are very few bodies, I switch to the brute-force algorithm ********/
       if (!brute_force_bool && !force_naive_bool && how_many_moonlets < switch_to_brute_force){
             force_naive_bool = 1;
       }
@@ -471,114 +292,134 @@ void end_of_timestep(struct moonlet * moonlets, int progressed, typ t){
             }
       }
       
-      /******** Spawning moonlets from the inner fluid disk ********/
+      /******** Spawning bodies from the inner fluid disk ********/
       if (inner_fluid_disk_bool){
-            time_since_last_spawn += timestep;
-            typ quotient = integral(time_since_last_spawn/time_between_spawn);
-            time_since_last_spawn -= quotient*time_between_spawn;
+            time_since_last_spawn     += timestep;
+            typ quotient               = floor(time_since_last_spawn/time_between_spawn);
+            time_since_last_spawn     -= quotient*time_between_spawn;
             int how_many_to_be_spawned = (int) quotient;
-            while (how_many_to_be_spawned){ //If the time elapsed since the last spawn if above the characteristic timescale of moonlet spawning, I spawn a moonlet
-                  typ mf  = 16.0*fast_pow(M_PI,4)*f_tilde*f_tilde*fast_pow(fluid_disk_Sigma*Rroche*Rroche,3)/(Mearth*Mearth); //Mass of the spawned moonlet
-                  typ rad = pow(3.0*mf/(4.0*M_PI*density) ,1.0/3.0);
-                  fluid_disk_Sigma -= mf/(M_PI*(Rroche*Rroche - Rearth*Rearth)); //New surface density of the inner fluid disk
-                  int index = get_free_index(0); //Retrieving an index in the moonlets array for the new moonlet
+            while (how_many_to_be_spawned){ //If the time elapsed since the last spawn if above the characteristic timescale of body spawning, I spawn a body
+                  typ mf            = 16.0*fast_pow(M_PI,4)*f_tilde*f_tilde*fast_pow(fluid_disk_Sigma*Rroche*Rroche,3)/(M_unit*M_unit); //Mass of the spawned body
+                  typ rad           = pow(3.0*mf/(4.0*M_PI*spawned_density), 1.0/3.0);
+                  fluid_disk_Sigma -= mf/(M_PI*(Rroche*Rroche - R_unit*R_unit)); //New surface density of the inner fluid disk
+                  int index         = get_free_index(0); //Retrieving an index in the bodies array for the new body
                   typ nu, omega, Omega;
                   nu              = rdm(0.0, 2.0*M_PI);
                   omega           = rdm(0.0, 2.0*M_PI);
                   Omega           = rdm(0.0, 2.0*M_PI);
-                  *(moonlets + index) = init(Rroche, 0.0, 0.0, nu, omega, Omega, rad); //Spawning a moonlet at the Roche radius on a circular and equatorial orbit
+                  *(moonlets + index) = init(Rroche, 0.0, 0.0, nu, omega, Omega, spawned_density, rad); //Spawning a body at the Roche radius on a circular and equatorial orbit
                   how_many_to_be_spawned --;
+                  X  = (moonlets + index) -> x;  //Taking the body's momentum away from Earth for conservation
+                  Y  = (moonlets + index) -> y;
+                  Z  = (moonlets + index) -> z;
+                  vX = (moonlets + index) -> vx;
+                  vY = (moonlets + index) -> vy;
+                  vZ = (moonlets + index) -> vz;
+                  M  = CM.mass + fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit);
+                  CM.x  *= (M + mf)/M;  CM.y *= (M + mf)/M;  CM.z *= (M + mf)/M;  CM.vx *= (M + mf)/M;  CM.vy *= (M + mf)/M;  CM.vz *= (M + mf)/M;
+                  CM.x  -= mf*X/M;      CM.y -= mf*Y/M;      CM.z -= mf*Z/M;      CM.vx -= mf*vX/M;     CM.vy -= mf*vY/M;     CM.vz -= mf*vZ/M;
             }
       }
 
       /******** Updating the position of the star or companion star ********/
       if (Sun_bool){
-            *sun_vector       = star_semi_major * cos(t*star_mean_motion);
-            *(sun_vector + 1) = star_semi_major * sin(t*star_mean_motion) * cos(obliquity);
-            *(sun_vector + 2) = star_semi_major * sin(t*star_mean_motion) * sin(obliquity);
+            * sun_vector      = star_semi_major*cos(time_elapsed*star_mean_motion);
+            *(sun_vector + 1) = star_semi_major*sin(time_elapsed*star_mean_motion)*cos(obliquity);
+            *(sun_vector + 2) = star_semi_major*sin(time_elapsed*star_mean_motion)*sin(obliquity);
       }
       
       /******** Updating the J2 and the position of the evection resonance ********/
       if (central_tides_bool && J2_bool){
             if (J2_value == 0.0){
-                  J2 = 0.5*SideralOmega*SideralOmega*Rearth*Rearth*Rearth/(G*Mearth);
+                  J2 = 0.5*SideralOmega*SideralOmega*R_unit*R_unit*R_unit/(G*M_unit);
             }
             else{
                   J2 = J2_value*SideralOmega*SideralOmega*Tearth*Tearth/(4.0*M_PI*M_PI);
             }
             if (Sun_bool){
-                  evection_resonance = pow(1.5*sqrt(Mearth/star_mass)*J2, 2.0/7.0)*pow(star_semi_major/Rearth, 3.0/7.0)*Rearth;
+                  evection_resonance = pow(1.5*sqrt(M_unit/star_mass)*J2, 2.0/7.0)*pow(star_semi_major/R_unit, 3.0/7.0)*R_unit;
             }
+      }
+      
+      /******** Communicating with REBOUND for 3D visualization ********/
+      if (openGL_bool){
+            rebound(moonlets);
       }
 }
 
 
-int integration_tree(typ t){
+void integration_tree(typ t){
 
 
       /******** Performs the numerical integration using a tree algorithm (falcON or standard tree) ********/
       /******** for mutual interactions treatment. t is the final time.                             ********/
 
 
-      /******** Initializing the array of moonlets ********/
-      struct moonlet * moonlets = populate(M_0, radius_stddev);
+      /******** Initializing the array of bodies ********/
+      struct moonlet * moonlets = populate();
       struct moonlet * moonlet_buffer = (struct moonlet *)malloc(N_max*sizeof(struct moonlet)); //Buffer for output steps
       if (moonlet_buffer == NULL){
-            fprintf(stderr, "Error : Can't allocate buffer for array of moonlets in function integration_tree.\n");
+            fprintf(stderr, "Error : Can't allocate buffer for array of bodies in function integration_tree.\n");
             abort();
       }
       
       /******** Numerical integration ********/
       int error = 0;
-      int iter = 0;
+      bigint iter = 0;
       int progressed = 0;
       typ progress = 0.0;
       typ previous_progress = 0.0;
-      typ * aei = (typ *)malloc(3*sizeof(typ));
-      int index, j;
+      int j;
       struct boxdot * root = NULL;
       
       printf("progress = %.1lf %%\n", 0.0);
       if (write_to_files_bool){
-            first_line_of_stat();
-            display(moonlets, aei);
+            readme();
+            if (central_mass_bool){
+                  CM_buffer = CM;
+            }
+            display(moonlets);
       }
       
       /******** Performing half a drift ********/
-      timestep /= 2.0;
-      if (collision_bool){ //Finding and resolving collisions and going backward
-            root = root_cell(moonlets);
-            FlatTree = flattree_init(root);
-            clear_boxdot(&root);
-            center_and_maxR_flattree(FlatTree, moonlets);
-            rmax_and_rcrit_flattree (FlatTree, moonlets);
-            if (falcON_bool){
-                  collision_flattree(FlatTree, moonlets);
-            }
-            else if (standard_tree_bool){
-                  for (j = 0; j <= largest_id; j++){
-                        if (exists[j] && !(did_collide[j])){
-                              standard_tree_collision(FlatTree, moonlets, j);
+      if (t > 0.0){
+            timestep /= 2.0;
+            if (collision_bool){ //Finding and resolving collisions and going backward
+                  root     = root_cell(moonlets);
+                  FlatTree = flattree_init(root);
+                  clear_boxdot(&root);
+                  center_and_maxR_flattree(FlatTree, moonlets);
+                  rmax_and_rcrit_flattree (FlatTree, moonlets);
+                  if (falcON_bool){
+                        collision_flattree(FlatTree, moonlets);
+                  }
+                  else if (standard_tree_bool){
+                        for (j = 0; j <= largest_id; j++){
+                              if (exists[j] && !(did_collide[j])){
+                                    standard_tree_collision(FlatTree, moonlets, j);
+                              }
                         }
                   }
             }
-      }
-      drift(moonlets); //Drifting
-      timestep *= 2.0;
+            drift(moonlets, &CM); //Drifting
+            timestep *= 2.0;
 
-      /******** Resetting data relative to trees ********/
-      if (collision_bool){
-            for (j = 0; j < cell_id; j++){
-                  free((FlatTree + j) -> dots);
-                  (FlatTree + j) -> dots = NULL;
-            }
-            free(FlatTree);
-            FlatTree = NULL;
-            how_many_cells = 0;
-            cell_id = 0;
-            /******** Reinitializing the array did_collide ********/
-            for (j = 0; j <= largest_id; j++){
-                  *(did_collide+j) = 0;
+            /******** Resetting data relative to trees ********/
+            if (collision_bool){
+                  for (j = 0; j < cell_id; j ++){
+                        free((FlatTree + j) -> dots);
+                        (FlatTree + j) -> dots = NULL;
+                  }
+                  free(FlatTree);
+                  FlatTree = NULL;
+                  how_many_cells = 0;
+                  cell_id = 0;
+                  /******** Reinitializing the array did_collide ********/
+                  if (one_collision_only_bool){
+                        for (j = 0; j <= largest_id; j ++){
+                              *(did_collide + j) = 0;
+                        }
+                  }
             }
       }
 
@@ -595,28 +436,31 @@ int integration_tree(typ t){
                               *(moonlet_buffer + j) = *(moonlets + j);
                         }
                   }
+                  if (central_mass_bool){
+                        CM_buffer = CM;
+                  }
                   timestep /= -2.0;
-                  drift(moonlet_buffer); //Drifting backwards half a timestep
+                  drift(moonlet_buffer, &CM_buffer); //Drifting backwards half a timestep
                   timestep *= -2.0;
-                  display(moonlet_buffer, aei);
+                  display(moonlet_buffer);
             }
 
             /******** Performing a full kick. Integrator is SABA1 ********/
             if (!force_naive_bool && mutual_bool){
-                  root = root_cell(moonlets);
+                  root     = root_cell(moonlets);
                   FlatTree = flattree_init(root);
                   clear_boxdot(&root);
                   com_flattree(FlatTree, moonlets);
-                  Mtot = FlatTree -> M0;
+                  Mtot     = FlatTree -> M0;
                   rmax_flattree(FlatTree, moonlets);
-                  rcrit_flattree(FlatTree, moonlets);
+                  rcrit_flattree(FlatTree);
                   tensor_initialization();
                   if (expansion_order >= 3){
                         multipole_flattree(FlatTree, moonlets);
                   }
-            }
-            kick(moonlets, vector_field);
-            
+            }        
+            kick(moonlets, &CM, vector_field);
+
             /******** Performing a full drift ********/
             if (collision_bool){
                   if (force_naive_bool){ //Finding and resolving collisions and going backward brute-forcely
@@ -630,105 +474,120 @@ int integration_tree(typ t){
                         }
                         center_and_maxR_flattree(FlatTree, moonlets);
                         rmax_and_rcrit_flattree (FlatTree, moonlets);
-                        if (falcON_bool){ //Finding and resolving collisions and going backward with falcON
-                              collision_flattree(FlatTree, moonlets);
+                        if (falcON_bool){ //Finding and resolving collisions and going backward with falcON                        
+                              collision_flattree(FlatTree, moonlets);   
                         }
                         else if (standard_tree_bool){ //Finding and resolving collisions and going backward with the standard tree code
-                              for (j = 0; j <= largest_id; j++){
+                              for (j = 0; j <= largest_id; j ++){
                                     if (exists[j] && !(did_collide[j])){
                                           standard_tree_collision(FlatTree, moonlets, j);
                                     }
                               }
                         }
                   }
-            }
-            drift(moonlets);
+            }            
+            drift(moonlets, &CM);
 
             iter ++;
+            iter_global ++;
             time_elapsed += timestep;
             progress = time_elapsed/t;
             
             /******** Displaying informations in the terminal, and reinitializing what needs to be reinitialized after every timestep ********/
-            if (progress-previous_progress > 0.001){
+            if (progress - previous_progress > 0.001){
                   previous_progress = progress;
                   printf("progress = %.1lf %%\n", 100.0*progress);
                   progressed = 1;
             }
             
             /******** Taking care of the end of the timestep ********/
-            end_of_timestep(moonlets, progressed, t);
-            
+            end_of_timestep(moonlets, progressed);
             
       }
+      
+      /******** Last file saving ********/
+      if (central_mass_bool){
+            CM_buffer = CM;
+      }
+      timestep /= -2.0;
+      drift(moonlets, &CM_buffer); //Performing half a backward drift
+      timestep *= -2.0;
+      if (write_to_files_bool){
+            display(moonlets);
+      }
+      if (resume_simulation_bool){
+            resume(moonlets);
+      }
+      
+      /******** Displaying the number of timesteps performed ********/
       printf("progress = %.1lf %%\n", 100.0);
-      printf("total number of timestep performed : %d\n",iter);
+      printf("total number of timestep performed : %ld\n", iter);
       
-      
-      /******** Deallocating the array of moonlets ********/
+      /******** Deallocating the array of bodies ********/
       free(moonlets);
       moonlets = NULL;
       free(moonlet_buffer);
       moonlet_buffer = NULL;
-      free(aei);
-      aei = NULL;
-     
-      return 0;
 }
 
 
-int integration_mesh(typ t){
+void integration_mesh(typ t){
 
 
       /******** Performs the numerical integration using a mesh algorithm ********/
       /******** for mutual interactions treatment. t is the final time.   ********/
 
 
-      /******** Initializing the array of moonlets ********/
-      struct moonlet * moonlets = populate(M_0, radius_stddev);
+      /******** Initializing the array of bodies ********/
+      struct moonlet * moonlets = populate();
       struct moonlet * moonlet_buffer = (struct moonlet *)malloc(N_max*sizeof(struct moonlet)); //Buffer for output steps
       if (moonlet_buffer == NULL){
-            fprintf(stderr, "Error : Can't allocate buffer for array of moonlets in function integration_brute_force.\n");
+            fprintf(stderr, "Error : Can't allocate buffer for array of bodies in function integration_brute_force.\n");
             abort();
       }
       
       
       /******** Numerical integration ********/
       int error = 0;
-      int iter = 0;
+      bigint iter = 0;
       int progressed = 0;
       typ progress = 0.0;
       typ previous_progress = 0.0;
-      typ * aei = (typ *)malloc(3*sizeof(typ));
       int index, j;
       
       printf("progress = %.1lf %%\n", 0.0);
       if (write_to_files_bool){
-            first_line_of_stat();
-            display(moonlets, aei);
+            readme();
+            if (central_mass_bool){
+                  CM_buffer = CM;
+            }
+            display(moonlets);
       }
       
-      timestep /= 2.0;
-      three_largest_moonlets(moonlets);
-      three_largest_three_first(moonlets);
-      get_neighbours_mesh(moonlets);
-      kick(moonlets, vector_field); //Performing half a kick
-      timestep *= 2.0;
+      /******** Performing half a kick ********/
+      if (t > 0.0){
+            timestep /= 2.0;
+            three_largest_moonlets(moonlets);
+            three_largest_three_first(moonlets);
+            get_neighbours_mesh(moonlets);
+            kick(moonlets, &CM, vector_field);
+            timestep *= 2.0;
       
-      /******** Reinitializing data relative to the hash table ********/
-      for (j = 0; j < how_many_modified; j++){
-            index = *(modified_cells + j);
-            clear_chain(hash + index); //Reinitializing to NULL the index^th cell of the hash table
+            /******** Reinitializing data relative to the hash table ********/
+            for (j = 0; j < how_many_modified; j++){
+                  index = *(modified_cells + j);
+                  clear_chain(hash + index); //Reinitializing to NULL the index^th cell of the hash table
+            }
+            average_neighbours = 2.0*((typ) total_neighbours)/((typ) how_many_moonlets);
+            gam *= pow(how_many_neighbours/average_neighbours, 1.0/3.0); //Updating the mesh-size gamma
+            if (gam < gam_min){
+                  gam = gam_min;
+            }
+            collision_cube    = gam*((typ) collision_cube_cells);
+            how_many_pairs    = 0; //It is unnecessary to reinitialize the array pairs
+            how_many_modified = 0; //It is unnecessary to reinitialize the array modified_cells
+            total_neighbours  = 0;
       }
-      average_neighbours = 2.0*((typ) total_neighbours)/((typ) how_many_moonlets);
-      gam *= pow(how_many_neighbours/average_neighbours, 1.0/3.0); //Updating the mesh-size gamma
-      if (gam < gam_min){
-            gam = gam_min;
-      }
-      collision_cube = gam*((typ) collision_cube_cells);
-      how_many_pairs    = 0; //It is unnecessary to reinitialize the array pairs
-      how_many_modified = 0; //It is unnecessary to reinitialize the array modified_cells
-      total_neighbours  = 0;
-      
 
       while(time_elapsed < t && error == 0){
 
@@ -739,10 +598,13 @@ int integration_mesh(typ t){
             if (write_to_files_bool && iter % output_step == 0 && iter > 0){
 
                   /******** I kicked too far at the previous timestep, I have to unkick by half a timestep ********/
-                  for (j = 0; j <= largest_id; j++){
+                  for (j = 0; j <= largest_id; j ++){
                         if (*(exists + j)){
                               *(moonlet_buffer + j) = *(moonlets + j);
                         }
+                  }
+                  if (central_mass_bool){
+                        CM_buffer = CM;
                   }
                   timestep /= -2.0;
                   if (!force_naive_bool){
@@ -750,13 +612,13 @@ int integration_mesh(typ t){
                         three_largest_three_first(moonlet_buffer);
                         get_neighbours_mesh(moonlet_buffer);
                   }
-                  kick(moonlet_buffer, vector_field); //Performing half a backward kick
+                  kick(moonlet_buffer, &CM_buffer, vector_field); //Performing half a backward kick
                   timestep *= -2.0;
-                  display(moonlet_buffer, aei);
+                  display(moonlet_buffer);
                   
                   /******** Reinitializing data relative to the hash table ********/
                   if (!force_naive_bool){
-                        for (j = 0; j < how_many_modified; j++){
+                        for (j = 0; j < how_many_modified; j ++){
                               index = *(modified_cells + j);
                               clear_chain(hash + index); //Reinitializing to NULL the index^th cell of the hash table
                         }
@@ -777,80 +639,109 @@ int integration_mesh(typ t){
                         mesh(moonlets);
                   }
             }
-            drift(moonlets); //Performing a full drift
+            drift(moonlets, &CM); //Performing a full drift
             if (!collision_bool && !force_naive_bool){
                   three_largest_moonlets(moonlets);
                   three_largest_three_first(moonlets);
                   get_neighbours_mesh(moonlets);
             }
-            kick(moonlets, vector_field); //Performing a full kick
+            kick(moonlets, &CM, vector_field); //Performing a full kick
 
             iter ++;
             time_elapsed += timestep;
             progress = time_elapsed/t;
             
             /******** Displaying informations in the terminal, and reinitializing what needs to be reinitialized after every timestep ********/
-            if (progress-previous_progress > 0.001){
+            if (progress - previous_progress > 0.001){
                   previous_progress = progress;
                   printf("progress = %.1lf %%\n", 100.0*progress);
                   progressed = 1;
             }
             
             /******** Taking care of the end of the timestep ********/
-            end_of_timestep(moonlets, progressed, t);
+            end_of_timestep(moonlets, progressed);
             
             
       }
+      
+      /******** Last file saving ********/
+      if (central_mass_bool){
+            CM_buffer = CM;
+      }
+      timestep /= -2.0;
+      if (!force_naive_bool){
+            three_largest_moonlets(moonlets);
+            three_largest_three_first(moonlets);
+            get_neighbours_mesh(moonlets);
+      }
+      kick(moonlets, &CM_buffer, vector_field); //Performing half a backward kick
+      timestep *= -2.0;
+      if (write_to_files_bool){
+            display(moonlets);
+      }
+      if (resume_simulation_bool){
+            resume(moonlets);
+      }           
+      if (!force_naive_bool){
+            for (j = 0; j < how_many_modified; j ++){
+                  index = *(modified_cells + j);
+                  clear_chain(hash + index); //Reinitializing to NULL the index^th cell of the hash table
+            }
+            how_many_pairs    = 0; //It is unnecessary to reinitialize the array pairs
+            how_many_modified = 0; //It is unnecessary to reinitialize the array modified_cells
+            total_neighbours  = 0;
+      }
+      
+      /******** Displaying the number of timesteps performed ********/
       printf("progress = %.1lf %%\n", 100.0);
-      printf("total number of timestep performed : %d\n",iter);
-      
-      
-      /******** Deallocating the array of moonlets ********/
+      printf("total number of timestep performed : %ld\n", iter);
+
+      /******** Deallocating the array of bodies ********/
       free(moonlets);
       moonlets = NULL;
       free(moonlet_buffer);
       moonlet_buffer = NULL;
-      free(aei);
-      aei = NULL;
-
-      return 0;
 }
 
 
-int integration_brute_force_SABA1(typ t){
+void integration_brute_force_SABA1(typ t){
 
 
       /******** Performs the numerical integration with a brute force method. t is the final time ********/
 
 
-      /******** Initializing the array of moonlets ********/
-      struct moonlet * moonlets = populate(M_0, radius_stddev);
+      /******** Initializing the array of bodies ********/
+      struct moonlet * moonlets = populate();
       struct moonlet * moonlet_buffer = (struct moonlet *)malloc(N_max*sizeof(struct moonlet)); //Buffer for output steps
       if (moonlet_buffer == NULL){
-            fprintf(stderr, "Error : Can't allocate buffer for array of moonlets in function integration_brute_force.\n");
+            fprintf(stderr, "Error : Can't allocate buffer for array of bodies in function integration_brute_force.\n");
             abort();
       }
       
       
       /******** Numerical integration ********/
       int error = 0;
-      int iter = 0;
+      bigint iter = 0;
       int progressed = 0;
       typ progress = 0.0;
       typ previous_progress = 0.0;
-      typ * aei = (typ *)malloc(3*sizeof(typ));
-      int index, j;
+      int j;
       
       printf("progress = %.1lf %%\n", 0.0);
       if (write_to_files_bool){
-            first_line_of_stat();
-            display(moonlets, aei);
+            readme();
+            if (central_mass_bool){
+                  CM_buffer = CM;
+            }
+            display(moonlets);
       }
       
-      timestep /= 2.0;
-      drift(moonlets); //Performing half a drift
-      timestep *= 2.0;
-
+      /******** Performing half a drift ********/
+      if (t > 0.0){
+            timestep /= 2.0;
+            drift(moonlets, &CM);
+            timestep *= 2.0;
+      }
 
       while(time_elapsed < t && error == 0){
 
@@ -861,54 +752,67 @@ int integration_brute_force_SABA1(typ t){
             if (write_to_files_bool && iter % output_step == 0 && iter > 0){
                   
                   /******** I drifted too far at the previous timestep, I have to undrift by half a timestep ********/
-                  for (j = 0; j <= largest_id; j++){
+                  for (j = 0; j <= largest_id; j ++){
                         if (*(exists + j)){
                               *(moonlet_buffer + j) = *(moonlets + j);
                         }
                   }
+                  if (central_mass_bool){
+                        CM_buffer = CM;
+                  }
                   timestep /= -2.0;
-                  drift(moonlet_buffer); //Performing half a backward drift
+                  drift(moonlet_buffer, &CM_buffer); //Performing half a backward drift
                   timestep *= -2.0;
-                  display(moonlet_buffer, aei);
+                  display(moonlet_buffer);
             }
 
             /******** Integrator is SBAB1 ********/
-            kick(moonlets, vector_field); //Performing a full kick
+            kick(moonlets, &CM, vector_field); //Performing a full kick            
             if (collision_bool){
                   brute_force(moonlets);  //Resolving collisions and going backward
-            }
-            drift(moonlets);              //Performing a full drift
-            
+            }           
+            drift(moonlets, &CM);         //Performing a full drift
 
             iter ++;
             time_elapsed += timestep;
             progress = time_elapsed/t;
             
             /******** Displaying informations in the terminal, and reinitializing what needs to be reinitialized after every timestep ********/
-            if (progress-previous_progress > 0.001){
+            if (progress - previous_progress > 0.001){
                   previous_progress = progress;
                   printf("progress = %.1lf %%\n", 100.0*progress);
                   progressed = 1;
             }
             
             /******** Taking care of the end of the timestep ********/
-            end_of_timestep(moonlets, progressed, t);
+            end_of_timestep(moonlets, progressed);
             
             
       }
+      
+      /******** Last file saving ********/
+      if (central_mass_bool){
+            CM_buffer = CM;
+      }
+      timestep /= -2.0;
+      drift(moonlets, &CM_buffer); //Performing half a backward drift
+      timestep *= -2.0;
+      if (write_to_files_bool){
+            display(moonlets);
+      }
+      if (resume_simulation_bool){
+            resume(moonlets);
+      }
+      
+      /******** Displaying the number of timesteps performed ********/
       printf("progress = %.1lf %%\n", 100.0);
-      printf("total number of timestep performed : %d\n",iter);
+      printf("total number of timestep performed : %ld\n", iter);
       
-      
-      /******** Deallocating the array of moonlets ********/
+      /******** Deallocating the array of bodies ********/
       free(moonlets);
       moonlets = NULL;
       free(moonlet_buffer);
       moonlet_buffer = NULL;
-      free(aei);
-      aei = NULL;
-       
-      return 0;
 }
 
 

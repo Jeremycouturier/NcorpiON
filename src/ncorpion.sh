@@ -2,7 +2,7 @@
 ########################################################################################
 ########################################################################################
 ######### @file    ncorpion.sh                                                 #########
-######### @brief   This bash script compiles and runs the NcorpiON software    #########
+######### @brief   This bash script compiles and runs NcorpiON                 #########
 ######### @author  Jérémy COUTURIER <jeremycouturier.com>                      #########
 #########                                                                      #########
 ######### @section 	LICENSE                                                #########
@@ -26,4 +26,18 @@
 ########################################################################################
 ########################################################################################
 
-make clean && make && make clean && ./ncorpion
+make clean && make && make clean
+
+read foo <makefile
+
+visualization="${foo: -1}"
+
+if [ $visualization = 1 ]; then
+      cd 3D
+      if [ ! -f ./librebound.so ]; then
+            make clean
+      fi
+      make && mpirun -n 1 ../ncorpion : -n 1 ./rebound && cd ../
+else
+      ./ncorpion
+fi

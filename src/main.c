@@ -2,7 +2,7 @@
 /**************************************************************************************/
 /**************************************************************************************/
 /******** @file    main.c                                                      ********/
-/******** @brief   The main file of the software NcorpiON                      ********/
+/******** @brief   The main file of NcorpiON                                   ********/
 /******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
 /********                                                                      ********/
 /******** @section 	LICENSE                                                ********/
@@ -21,7 +21,7 @@
 /******** GNU General Public License for more details.                         ********/
 /********                                                                      ********/
 /******** You should have received a copy of the GNU General Public License    ********/
-/******** along with rebound.  If not, see <http://www.gnu.org/licenses/>.     ********/
+/******** along with NcorpiON.  If not, see <http://www.gnu.org/licenses/>.    ********/
 /**************************************************************************************/
 /**************************************************************************************/
 /**************************************************************************************/
@@ -34,18 +34,34 @@
 #include "parameters.h"
 #include "structure.h"
 #include "physics.h"
+#include "collision.h"
 #include "ffm.h"
+#include "display.h"
 #include <errno.h>
 #include <math.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <string.h>
+#if openGL_bool
+      #include <mpi.h>
+#endif
 
 
-int main(){
+int main(int argc, char ** argv){
+
+      (void) argc;
+      (void) argv;
+
+      /*********************************************************************/
+      /******** Verifying that the parameter file is properly setup ********/
+      /*********************************************************************/
+      printf("\nChecking if the parameter file is properly setup\n");
+      verify();
 
 
+      /***************************************************************/
       /******** Defining the seed for the random function rdm ********/
+      /***************************************************************/
       printf("Defining the seed for random number generation\n");
       time_t t;
       if (seed_bool){
@@ -58,12 +74,12 @@ int main(){
       }
       printf("Seed = %d\n", (int) t);
       
-      /******** Initializing the variables that are used globally ********/
+      
+      /************************************************/
+      /******** Initializing the global memory ********/
+      /************************************************/
       printf("Allocating and initializing global memory\n");
       variable_initialization();
-      
-      
-      /******** Initializing the arrays that are used globally ********/
       array_initialization();
       k_from_s2s3_init();
       s1s2s3_from_kn_init();
@@ -74,45 +90,83 @@ int main(){
       q1fromq2q3_init();
       
       
-      /******** Creating and opening the output files ********/
+      /***************************************************/
+      /******** Creating and opening output files ********/
+      /***************************************************/
       if (write_to_files_bool){
             printf("Opening output files\n");
             file_opening();
       }
       
       
+      /************************************************************/
+      /******** Initializing the MPI execution environment ********/
+      /************************************************************/
+      #if openGL_bool
+            printf("Initializing MPI environment\n");
+            MPI_Init(&argc, &argv);
+            int rank;
+            MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+            typ * dtt = (typ *)malloc(3*sizeof(typ));
+            int * att = (int *)malloc(2*sizeof(int));
+            dtt[0] = timestep;  dtt[1] = t_end;  dtt[2] = radius_blow_up_factor;
+            att[0] = central_mass_bool;  att[1] = browser_port;
+            MPI_Send(dtt, 3, MPI_TYP, !rank, 0, MPI_COMM_WORLD);
+            MPI_Send(att, 2, MPI_INT, !rank, 0, MPI_COMM_WORLD);
+            free(dtt);  dtt = NULL;
+            free(att);  att = NULL;
+      #endif
+      
+      /*****************************************************/
       /******** Launching the numerical integration ********/
+      /*****************************************************/
       printf("Launching numerical integration\n");
-      int integ;
+      typ duration;
+      clock_t t0, t1;
+      t0 = clock();
       if (brute_force_bool){
-            integ = integration_brute_force_SABA1(t_end);
+            integration_brute_force_SABA1(t_end);
       }
       else if (falcON_bool || standard_tree_bool){
-            integ = integration_tree(t_end);
+            integration_tree(t_end);
       }
       else if (mesh_bool){
-            integ = integration_mesh(t_end);
+            integration_mesh(t_end);
       }
-      else{
-            fprintf(stderr, "Error : Exactly one of the booleans (brute_force_bool, falcON_bool, standard_tree_bool, mesh_bool) must be 1.\n");
-            abort();
-      }
-
+      t1       = clock();
+      duration = ((typ) (t1 - t0))/(typ) CLOCKS_PER_SEC;
+      printf("The integration took %.3lf seconds to complete\n", duration);
       
+      
+      /***********************************************************/
+      /******** Terminating the MPI execution environment ********/
+      /***********************************************************/  
+      #if openGL_bool
+            printf("Terminating MPI environment\n");
+            MPI_Finalize();
+      #endif
+      
+      
+      /******************************************/
       /******** Closing the output files ********/
+      /******************************************/
       if (write_to_files_bool){
             printf("Closing output files\n");
             file_closing();
       }
       
 
+      /****************************************************************/
       /******** Deallocating the arrays that are used globally ********/
+      /****************************************************************/
       printf("Deallocating global memory\n");
       deallocation();
       printf("Simulation over\n");
       
       
+      /*********************************************************/
       /******** Making animations out of the simulation ********/
+      /*********************************************************/
       if (make_animation_bool && write_to_files_bool){
             /******** Producing the images      ********/
             /******** A python script is called ********/
@@ -128,25 +182,25 @@ int main(){
             else{
                   sprintf(J2_bl, "%d", 0);
             }
-            if (Sun_bool){ //The user decision on taking into account perturbations from the sun is passed to the python script
+            if (Sun_bool){ //The user's decision on taking into account perturbations from the sun is passed to the python script
                   sprintf(Sun_bl, "%d", 1);
             }
             else{
                   sprintf(Sun_bl, "%d", 0);
             }
-            if (fragmentation_bool && collision_bool){ //The user decision to use NcorpiON's fragmentation model is passed to the python script
+            if (fragmentation_bool && collision_bool){ //The user's decision to use NcorpiON's fragmentation model is passed to the python script
                   sprintf(frag_bl, "%d", 1);
             }
             else{
                   sprintf(frag_bl, "%d", 0);
             }
-            if (inner_fluid_disk_bool){ //The user decision to feature an inner fluid disk is passed to the python script
+            if (inner_fluid_disk_bool){ //The user's decision to feature an inner fluid disk is passed to the python script
                   sprintf(inner_bl, "%d", 1);
             }
             else{
                   sprintf(inner_bl, "%d", 0);
             }
-            if (central_tides_bool){ //The user decision to consider tides on the central body is passed to the python script
+            if (central_tides_bool){ //The user's decision to consider tides on the central body is passed to the python script
                   sprintf(tides_bl, "%d", 1);
             }
             else{
@@ -160,7 +214,7 @@ int main(){
             strcpy(to_system, "./image_creation.sh ");
             strcat(to_system, argument);
             strcat(to_system, " ");
-            strcat(to_system, path);
+            strcat(to_system, pth);
             strcat(to_system, " ");
             strcat(to_system, inner_bl);
             strcat(to_system, " ");
@@ -171,23 +225,18 @@ int main(){
             strcat(to_system, Sun_bl);
             strcat(to_system, " ");
             strcat(to_system, tides_bl);
-            int status = system(to_system);
+            (void) (system(to_system) + 1); //Just a weid manoeuver to avoid the annoying "set but not used" compiler warning
             
             /******** Assembling the images into a gif and a mp4 ********/
             /******** Ffmpeg is called                           ********/
             printf("\nAssembling the images\n\n");
             strcpy(to_system, "./ncorpion_animation.sh ");
-            strcat(to_system, path);
-            status = system(to_system);
+            strcat(to_system, pth);
+            (void) (system(to_system) + 1); //Just a weid manoeuver to avoid the annoying "set but not used" compiler warning
       }
 
-      return integ;
+      return 0;
 }
-
-
-
-
-
 
 
 

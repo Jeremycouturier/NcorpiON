@@ -22,7 +22,7 @@
 /******** GNU General Public License for more details.                         ********/
 /********                                                                      ********/
 /******** You should have received a copy of the GNU General Public License    ********/
-/******** along with rebound.  If not, see <http://www.gnu.org/licenses/>.     ********/
+/******** along with NcorpiON.  If not, see <http://www.gnu.org/licenses/>.    ********/
 /**************************************************************************************/
 /**************************************************************************************/
 /**************************************************************************************/
@@ -33,60 +33,105 @@
 
 
 
-/*****************************************************************************************/
-/******** Redefining keywords. Do not touch if you are fine with double precision ********/
-/******** Quadruple precision does not seem to be working at the moment           ********/
-/*****************************************************************************************/
+/**************************************************************************************************/
+/******** Defining the input/output path where data are output if write_to_files_bool is 1 ********/
+/******** and where initial conditions are read if random_initial_bool is 0                ********/
+/******** Put / at the end of the path. The path must exist and be absolute.               ********/
+/**************************************************************************************************/
 
-#define typ double                   //Renaming double as typ. Define typ as long double (resp. float) for quadruple precision (resp. simple precision)
-#define bigint long int              //Renaming long int as bigint. If sizeof(int) == sizeof(long int) == 4 on your system, then define bigint as long long int instead
-                                     //Open the file /usr/share/gtksourceview/language-specs/c.lang and then find the field
-                                     //<context id="types" style-ref="type">. Add the lines <keyword>typ</keyword> and <keyword>bigint</keyword> to it
-                                     //and color gedit with C. The keywords typ and bigint should now be colored after a reboot
-#define absolute fabs                //The function returning the absolute value of a typ. Choose fabs (resp. fabsf or fabsl) if typ is double (resp. float or long double)
-#define integral floor               //The function returning the floor of a typ. Choose floor (resp. floorf or floorl) if typ is double (resp. float or long double)
+//#define pth "/home/jeremy/Documents/NcorpiON_simulation/ScottHull/simulation73_t=0-768/"
+#define pth "/home/jeremy/Documents/NcorpiON_simulation/test/"
 
 
 
-/*********************************************************************************************************/
-/******** Defining the path where data have to be output. Unimportant if write_to_files_bool is 0 ********/
-/******** Put / at the end of the path. The path must exist.                                      ********/
-/*********************************************************************************************************/
+/**************************************************************************/
+/******** Defining booleans to determine the behaviour of NcorpiON ********/
+/**************************************************************************/
 
-#define path "./ncorpion/"
+/******** General booleans relative to the simulation ********/
+#define write_to_files_bool      1   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
+                                     //You can also set this boolean to 0 if you only want to 3D visualize the simulation in your browser.
+#define make_animation_bool      1   //Determines if animations of the simulation are produced. write_to_files_bool and write_elliptic_bool must both be set to 1
+#define write_cartesian_bool     0   //Determines if the cartesian elements x, y, z, vx, vy, vz   should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
+#define write_elliptic_bool      1   //Determines if the elliptic  elements a, lambda, k, h, q, p should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
+                                     //If write_to_files_bool is 1 but both write_cartesian_bool and write_elliptic_bool are 0, then only radius.txt, mass.txt and stat.txt are output
+#define central_mass_bool        1   //Determines if there is a central mass. If 0, none of the bodies in the simulation play any particular role. If 1, the central body is initially
+                                     //at (x,y,z,vx,vy,vz) = {0.0} and treated independently. Should be set to 1 if one body is very massive and if brute_force_bool is 0, so gravity
+                                     //with that body is computed directly and not from a tree or a mesh. If 1, some physical effects can be considered as well(see below).
+#define reduce_to_COM_bool       1   //Determines if the position and speed of the center of mass of the system are cancelled by a translation before simulating. If 0, then the center
+                                     //of mass will drift linearly with time, which could be a problem due to the limit of floating-point representation. Setting to 1 is recommended.
+                                     //Note that the position and speed of the central body (if any) will slightly deviate from 0 after the reduction of the center of mass.
+#define random_initial_bool      1   //Determines if the initial conditions are drawn randomly between bounds defined below. If 0, the initial conditions are read from the file init.txt
+                                     //located at the path defined above, with one line per body and 8 columns, the first six for the initial conditions and the last two for mass and
+                                     //radius (in simulation unit). If central_mass_bool is 1 and random_initial_bool is 0, do not include the central body in init.txt.
+#define initial_cartesian_bool   1   //Determines if the initial conditions are given in cartesian coordinates (X,Y,Z,vX,vY,vZ). If 0, then the initial conditions are (semi-major axis,
+                                     //eccentricity, inclination, true anomaly, argument of periapsis, longitude of ascending node). Unimportant if random_initial_bool is 1.
+                                     //The initial conditions in the file init.txt must be given in simulation's units and radians.
+#define seed_bool                1   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
+#define one_collision_only_bool  0   //Determines if bodies are only allowed to collide once per timestep. If 0, there is no restriction on the number of collisions a body can experience
+                                     //during a timestep. Setting first to 1 and then to 0 is a good way to know if the timestep is adapted to the bodies' mean free path.
+#define openGL_bool              0   //Determines if a 3D real-time visualization of the simulation is enabled. You must match openGL_bool to the same value in the makefile
+#define resume_simulation_bool   0   //Determines if, at the end of the simulation, NcorpiON generates a file named init.txt that can be used to resume the simulation. The file init.txt
+                                     //is stored at the path indicated above. To resume the simulation, you need to set random_initial_bool to 0, initial_cartesian_bool to 1, and N_0 to
+                                     //the number of lines of init.txt. If init.txt already exists in path pth, it will be overwritten. Simulation's variables should be updated.
 
+/******** Booleans relative to interactions with the central mass or a distant object. Set to 0 if central_mass_bool is 0 ********/
+#define J2_bool                  1   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
+#define Sun_bool                 0   //Determines if the perturbations from a distant object that the system orbits (or is orbited by) are taken into account in the simulation
+#define central_tides_bool       0   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
+#define inner_fluid_disk_bool    1   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which bodies spawn). See Salmon & Canup 2012
+                                     //If set to 1, its mass is added to that of the central body when computing gravitational interactions and when preserving the total momemtum
 
+/******** Booleans relative to mutual interactions between the bodies ********/
+#define collision_bool           1   //Determines if the bodies are able to collide. If 0, the bodies pass through each other and you should set a non-zero value for softening_parameter
+#define mutual_bool              1   //Determines if there is mutual gravity between the bodies. If central_mass_bool is 1, the bodies interact with the central mass even if set to 0.
+
+/******** Booleans relative to the treatment of mutual interactions (collisions and self-gravity). Exactly one of them must be 1. Unimportant if mutual_bool is 0 ********/
+#define brute_force_bool         0   //Determines if a brute-force method should be used for mutual interactions.
+#define falcON_bool              1   //Determines if falcON algorithm     should be used for mutual interactions. (Best speed/accuracy compromise for large N + preserve total momentum)
+#define standard_tree_bool       0   //Determines if a standard tree code should be used for mutual interactions. (Much slower than falcON for the same accuracy, momentum not preserved).
+#define mesh_bool                0   //Determines if the  mesh algorithm  should be used for mutual interactions. (Fastest but gravity with neighbours and three largest bodies only).
+
+/******** Booleans relative to collision resolution. Exactly one of them must be 1. Unimportant if collision_bool is 0 ********/
+#define elastic_collision_bool   0   //Determines if the collisions are all elastic.
+#define inelastic_collision_bool 0   //Determines if the collisions are all inelastic with inelasticity parameter collision_parameter.
+#define instant_merger_bool      0   //Determines if the collisions all result in a merger.
+#define fragmentation_bool       1   //Determines if the outcome of the collision should be either a merge, a partial fragmentation, a full fragmentation, or a catastrophic disruption,
+                                     //depending on the relative velocity. Set to 1 to use the fragmentation model of NcorpiON.
+                                     
+                                     
 
 /**************************************************/
 /******** Defining some physical constants ********/
 /**************************************************/
 
-#define Rearth 1.0                   //Radius of the central mass. It is the unit of length of the simulation
-#define Mearth 1.0                   //Mass   of the central mass. It is the unit of mass
-#define G 39.47841760435743          //Gravitational constant is set to 4*pi^2, so that the simulation's unit of time is the surface orbital period
-#define density 0.1448               //The density of the moonlets (here 3344 kg/m^3) in simulation's units (central masses per cubic central radii)
+/******** Defining a system of units for the simulation. If random_initial_bool is 0, then the units in the file init.txt must be the simulation's units ********/
+#define R_unit 1.0                   //If central_mass_bool is 1, then radius of the central body. Otherwise, unimportant for the simulation. You define your own unit of length.
+#define M_unit 1.0                   //If central_mass_bool is 1, then   mass of the central body. Otherwise this is the mass for conversions cartesian <-> elliptic
+#define G 39.47841760435743          //The gravitational constant. It is here set to 4*pi^2, so that a body of semi-major axis 1 orbiting a mass 1 has a period 1
+                                     //Note that R_unit and M_unit do not necessarily have to be 1, they should just be equal to the mass and radius of the central body in the system
+                                     //of units that you want to use for the simulation. It is generally advised to use a system of units such that the simulation will not have to
+                                     //manipulate absurdely large or small floating points numbers. If central_mass_bool is 0, then you don't have to define R_unit and you should define
+                                     //M_unit as the mass, in your system of units, that is used to convert cartesian coordinates into elliptic coordinates. Whether central_mass_bool
+                                     //is 0 or 1, you have to define G as the value of the gravitational constant in your system of units. Even if the mass of the central body changes,
+                                     //M_unit stays the mass used for conversions cartesian <-> elliptic.
 
-/******** Physical constants relative to the symmetrical equatorial bulge (J2) and to tides. Unimportant if both J2_bool and central_tides_bool are 0. ********/
+/******** Physical constants relative to interactions with the central body (J2, inner disk, central tides) or a distant object. Unimportant if central_mass_bool is 0 ********/
 #define Tearth 3.4076                //Central body's sideral period in units of the surface orbital period. Must be > 1. Earth's current value is 17.038
                                      //In case of tides, the sideral period changes and this is the value at t = 0.
 #define J2_value 0.0                 //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body)
-                                     //where Omega is the sideral frequency and Omega_crit = sqrt(G*Mearth/Rearth^3)
-
-/******** Physical constants relative to tides raised on the central body. Unimportant if central_tides_bool is 0. The constant timelag model is used ********/
-#define k2 1.5                       //Second Love number of the central body. Here the value is for a fluid body (zero shear modulus)
-#define Delta_t 0.0004856//0.1185574 //The timelag between stress and response. Here 10 minutes. In units of the orbital period at the surface of the central body.
+                                     //where Omega is the sideral frequency and Omega_crit = sqrt(G*M_unit/R_unit^3)
+#define k2 1.5                       //Second Love number of the central body. Here the value is for a fluid body (zero shear modulus). The constant timelag model is used
+#define Delta_t 0.0002428//0.1185574 //The timelag between stress and response. Here 10 minutes. In units of the orbital period at the surface of the central body.
 #define dimensionless_moi 0.3307     //The moment of inertia of the central body, in simulation units (in units of its mass times its radius squared).
-
-/******** Physical constants relative to perturbations from the star (or companion star) that the central body is orbiting. Unimportant if Sun_bool is 0 ********/
-#define star_semi_major 23481.066    //The semi-major axis of the orbit of the central body around its star or its companion star in simulation units (central body radius).
-#define star_mass 332946.0434581987  //The mass of the star or companion star in simulation units (mass of the central body).
-#define obliquity 0.0//0.4091051767  //The obliquity (in radians) of the central body on its orbital plane.
-                                     
-/******** Physical constants relative to the inner fluid disk. Unimportant if inner_fluid_disk_bool is 0 ********/
-#define inner_mass 0.014             //Mass of the inner fluid disk at t = 0. 
-#define f_tilde 0.3                  //A parameter controlling the mass of moonlets spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
-#define Rroche 2.9                   //The Roche radius where moonlets spawn from the inner fluid disk. The radius of tidal disruption is low_dumping_threshold defined below
-                                     //Must be larger than low_dumping_threshold and than Rearth.
+#define star_semi_major 23481.066    //The semi-major axis of the orbit of the system around the distant object in simulation units.
+#define star_mass 332946.0434581987  //The mass of the distant object in simulation units.
+#define obliquity 0.0//0.4091051767  //The angle between the simulation's reference plane and the orbit of the distant object.
+#define inner_mass 0.014//0.0161414706381//0.0168959129267//0.0172169270831//0.014             //Mass of the inner fluid disk at t = 0.
+#define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
+#define f_tilde 0.3                  //A parameter controlling the mass of bodies spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
+#define Rroche 2.9                   //The Roche radius where bodies spawn from the inner fluid disk (in simulation's units). The radius of tidal disruption is low_dumping_threshold
+                                     //defined below. Must be larger than both low_dumping_threshold and than R_unit.
 
 
 
@@ -95,75 +140,86 @@
 /*******************************************************/
 
 /******** General parameters ********/
-#define N_max 10000                  //The maximum number of moonlets that the simulation can handle. An error will occur if the number of moonlets ever exceeds N_max.
-#define N_0 1000                     //The initial number of moonlets. Must be less than or equal to N_max
-#define M_0 0.014                    //Total (expected) moonlet mass at t = 0
-#define t_end 2048.0                 //Total simulation time      (in surface orbital period)
-#define time_step 0.0078125          //Timestep of the simulation (in surface orbital period)
-#define output_step 128              //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
-#define radius_stddev 0.57           //Standard deviation of moonlet's radii at t = 0 (drawn uniformly), in units of the mean radius. Must be less than 1/sqrt(3) to prevent negative radius
-#define eccentricity_min 0.0         //Minimal eccentricity             for a moonlet at t = 0
-#define eccentricity_max 0.2         //Maximal eccentricity             for a moonlet at t = 0
-#define sma_min 2.9                  //Minimal semi-major axis          for a moonlet at t = 0
-#define sma_max 14.0                 //Maximal semi-major axis          for a moonlet at t = 0
-#define inclination_min 0.0          //Minimal inclination (in radians) for a moonlet at t = 0 with respect to the central body's equator
-#define inclination_max 0.174533     //Maximal inclination (in radians) for a moonlet at t = 0 with respect to the central body's equator
-#define low_dumping_threshold 2.0    //Threshold (in central mass radii) below  which moonlets are dumped from the simulation (collision with the Earth or disruption by tidal forces)
-#define high_dumping_threshold 200.0 //Threshold (in central mass radii) beyond which moonlets are dumped from the simulation (assumed unbounded)
+#define N_max 15000                  //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
+#define N_0 1000//4587//5784//6156//12745 //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
+#define t_end 2.0                    //Total simulation length    (in simulation's units)
+#define time_step 0.015625           //Timestep of the simulation (in simulation's units)
+#define output_step 1                //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
+#define low_dumping_threshold 2.0    //Threshold (in simulation's units) below  which bodies are dumped from the simulation. Unimportant if central_mass_bool is 0.
+#define high_dumping_threshold 128.0 //Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
 
 /******** Specific parameters ********/
 #define max_ids_per_node 173         //The maximum number of ids in each node of the unrolled linked lists (chains). Choose such that sizeof(struct chain) be a multiple of the cache line
 #define softening_parameter 0.0      //The softening parameter for mutual gravitational interations, in units of the sum of the radii.
-#define seed 778345128               //The seed used for random number generation. Unimportant if seed_bool is 0.
-#define switch_to_brute_force 512    //Threshold for N below which the program switches to the brute-force method for mutual interactions. Unimportant if brute_force_bool is 1
+#define seed 129425372               //The seed used for random number generation. Unimportant if seed_bool is 0.
+#define switch_to_brute_force 0      //Threshold for N below which the program switches to the brute-force method for mutual interactions. Unimportant if brute_force_bool is 1
 
+/******** Bounds for initial conditions. Unimportant if random_initial_bool is 0. The initial conditions are drawn uniformly at random between these bounds ********/
+#define radius_min 0.01//0.02//0.0              //Minimal radius                   of a body at t = 0
+#define radius_max 0.05//0.08//0.043288          //Maximal radius                   of a body at t = 0
+#define density_min 0.1448           //Minimal density                  of a body at t = 0
+#define density_max 0.1448           //Maximal density                  of a body at t = 0
+#define eccentricity_min 0.0         //Minimal eccentricity             of a body at t = 0
+#define eccentricity_max 0.2         //Maximal eccentricity             of a body at t = 0
+#define sma_min 2.9                  //Minimal semi-major axis          of a body at t = 0
+#define sma_max 14.0                 //Maximal semi-major axis          of a body at t = 0
+#define inclination_min 0.0          //Minimal inclination (in radians) of a body at t = 0
+#define inclination_max 0.174533     //Maximal inclination (in radians) of a body at t = 0
+                                     //The true longitude, argument of pericenter and longitude of the ascending node are drawn uniformly at random between 0 and 2*M_PI
+                                     //These bounds must be defined in the simulation's units
+                                     
+/******** Parameters relative to 3D visualization with REBOUND. Unimportant if openGL_bool is 0 ********/
+#define browser_port 1234            //The http port where your browser will communicate with REBOUND. You can visualize several simulations at the same time if you change the port
+#define radius_blow_up_factor 4.0    //All the bodies, except the central mass (if any), are displayed with a radius that much larger than their true radius. Can enhance visualization
 
-
-/****************************************************************/
-/******** Parameters relative to the mesh-grid algorithm ********/
-/****************************************************************/
-
-#define collision_cube_min 80.0      //Minimal sidelength of the mesh-grid centered on the Earth. The mesh-size will never be less than collision_cube_min/collision_cube_cells
-#define collision_cube_cells 1024    //Number of mesh cells per dimension of the collision cube. Must be even. For 16+ GiB of RAM (resp. 8 or 4 GiB), choose ~1000 (resp. ~800 or ~500)
-#define how_many_neighbours 16.0     //The desired expected number of neighbours for a moonlet
-
-
-
-/**************************************************************************************************/
-/******** Parameters relative to tree-based algorithms (falcON and the standard tree code) ********/
-/**************************************************************************************************/
+/*************************************************************************************************************************/
+/******** Parameters relative to tree-based algorithms (falcON and the standard tree code). If either falcON_bool ********/
+/******** or standard_tree_bool is 1, then Dehnen's falcON algorithm or Barnes & Hut's standard tree code is used ********/
+/******** to compute mutual gravity and to detect collisions. In theses cases, these parameters must be defined   ********/
+/*************************************************************************************************************************/
 
 #define expansion_order 3            //The order p of the Taylor expansions. This is p = 3 in Dehnen (2002). NcorpiON allows up to p = 6. Minimum is 1 as order 0 yields no acceleration
 #define theta_min 0.5                //Minimal value of the tolerance parameter theta. Must be strictly less than 1. Sensible values are 0.2 < theta_min < 0.8
                                      //The precision (and computational time) of the mutual gravity computed by Ncorpion increases with increasing p and decreasing theta_min.
-#define subdivision_threshold 17     //A cubic cell is not divided as long as it contains at most that many moonlets. Called s in Dehnen (2002). Must be > 0
-                                     //The computational time depends a lot on this threshold. Suggested values are s ~ 26 if p = 3 and s ~ 80 if p = 6 but must be tweaked by the user.
-#define root_sidelength 80.0         //Sidelength of the root cell. Must be machine representable. Particles outside of the root cell only feel Earth's gravity and do not affect others
+#define subdivision_threshold 17     //A cubic cell is not divided as long as it contains at most that many bodies. Called s in Dehnen (2002). Must be > 0. The precision does not depend
+                                     //on this threshold, but the computational time does. Suggested values are 5 < s < 200 but must be tweaked by the user to obtain the best performances
+#define root_sidelength 128.0        //Sidelength of the root cell (in simulation's units). Should be machine representable. Particles outside of the root cell don't feel others.
 #define level_max 25                 //The maximum allowed number of levels in the tree. Root is at level 0 and a cell at level level_max - 1 is never divided.
-#define child_multipole_threshold 1  //If number of particles/number of children is at most this threshold then the multipole moments of a cell are computed directly from the particles.
+#define child_multipole_threshold 1  //If number of bodies/number of children is at most this threshold then the multipole moments of a cell are computed directly from the bodies.
                                      //Otherwise, they are computed from that of the children
 
-/******** Parameters relative to mutual gravity computation with falcON algorithm ********/
-#define N_cc_pre 8                   //For two cells with N1 and N2 moonlets, if N1N2 < N_cc_pre, then the interaction is computed brute-forcely, regardless of their well-separation
-#define N_cc_post 64                 //For two cells with N1 and N2 moonlets, if N1N2 < N_cc_post and they are not well-separated, then the interaction is computed brute-forcely
-#define N_cs 64                      //If N1 < N_cs, then the self-interaction of a cell containing N1 moonlets is computed brute-forcely
-                                     //See TreeWalk algorithm in the paper for details about these thresholds. Since the computational cost of the multipole method increases greatly with
-                                     //the expansion order, the values of N_cc_pre, N_cc_post and N_cs should be adapted to the expansion order p. Note, however, that the computational
-                                     //cost depends more on the subdivision threshold s that on these thresholds. Suggested values are (s, N_cc_pre, N_cc_post, N_cs) = (26, 8, 64, 64)
-                                     //for p = 3 and (s, N_cc_pre, N_cc_post, N_cs) = (80, 256, 1024, 128) for p = 6 but this depends on the architecture and should be tweaked.
+/******** Parameters specifically relative to mutual gravity computation with falcON algorithm ********/
+#define N_cc_pre 8                   //For two cells with N1 and N2 bodies, if N1N2 < N_cc_pre, then the interaction is computed brute-forcely, regardless of their well-separation
+#define N_cc_post 64                 //For two cells with N1 and N2 bodies, if N1N2 < N_cc_post and they are not well-separated, then the interaction is computed brute-forcely
+#define N_cs 64                      //If N1 < N_cs, then the self-interaction of a cell containing N1 bodies is computed brute-forcely
+                                     //See TreeWalk algorithm in the paper for details about these thresholds. The precision does not depend on these thresholds, but the computational
+                                     //time slightly does. However, note that the computational cost depends much more on the subdivision threshold s that on these thresholds. Suggested
+                                     //values are (s, N_cc_pre, N_cc_post, N_cs) = (26, 8, 64, 64) for p = 3 and (s, N_cc_pre, N_cc_post, N_cs) = (80, 256, 1024, 128) for p = 6 but this
+                                     //depends on the architecture and should be tweaked. N_cc_post must be larger that N_cc_pre.
                                      
-/******** Parameters relative to mutual gravity computation with the standard tree code ********/
-#define N_cb_pre 6                   //If N1 < N_cb_pre, the interaction between a moonlet and a cell with N1 moonlets is performed brute-forcely, regardless of their well-separation
-#define N_cb_post 16                 //If N1 < N_cb_post and they are not well-separated, the interaction between a moonlet and a cell with N1 moonlets is performed brute-forcely
+/******** Parameters specifically relative to mutual gravity computation with the standard tree code ********/
+#define N_cb_pre 6                   //If N1 < N_cb_pre, the interaction between a body and a cell with N1 bodies is performed brute-forcely, regardless of their well-separation
+#define N_cb_post 16                 //If N1 < N_cb_post and they are not well-separated, the interaction between a body and a cell with N1 bodies is performed brute-forcely.
 
-/******** Parameters relative to collision detection with falcON algorithm ********/
-#define N_cc_collision 16            //This is N_cc_post. For two non well-separated nodes with Na and Nb moonlets, if NaNb < N_cc_collision, then collisions are searched brute-forcely,
-                                     //otherwise, the largest node is subdivised. N_cc_pre is 0 when falcON is used for collision detection.
-#define N_cs_collision 12            //For a node with Na moonlets, if Na < N_cs_collision, then collisions are searched brute-forcely, otherwise, the node is subdivised
+/******** Parameters specifically relative to collision detection with falcON algorithm ********/
+#define N_cc_collision 16            //This is N_cc_post. For two nodes not well-separated with Na and Nb bodies, if NaNb < N_cc_collision, then collisions are searched brute-forcely,
+                                     //otherwise, the largest node is subdivised. N_cc_pre is always 0 when falcON is used for collision detection and is not a parameter
+#define N_cs_collision 12            //For a node with Na bodies, if Na < N_cs_collision, then collisions are searched brute-forcely, otherwise, the node is subdivised
 
-/******** Parameters relative to collision detection with the standard tree code ********/
-#define N_cb_collision 16            //This is N_cb_post. For a moonlet not well-separated from a node with Na moonlets, if Na < N_cb_collision, then collisions are searched
-                                     //brute-forcely, otherwise, the node is subdivised. N_cb_pre is 0 when the standard tree code is used for collision detection.
+/******** Parameters specifically relative to collision detection with the standard tree code ********/
+#define N_cb_collision 16            //This is N_cb_post. For a body not well-separated from a node with Na bodies, if Na < N_cb_collision, then collisions are searched brute-forcely,
+                                     //otherwise, the node is subdivised. N_cb_pre is always 0 when the standard tree code is used for collision detection and is not a parameter
+                                     
+                                     
+                                     
+/*****************************************************************************************************************/
+/******** Parameters relative to the mesh-grid algorithm. If mesh_bool is 1 then a mesh algorithm is used ********/
+/******** to compute mutual gravity and detect collisions. In that case, these parameters must be defined ********/
+/*****************************************************************************************************************/
+
+#define collision_cube_min 80.0      //Minimal sidelength of the mesh-grid (in simulation's units). The mesh-size will never be less than collision_cube_min/collision_cube_cells
+#define collision_cube_cells 1024    //Number of mesh cells per dimension of the collision cube. Must be even. For 16+ GiB of RAM (resp. 8 or 4 GiB), choose ~1000 (resp. ~800 or ~500)
+#define how_many_neighbours 16.0     //The desired expected number of neighbours for a body
 
 
 
@@ -171,55 +227,35 @@
 /******** Parameters relative to collision resolution and the fragmentation model ********/
 /*****************************************************************************************/
 
-/******** Collision resolution when all collisions are inelastic ********/
-#define collision_parameter 1.1      //The collision parameter f to model inelastic collision. Must be between 1 (completely inelastic) and 2 (elastic)
+/******** Collision resolution when all collisions are inelastic. Important only if both collision_bool and inelastic_collision_bool are 1 ********/
+#define collision_parameter 1.0      //The collision parameter f to model inelastic collision. Must be between 1 (completely inelastic) and 2 (elastic)
 
-/******** Collision resolution with the fragmentation model described in NcorpiON's paper ********/
-#define beta_slope 2.6470588235294118//Slope of the power law for fragment size distribution in Leinhardt and Stewart (2012). Must be such that N_tilde is integer.
-#define N_tilde 15                   //2*beta_slope/(3 - beta_slope). This is the ratio between the ejected mass and the mass of the second largest fragment : N° of fragments in the tail
+/******** Collision resolution with the fragmentation model described in NcorpiON's paper. Important only if both collision_bool and fragmentation_bool are 1 ********/
+#define N_tilde 15                   //Ratio between ejected mass and mass of the second largest fragment : N° of fragments in the tail. 2*beta/(3-beta) in Leinhardt & Stewart(2012)
 #define mu_parameter 0.55            //The exponent of the impact velocity in the coupling parameter. See Table 3 of Housen & Holsapple (2011)
+#define nu_parameter 0.4             //The exponent of the density         in the coupling parameter. See Table 3 of Housen & Holsapple (2011)
 #define C1_parameter 1.5             //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
 #define k_parameter 0.2              //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
-#define frag_threshold 0.000000005   //Ejected mass threshold below which the collision results in a merger. If the ejected mass is above that threshold but the mass of the second
-                                     //largest fragment is below, then the tail is reunited into a single moonlet. If the mass of the second largest fragment is above that threshold
-                                     //then the collision results in a full fragmentation.                             
+#define frag_threshold 0.00000002    //Ejected mass threshold below which the collision results in a merger. If the ejected mass is above that threshold but the mass of the second
+                                     //largest fragment is below, then the tail is reunited into a single body. If the mass of the second largest fragment is above that threshold
+                                     //then the collision results in a full fragmentation. To be given in simulation's units
 #define pq_min_max {-1,3,-1,1}       //Extremal integer values for p_k and q_k to determine the position of the tail fragments with respect to the largest fragment.
-                                     //Must define a rectangle containing exactly N_tilde points with integer coordinates. More precisely, if pq_min_max = {a,b,c,d},
-                                     //then we must have N_tilde = (b-a+1)(d-c+1). See NcorpiON's paper for details
+                                     //Must define a rectangle containing exactly N_tilde points with integer coordinates. More precisely, if pq_min_max = {a, b, c, d},
+                                     //then we must have N_tilde = (b - a + 1)*(d - c + 1). See NcorpiON's paper for details
                                      
 
 
-/****************************************/
-/******** Defining some booleans ********/
-/****************************************/
+/*********************************************************/
+/******** Redefining keywords. Not to be modified ********/
+/*********************************************************/
 
-/******** Booleans relative to the simulation ********/
-#define write_to_files_bool      1   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
-#define make_animation_bool      1   //Determines if animations of the simulation are produced. write_to_files_bool must be 1
-#define seed_bool                0   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
-#define tam_bool                 0   //Determines if the total angular momentum should be conserved upon merging or fragmenting impact. If tam_bool is 0, then the total momentum
-                                     //is conserved instead. Since falcON preserves the total momentum by construction, choosing 0 is best when falcON_bool is 1
-
-/******** Booleans relative to the physical effects taken into account in the simulation ********/
-#define J2_bool                  0   //Determines if the contribution from the symmetrical equatorial bulge is taken into account in the simulation
-#define Sun_bool                 0   //Determines if the perturbations from the Sun (or star) are taken into account in the simulation
-#define inner_fluid_disk_bool    0   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which moonlets spawn). See Salmon & Canup 2012
-#define central_tides_bool       0   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
-#define collision_bool           1   //Determines if the moonlets are able to collide
-#define mutual_bool              1   //Determines if there are mutual gravitational interactions between the moonlets.                         
-
-/******** Booleans relative to collision resolution. Exactly one of them must be 1 ********/
-#define elastic_collision_bool   0   //Determines if the collisions are all elastic.
-#define inelastic_collision_bool 0   //Determines if the collisions are all inelastic with inelasticity parameter collision_parameter defined above.
-#define instant_merger_bool      0   //Determines if the collisions all result in a merger.
-#define fragmentation_bool       1   //Determines if the outcome of the collision should be either a merge, a partial fragmentation, a full fragmentation, or a catastrophic disruption,
-                                     //depending on the relative velocity and according to the fragmentation model of NcorpiON. 
-
-/******** Booleans relative to the treatment of mutual interactions (collisions and self-gravity). Exactly one of them must be 1. ********/
-#define brute_force_bool         0   //Determines if a brute-force method should be used for mutual interactions.
-#define falcON_bool              1   //Determines if falcON algorithm     should be used for mutual interactions. (Often the best speed/accuracy compromise for large N)
-#define standard_tree_bool       0   //Determines if a standard tree code should be used for mutual interactions. (Significantly slower than falcON for the same accuracy).
-#define mesh_bool                0   //Determines if the  mesh algorithm  should be used for mutual interactions. (Fastest but gravity with neighbours and three largest moonlets only).
+#define typ double                   //Renaming double as typ
+#define MPI_TYP MPI_DOUBLE           //Renaming double as typ for mpi
+#define bigint long int              //Renaming long int as bigint. If sizeof(int) == sizeof(long int) == 4 on your system, then define bigint as long long int instead
+                                     //Open the file /usr/share/gtksourceview/language-specs/c.lang and then find the field
+                                     //<context id="types" style-ref="type">. Add the lines <keyword>typ</keyword> and <keyword>bigint</keyword> to it
+                                     //and color gedit with C. The keywords typ and bigint should now be colored after a reboot
+#define type_check __builtin_types_compatible_p 
 
 
 

@@ -21,7 +21,7 @@
 /******** GNU General Public License for more details.                         ********/
 /********                                                                      ********/
 /******** You should have received a copy of the GNU General Public License    ********/
-/******** along with rebound.  If not, see <http://www.gnu.org/licenses/>.     ********/
+/******** along with NcorpiON.  If not, see <http://www.gnu.org/licenses/>.    ********/
 /**************************************************************************************/
 /**************************************************************************************/
 /**************************************************************************************/
@@ -38,34 +38,22 @@
 extern struct node * FlatTree;
 
 
-void kick(struct moonlet * X, void (*F)(struct moonlet *));
+void kick(struct moonlet * X, struct moonlet * C, void (*F)(struct moonlet *));
 
 
-void drift(struct moonlet * X);
+void drift(struct moonlet * X, struct moonlet * C);
 
 
-FILE ** file_opening();
+void end_of_timestep(struct moonlet * moonlets, int progressed);
 
 
-void file_closing();
+void integration_tree(typ t);
 
 
-void display(struct moonlet * moonlets, typ * aei);
+void integration_mesh(typ t);
 
 
-void first_line_of_stat();
-
-
-void end_of_timestep(struct moonlet * moonlets, int progressed, typ t);
-
-
-int integration_tree(typ t);
-
-
-int integration_mesh(typ t);
-
-
-int integration_brute_force_SABA1(typ t);
+void integration_brute_force_SABA1(typ t);
 
 
 #endif

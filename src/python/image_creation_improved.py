@@ -44,7 +44,7 @@ frag_bl  = int(sys.argv[6])   #Boolean indicating whether or not the simulation 
 J2_bl    = float(sys.argv[7]) #Boolean indicating whether or not the simulation featured the J2
 sun_bl   = int(sys.argv[8])   #Boolean indicating whether or not the simulation used perturbation from the star
 tides_bl = int(sys.argv[9])   #Boolean indicating whether or not the simulation had tides raised on the central body
-surface_orbital_period_in_days = 0.0585745105636311 #Proportionality constant between the simulation's unit of time and 24 hours : surface orbital period/1 day.
+surface_orbital_period_in_days = 0.0585745105636311 #Proportionality constant between the simulation's unit of time and 24 hours
                                                     #The current value is for the Earth.
       
 
@@ -54,16 +54,20 @@ asini_min = 0.0 #Bottom border of the image
 asini_max = 8.0 #Top border of the image
 
 patha   = path + "a.txt"
-pathe   = path + "e.txt"
-pathi   = path + "i.txt"
+pathk   = path + "k.txt"
+pathh   = path + "h.txt"
+pathq   = path + "q.txt"
+pathp   = path + "p.txt"
 pathrad = path + "radius.txt"
 pathstat= path + "stat.txt"
 
-a = open(patha,    "r")
-e = open(pathe,    "r")
-i = open(pathi,    "r")
-R = open(pathrad,  "r")
-S = open(pathstat, "r")
+a  = open(patha,    "r")
+kk = open(pathk,    "r")
+hh = open(pathh,    "r")
+qq = open(pathq,    "r")
+pp = open(pathp,    "r")
+R  = open(pathrad,  "r")
+S  = open(pathstat, "r")
 
 
 def f(e):
@@ -140,11 +144,13 @@ def draw_moonlet(sma, ecc, inc, rad, p, maxR1, maxR2, maxR3, largest_index_1, la
       elif (eccentricity <= 1.0):
             color = (f(eccentricity), g(eccentricity), 0.0)
       else:
-            color = 'yellow'
-      X = sma[p] * m.cos(inc[p])
-      Y = sma[p] * m.sin(inc[p])
+            color = 'darkred'
+      X = abs(sma[p] * m.cos(inc[p]))
+      Y = abs(sma[p] * m.sin(inc[p]))
       if (X <= acosi_max + 0.2 and Y <= asini_max + 0.2):
-            if (radius >= 0.12):
+            if (radius >= 0.5):
+                  draw_orbit(radius, X, Y, 4, "grey", 250)
+            elif (radius >= 0.12):
                   draw_orbit(radius, X, Y, 3, color, 150)
             elif (radius >= 0.06):
                   draw_orbit(radius, X, Y, 2, color, 100)
@@ -160,8 +166,8 @@ def draw_moonlet(sma, ecc, inc, rad, p, maxR1, maxR2, maxR3, largest_index_1, la
 def make_image(sma, ecc, inc, rad, sta, q):
       where_to_plot = 0.65
       py.xticks([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])
-      sideral_period = float(sta[10])
-      draw_oblate_Earth(1.0, sideral_period)
+      #sideral_period = float(sta[10])
+      #draw_oblate_Earth(1.0, sideral_period)
       artisanal_colorbar(asini_min+0.05*(asini_max-asini_min),asini_max-0.05*(asini_max-asini_min),acosi_max*0.94,acosi_max*0.96)
       maxR1 = 0.0
       maxR2 = 0.0
@@ -175,27 +181,26 @@ def make_image(sma, ecc, inc, rad, sta, q):
             the_range = len(sma)
       for p in range(the_range):
             (maxR1,maxR2,maxR3,largest_index_1,largest_index_2,largest_index_3) = draw_moonlet(sma,ecc,inc,rad,p,maxR1,maxR2,maxR3,largest_index_1,largest_index_2,largest_index_3)
-      draw_moonlet(sma, ecc, inc, rad, largest_index_1, 0.0, 0.0, 0.0, 0, 0, 0)
+      #draw_moonlet(sma, ecc, inc, rad, largest_index_1, 0.0, 0.0, 0.0, 0, 0, 0)
       draw_moonlet(sma, ecc, inc, rad, largest_index_2, 0.0, 0.0, 0.0, 0, 0, 0)
       draw_moonlet(sma, ecc, inc, rad, largest_index_3, 0.0, 0.0, 0.0, 0, 0, 0)
-      py.text(0.08,asini_max*0.94,"t = " + str(round(float(sta[0]),3)) + " = " + str(round(float(sta[0])*surface_orbital_period_in_days,3)) + " days", alpha=0.4, fontsize=20)
+      py.text(0.08,asini_max*0.94,"t = " + str(round(float(sta[0]),3)), alpha=0.4, fontsize=20)
       py.text(0.08,asini_max*0.88,"N = " + sta[1], alpha=0.4, fontsize=20)
       py.text(0.08,asini_max*0.82,"Collisions = " + sta[2], alpha=0.4, fontsize=20)
       py.text(0.08,asini_max*0.76,"Largest radii = (" + str(round(maxR1,3)) + ", " + str(round(maxR2,3)) + ", " + str(round(maxR3,3)) + ")" + r" $R_{\oplus}$", alpha=0.4, fontsize=20)
       if (inner_bl):
-            py.text(0.08,asini_max*0.70,"(Moonlet mass, Inner disk mass) = (" + str(round(float(sta[4]),4))+", "+str(round(float(sta[5]),4))+")"+r" $M_{\oplus}$", alpha=0.4, fontsize=20)
+            py.text(0.08,asini_max*0.70,"(Bodies mass, Inner disk mass) = (" + str(round(float(sta[4]),4))+", "+str(round(float(sta[6]),4))+")"+r" $M_{\oplus}$", alpha=0.4, fontsize=20)
       else:
-            py.text(0.08,asini_max*0.70,"Moonlet mass = " + str(round(float(sta[4]),4)) + r" $M_{\oplus}$", alpha=0.4, fontsize=20)
+            py.text(0.08,asini_max*0.70,"Bodies mass = " + str(round(float(sta[4]),4)) + r" $M_{\oplus}$", alpha=0.4, fontsize=20)
       if (tides_bl):
-            py.text(0.08,asini_max*0.64,"Length of day = " + str(round(float(sta[10]),4)) + " = " + str(round(float(sta[10])*surface_orbital_period_in_days*24,4))+" hours"
-            , alpha=0.4, fontsize=20)
+            py.text(0.08,asini_max*0.64,"Length of day = " + str(round(float(sta[11]),4)), alpha=0.4, fontsize=20)
             where_to_plot = 0.59
       py.text(0.08,asini_max*where_to_plot,"thin: R < 0.06", alpha=0.4, fontsize=8)
       py.text(0.08,asini_max*(where_to_plot-0.03),"thick: R > 0.06", alpha=0.4, fontsize=8)
       py.text(0.08,asini_max*(where_to_plot-2*0.03),"thickest: R > 0.12", alpha=0.4, fontsize=8)
       py.text(0.08,asini_max*(where_to_plot-3*0.03),"single pixel (barely visible): R < 0.001", alpha=0.4, fontsize=8)
-      py.text(0.08,asini_max*(where_to_plot-4*0.03),"Everything is at scale", alpha=0.4, fontsize=8)
-      evection_resonance = float(sta[12])
+      py.text(0.08,asini_max*(where_to_plot-4*0.03),"Everything is at scale. Dark red = e > 1", alpha=0.4, fontsize=8)
+      evection_resonance = float(sta[13])
       if (evection_resonance != 0.0):
             py.vlines(evection_resonance, asini_min, asini_max, colors='black', linestyles='dashed', linewidth = 0.5, alpha=0.4)
             py.text(evection_resonance*1.003,asini_max*0.82,"Evection resonance", rotation=-90, alpha=0.4, fontsize=8)
@@ -204,8 +209,8 @@ def make_image(sma, ecc, inc, rad, sta, q):
       py.ylim([asini_min,asini_max])
       py.xticks(fontsize = 15)
       py.yticks(fontsize = 15)
-      py.xlabel(r"$a\,\cos\,i$ (Earth radii)", fontsize = 25)
-      py.ylabel(r"$a\,\sin\,i$ (Earth radii)", fontsize = 25)
+      py.xlabel(r"$a\,\cos\,i$", fontsize = 25)
+      py.ylabel(r"$a\,\sin\,i$", fontsize = 25)
       figure = py.gcf() ##get current figure
       figure.set_size_inches(16, 9)
       #py.axis('off')
@@ -216,11 +221,14 @@ def make_image(sma, ecc, inc, rad, sta, q):
 mod      = int(sys.argv[1])  # Only treats images equal to mod modulo n_thread
 n_thread = int(sys.argv[2])  # Number of threads (to be modified in image_creation.sh)
 
-sma = np.float64(np.array(a.readline().strip().split()))
-ecc = np.float64(np.array(e.readline().strip().split()))
-inc = np.float64(np.array(i.readline().strip().split()))
+sma = np.float64(np.array( a.readline().strip().split()))
+kkk = np.float64(np.array(kk.readline().strip().split()))
+hhh = np.float64(np.array(hh.readline().strip().split()))
+qqq = np.float64(np.array(qq.readline().strip().split()))
+ppp = np.float64(np.array(pp.readline().strip().split()))
+ecc = np.sqrt(kkk**2 + hhh**2)
+inc = 2.0*np.arcsin(np.sqrt(qqq**2 + ppp**2))
 rad = np.float64(np.array(R.readline().strip().split()))
-S.readline().strip().split() #Skipping the first line of stat.txt
 sta = np.array(S.readline().strip().split())
 if (int(sta[1]) == 1):
       sma = np.array([sma])
@@ -233,8 +241,12 @@ for j in range(int(sys.argv[3])):
             print ("Producing image n° ", j)
             make_image(sma, ecc, inc, rad, sta, j)
       sma = np.float64(np.array(a.readline().strip().split()))
-      ecc = np.float64(np.array(e.readline().strip().split()))
-      inc = np.float64(np.array(i.readline().strip().split()))
+      kkk = np.float64(np.array(kk.readline().strip().split()))
+      hhh = np.float64(np.array(hh.readline().strip().split()))
+      qqq = np.float64(np.array(qq.readline().strip().split()))
+      ppp = np.float64(np.array(pp.readline().strip().split()))
+      ecc = np.sqrt(kkk**2 + hhh**2)
+      inc = 2.0*np.arcsin(np.sqrt(qqq**2 + ppp**2))
       rad = np.float64(np.array(R.readline().strip().split()))
       sta = np.array(S.readline().strip().split())
       if (int(sta[1]) == 1):
