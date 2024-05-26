@@ -1,4 +1,4 @@
-export openGL_bool = 1
+export openGL_bool = 0
 #Make sure to match openGL_bool to the same value in parameters.h
 
 ifeq ($(openGL_bool), 1)
