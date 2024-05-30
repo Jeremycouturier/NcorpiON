@@ -37,6 +37,7 @@
 #include "collision.h"
 #include "ffm.h"
 #include "display.h"
+#include "spring.h"
 #include <errno.h>
 #include <math.h>
 #include <unistd.h>

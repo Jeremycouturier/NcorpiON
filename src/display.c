@@ -41,7 +41,6 @@
 #include <math.h>
 #include <stdint.h>
 #include <unistd.h>
-//#include <sys/sysinfo.h>
 #include <string.h>
 #if openGL_bool
       #include <mpi.h>

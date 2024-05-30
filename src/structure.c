@@ -33,6 +33,8 @@
 #include "structure.h"
 #include "parameters.h"
 #include "ffm.h"
+#include "display.h"
+#include "spring.h"
 #include <errno.h>
 #include <math.h>
 #include <stdint.h>
@@ -94,7 +96,6 @@ typ star_mean_motion;
 typ evection_resonance;
 int need_to_reduce_COM_bool;
 int n_output;
-int iter_global = 0;
 
 
 typ * ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega){
@@ -456,7 +457,13 @@ struct moonlet * populate(){
             if (central_mass_bool){
                   CM.x -= com[0];  CM.y -= com[1];  CM.z -= com[2];  CM.vx -= com[3];  CM.vy -= com[4];  CM.vz -= com[5];
             }
-      }  
+      }
+      
+      /******** Communicating with REBOUND for 3D visualization ********/
+      if (openGL_bool){
+            rebound(moonlets);
+      }
+      
       return moonlets;
 }
 
@@ -666,6 +673,10 @@ void deallocation(){
       if (openGL_bool){
             free(sending_buffer);
             sending_buffer = NULL;
+      }
+      if (viscoelastic_bool){
+            free(connections);
+            connections = NULL;
       }
 }
 
@@ -1084,7 +1095,7 @@ void readFromFile(char * file_name, typ * storage, int n_data){
 
       FILE * file = fopen(file_name, "r");
       if (file == NULL){
-            fprintf(stderr, "Error : Could not open file pth/init.txt.\n");
+            fprintf(stderr, "Error : Could not open file in function readFromFile.\n");
             abort();
       }
       typ i = 0.0;
@@ -1164,6 +1175,8 @@ void verify(){
       if(!type_check(typeof(seed_bool),                int)){fprintf(stderr, "Error : seed_bool must be given as an integer (0 or 1).\n");               abort();}
       if(!type_check(typeof(one_collision_only_bool),  int)){fprintf(stderr, "Error : one_collision_only_bool must be given as an integer (0 or 1).\n"); abort();}
       if(!type_check(typeof(openGL_bool),              int)){fprintf(stderr, "Error : openGL_bool must be given as an integer (0 or 1).\n");             abort();}
+      if(!type_check(typeof(resume_simulation_bool),   int)){fprintf(stderr, "Error : resume_simulation_bool must be given as an integer (0 or 1).\n");  abort();}
+      if(!type_check(typeof(viscoelastic_bool),        int)){fprintf(stderr, "Error : viscoelastic_bool must be given as an integer (0 or 1).\n");       abort();}
       if(!type_check(typeof(J2_bool),                  int)){fprintf(stderr, "Error : J2_bool must be given as an integer (0 or 1).\n");                 abort();}
       if(!type_check(typeof(Sun_bool),                 int)){fprintf(stderr, "Error : Sun_bool must be given as an integer (0 or 1).\n");                abort();}
       if(!type_check(typeof(inner_fluid_disk_bool),    int)){fprintf(stderr, "Error : inner_fluid_disk_bool must be given as an integer (0 or 1).\n");   abort();}
@@ -1192,6 +1205,8 @@ void verify(){
       if (seed_bool                != 0 && seed_bool                != 1){OK = 0;}
       if (one_collision_only_bool  != 0 && one_collision_only_bool  != 1){OK = 0;}
       if (openGL_bool              != 0 && openGL_bool              != 1){OK = 0;}
+      if (resume_simulation_bool   != 0 && resume_simulation_bool   != 1){OK = 0;}
+      if (viscoelastic_bool        != 0 && viscoelastic_bool        != 1){OK = 0;}
       if (J2_bool                  != 0 && J2_bool                  != 1){OK = 0;}
       if (Sun_bool                 != 0 && Sun_bool                 != 1){OK = 0;}
       if (inner_fluid_disk_bool    != 0 && inner_fluid_disk_bool    != 1){OK = 0;}
@@ -1237,6 +1252,11 @@ void verify(){
       if(!type_check(typeof(spawned_density),           typ)){fprintf(stderr, "Error : spawned_density must be given as a floating-point number.\n");       abort();}
       if(!type_check(typeof(f_tilde),                   typ)){fprintf(stderr, "Error : f_tilde must be given as a floating-point number.\n");               abort();}
       if(!type_check(typeof(Rroche),                    typ)){fprintf(stderr, "Error : Rroche must be given as a floating-point number.\n");                abort();}
+      if(!type_check(typeof(spring_modulus),            typ)){fprintf(stderr, "Error : spring_modulus must be given as a floating-point number.\n");        abort();}
+      if(!type_check(typeof(damping_coefficient),       typ)){fprintf(stderr, "Error : damping_coefficient must be given as a floating-point number.\n");   abort();}
+      if(!type_check(typeof(spring_failure),            typ)){fprintf(stderr, "Error : spring_failure must be given as a floating-point number.\n");        abort();}
+      if(!type_check(typeof(connecting_distance),       typ)){fprintf(stderr, "Error : connecting_distance must be given as a floating-point number.\n");   abort();}
+      if(!type_check(typeof(minimal_distance),          typ)){fprintf(stderr, "Error : minimal_distance must be given as a floating-point number.\n");      abort();}
       if(!type_check(typeof(t_end),                     typ)){fprintf(stderr, "Error : t_end must be given as a floating-point number.\n");                 abort();}
       if(!type_check(typeof(time_step),                 typ)){fprintf(stderr, "Error : time_step must be given as a floating-point number.\n");             abort();}
       if(!type_check(typeof(low_dumping_threshold),     typ)){fprintf(stderr, "Error : low_dumping_threshold must be given as a floating-point number.\n"); abort();}
@@ -1265,6 +1285,7 @@ void verify(){
       if(!type_check(typeof(frag_threshold),            typ)){fprintf(stderr, "Error : frag_threshold must be given as a floating-point number.\n");        abort();}
 
       /******** I now verify that integer numbers stayed that way ********/
+      if(!type_check(typeof(n_vertices),                int)){fprintf(stderr, "Error : n_vertices must be given as an integer.\n");                         abort();}
       if(!type_check(typeof(N_max),                     int)){fprintf(stderr, "Error : N_max must be given as an integer.\n");                              abort();}
       if(!type_check(typeof(N_0),                       int)){fprintf(stderr, "Error : N_0 must be given as an integer.\n");                                abort();}
       if(!type_check(typeof(output_step),               int)){fprintf(stderr, "Error : output_step must be given as an integer.\n");                        abort();}
@@ -1321,6 +1342,18 @@ void verify(){
       }
       if (make_animation_bool && !write_elliptic_bool){
             fprintf(stderr, "Error : write_elliptic_bool must be set to 1 when make_animation_bool is set to 1.\n");
+            abort();
+      }
+      if (viscoelastic_bool && central_mass_bool){
+            fprintf(stderr, "Error : central_mass_bool must be set to 0 if viscoelastic_bool is set to 1.\n");
+            abort();
+      }
+      if (viscoelastic_bool && (mesh_bool || standard_tree_bool)){
+            fprintf(stderr, "Error : Only falcON algorithm and the brute-force method are supported when NcorpiON is used to simulate a viscoelastic body.\n");
+            abort();
+      }
+      if (viscoelastic_bool && collision_bool && (instant_merger_bool || fragmentation_bool)){
+            fprintf(stderr, "Error : Collision can only be resolved elastically and inelastically when NcorpiON is used to simulate a viscoelastic body.\n");
             abort();
       }
 }

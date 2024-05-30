@@ -37,6 +37,7 @@
 #include "ffm.h"
 #include "collision.h"
 #include "display.h"
+#include "spring.h"
 #include <errno.h>
 #include <math.h>
 #include <string.h>
@@ -69,6 +70,9 @@ void kick(struct moonlet * X, struct moonlet * C, void (*F)(struct moonlet *)){
       /******** Taking care of tides and other dissipation ********/
       if (central_tides_bool){
             tides(X);
+      }
+      if (viscoelastic_bool){
+            KelvinVoigtDamping(X);
       }
       
       /******** Applying the kick ********/
@@ -356,7 +360,7 @@ void integration_tree(typ t){
 
 
       /******** Initializing the array of bodies ********/
-      struct moonlet * moonlets = populate();
+      struct moonlet * moonlets = (viscoelastic_bool ? generate_visco_elastic_body() : populate());
       struct moonlet * moonlet_buffer = (struct moonlet *)malloc(N_max*sizeof(struct moonlet)); //Buffer for output steps
       if (moonlet_buffer == NULL){
             fprintf(stderr, "Error : Can't allocate buffer for array of bodies in function integration_tree.\n");
@@ -468,7 +472,7 @@ void integration_tree(typ t){
                   }
                   else{
                         if (!mutual_bool){
-                              root = root_cell(moonlets);
+                              root     = root_cell(moonlets);
                               FlatTree = flattree_init(root);
                               clear_boxdot(&root);
                         }
@@ -489,7 +493,6 @@ void integration_tree(typ t){
             drift(moonlets, &CM);
 
             iter ++;
-            iter_global ++;
             time_elapsed += timestep;
             progress = time_elapsed/t;
             
@@ -539,7 +542,7 @@ void integration_mesh(typ t){
 
 
       /******** Initializing the array of bodies ********/
-      struct moonlet * moonlets = populate();
+      struct moonlet * moonlets = (viscoelastic_bool ? generate_visco_elastic_body() : populate());
       struct moonlet * moonlet_buffer = (struct moonlet *)malloc(N_max*sizeof(struct moonlet)); //Buffer for output steps
       if (moonlet_buffer == NULL){
             fprintf(stderr, "Error : Can't allocate buffer for array of bodies in function integration_brute_force.\n");
@@ -711,7 +714,7 @@ void integration_brute_force_SABA1(typ t){
 
 
       /******** Initializing the array of bodies ********/
-      struct moonlet * moonlets = populate();
+      struct moonlet * moonlets = (viscoelastic_bool ? generate_visco_elastic_body() : populate());
       struct moonlet * moonlet_buffer = (struct moonlet *)malloc(N_max*sizeof(struct moonlet)); //Buffer for output steps
       if (moonlet_buffer == NULL){
             fprintf(stderr, "Error : Can't allocate buffer for array of bodies in function integration_brute_force.\n");

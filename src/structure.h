@@ -62,8 +62,8 @@ struct moonlet {
       typ vy;
       typ vz;
       typ mass;           //Body mass.
-      typ radius;         //Body radius. While the radius can be computed from the mass, storing the radius reduces computation time, at the cost of more memory usage.
-                          //This does not even yield more memory usage due to padding if the field radius is removed. The structure moonlet weighs 64 bytes if typ is double.
+      typ radius;         //Body radius.
+                          //The structure moonlet weighs 64 bytes if typ is double.
 };
 
 /******** Moonlet structure containing the central body, if needed ********/
@@ -79,13 +79,10 @@ extern struct moonlet * xx;
 extern int * exists;                          //The kth cell contains 1 if *(moonlets + k) contains a body, and zero else
 extern int * free_indexes;                    //Arrays of ids of non-existant bodies
 
-/******** To be removed (Debugging) ********/
-extern int iter_global;
 
-
-/****************************************************************************************/
-/******** Defining a cache-friendly chain structure that holds ids of bodies   ********/
-/****************************************************************************************/
+/************************************************************************************/
+/******** Defining a cache-friendly chain structure that holds ids of bodies ********/
+/************************************************************************************/
 
 
 /******** The regular definition of a chain (or linked list) is                  ********/

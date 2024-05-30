@@ -415,8 +415,8 @@ void brute_force(struct moonlet * moonlets){
 
       for (i = 0; i <= current_largest_id; i ++){
             if(*(exists + i)){                    //Checking if there is a body in the i^th cell of the array moonlets
-                  for (j = i+1; j <= largest_id; j ++){
-                        if(*(exists+j)){          //Checking if there is a body in the j^th cell of the array moonlets
+                  for (j = i + 1; j <= largest_id; j ++){
+                        if(*(exists + j)){        //Checking if there is a body in the j^th cell of the array moonlets
                               the_approach = closest_approach(moonlets, i, j);                             
                               if (the_approach != NULL && !(*(did_collide + i)) && !(*(did_collide + j))){ //The closest approach leads to a collision and i and j did not yet collide
                                     if(elastic_collision_bool){ //All collision are elastic
@@ -509,17 +509,17 @@ void get_rmax_and_rcrit(struct node * FlatTree, struct moonlet * moonlets, int a
       
       /******** Retrieving the center of mass of the cell ********/
       typ com_x, com_y, com_z;
-      com_x = ((FlatTree +a) -> com)[0];  com_y = ((FlatTree +a) -> com)[1];  com_z = ((FlatTree +a) -> com)[2];
+      com_x = ((FlatTree + a) -> com)[0];  com_y = ((FlatTree + a) -> com)[1];  com_z = ((FlatTree + a) -> com)[2];
       
       typ dx, dy, dz; //Distance with a dot along each axis
       
-      int * dots = (FlatTree + a) -> dots; //All the bodies in that cell
+      int * dots        = (FlatTree + a) -> dots; //All the bodies in that cell
       int how_many_dots = (FlatTree + a) -> how_many_dots;
       int i;
       int j; //Id of the body whose distance to the center of mass is to be computed
       
-      for (i = 0; i < how_many_dots; i++){
-            j = dots[i];
+      for (i = 0; i < how_many_dots; i ++){
+            j  = dots[i];
             dx = (moonlets + j) -> x - com_x;
             dy = (moonlets + j) -> y - com_y;
             dz = (moonlets + j) -> z - com_z;
@@ -546,13 +546,13 @@ void get_center_and_maxR_from_children(struct node * FlatTree, int a){
       int i;
       
       typ com[3] = {0.0, 0.0, 0.0}; //The average position of the bodies in the cell
-      typ maxR = 0.0;               //Largest body radius
+      typ maxR   = 0.0;             //Largest body radius
       typ * com_child;              //The average position of the bodies in the child
       typ maxR_child;               //Largest body radius of the child
       int how_many_dots_in_child;   //Number of bodies in the child
 
       
-      for (i = idFirstChild; i < idLastChild; i++){
+      for (i = idFirstChild; i < idLastChild; i ++){
             maxR_child = (FlatTree + i) -> M0;
             com_child  = (FlatTree + i) -> com;
             how_many_dots_in_child = (FlatTree + i) -> how_many_dots;
@@ -567,7 +567,7 @@ void get_center_and_maxR_from_children(struct node * FlatTree, int a){
       }
 
       /******** Initializing the relevant fields ********/
-      (FlatTree + a) -> M0 = maxR; //When treating collision, the field M0 of the FlatTree gives the largest body radius, not the cell's mass
+      ( FlatTree + a) -> M0 = maxR; //When treating collision, the field M0 of the FlatTree gives the largest body radius, not the cell's mass
       ((FlatTree + a) -> com)[0] = com[0]/((typ) how_many_dots); //Similarly, the field com gives the average position of the bodies, not the center of mass
       ((FlatTree + a) -> com)[1] = com[1]/((typ) how_many_dots);
       ((FlatTree + a) -> com)[2] = com[2]/((typ) how_many_dots);
@@ -583,9 +583,9 @@ void get_rmax_and_rcrit_from_children(struct node * FlatTree, int a){
       int idLastChild  = idFirstChild + (FlatTree + a) -> how_many_children;
       int i;
 
-      typ * center = (FlatTree + a) -> center; //The center of the node
-      typ * com = (FlatTree + a) -> com;       //The average position of the bodies in the node
-      typ D = (FlatTree + a) -> sidelength;    //The sidelength of the node
+      typ * center = (FlatTree + a) -> center;     //The center of the node
+      typ * com    = (FlatTree + a) -> com;        //The average position of the bodies in the node
+      typ D        = (FlatTree + a) -> sidelength; //The sidelength of the node
       typ corner[8][3] = {{center[0] - D - com[0], center[1] - D - com[1], center[2] - D - com[2]},
                           {center[0] - D - com[0], center[1] - D - com[1], center[2] + D - com[2]},
                           {center[0] - D - com[0], center[1] + D - com[1], center[2] - D - com[2]},
@@ -612,7 +612,7 @@ void get_rmax_and_rcrit_from_children(struct node * FlatTree, int a){
 
       /******** Eq. (9) of Dehnen (2002) ********/
       for (i = idFirstChild; i < idLastChild; i++){
-            com_child = (FlatTree + i) -> com;
+            com_child  = (FlatTree + i) -> com;
             rmax_child = (FlatTree + i) -> r_max;
             com_difference[0] = com[0] - com_child[0];
             com_difference[1] = com[1] - com_child[1];
@@ -755,7 +755,7 @@ void collision_flattree(struct node * FlatTree, struct moonlet * moonlets){
       /******** otherwise, if the nodes are well-separated, I do nothing, otherwise, if                            ********/
       /******** NaNb < N_cc_post or the pair has no children, I treat it brute-forcely, otherwise, I subdivise the ********/
       /******** largest node of the pair (or the only one that has children). If it is a pair of the same node, I  ********/
-      /******** treat it brute-forcely if Na < N_cs or if it has no children, and I subdivise it else              ********/
+      /******** treat it brute-forcely if Na < N_cs or if it has no children, and else I subdivise it else         ********/
       while (j > i){
             a = (stack + i) -> fst; //Id of first  node
             b = (stack + i) -> snd; //Id of second node
@@ -765,8 +765,8 @@ void collision_flattree(struct node * FlatTree, struct moonlet * moonlets){
                   how_many_children_a = (FlatTree + a) -> how_many_children;
                   if (Na < N_cs_collision || how_many_children_a == 0){ //Direct interaction
                         dots_a = (FlatTree + a) -> dots;
-                        for (p = 0; p < Na; p++){
-                              for (q = p + 1; q < Na; q++){
+                        for (p = 0; p < Na; p ++){
+                              for (q = p + 1; q < Na; q ++){
                                     s = dots_a[p]; //Id of first  body
                                     u = dots_a[q]; //Id of second body
                                     if (!did_collide[s] && !did_collide[u]){
@@ -821,8 +821,8 @@ void collision_flattree(struct node * FlatTree, struct moonlet * moonlets){
                         if ((!(Na > N_cc_collision && Nb > N_cc_collision) && Na*Nb < N_cc_collision) || (how_many_children_a == 0 && how_many_children_b == 0)){ //Direct interaction
                               dots_a = (FlatTree + a) -> dots;
                               dots_b = (FlatTree + b) -> dots;
-                              for (p = 0; p < Na; p++){
-                                    for (q = 0; q < Nb; q++){
+                              for (p = 0; p < Na; p ++){
+                                    for (q = 0; q < Nb; q ++){
                                           s = dots_a[p]; //Id of first  body
                                           u = dots_b[q]; //Id of second body
                                           if (!did_collide[s] && !did_collide[u]){
@@ -892,7 +892,7 @@ void collision_flattree(struct node * FlatTree, struct moonlet * moonlets){
                         }
                   }
             }
-            i++;
+            i ++;
       }
       free(stack);
       stack = NULL;

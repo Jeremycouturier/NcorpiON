@@ -37,6 +37,7 @@
 #include "ffm.h"
 #include "rk4.h"
 #include "display.h"
+#include "spring.h"
 #include <errno.h>
 #include <math.h>
 
@@ -251,7 +252,7 @@ void vector_field(struct moonlet * moonlets){
                   Cm_downtree(FlatTree, moonlets);
             }
             else if (standard_tree_bool){
-                  for (k = 0; k <= largest_id; k++){
+                  for (k = 0; k <= largest_id; k ++){
                         if (exists[k]){
                               standard_tree_acceleration(FlatTree, moonlets, k);
                         }
@@ -259,7 +260,7 @@ void vector_field(struct moonlet * moonlets){
             }
             for (k = 0; k <= largest_id; k ++){
                   if (exists[k]){                  
-                        (moonlets + k) -> vx += C1Moonlets[3*k]  ;
+                        (moonlets + k) -> vx += C1Moonlets[3*k];
                         (moonlets + k) -> vy += C1Moonlets[3*k + 1];
                         (moonlets + k) -> vz += C1Moonlets[3*k + 2];
                   }
@@ -340,11 +341,11 @@ void vector_field(struct moonlet * moonlets){
                         softening = softening_parameter*(Rk + Rp);
                         D  = sqrt(DX*DX + DY*DY + DZ*DZ + softening*softening);
                         D3 = D*D*D;
-                        /******** Updading the acceleration of body k ********/
+                        /******** Updating the acceleration of body k ********/
                         (moonlets + k) -> vx -= G*mp*DX/D3;
                         (moonlets + k) -> vy -= G*mp*DY/D3;
                         (moonlets + k) -> vz -= G*mp*DZ/D3;
-                        /******** Updading the acceleration of body p ********/
+                        /******** Updating the acceleration of body p ********/
                         (moonlets + p) -> vx += G*mk*DX/D3;
                         (moonlets + p) -> vy += G*mk*DY/D3;
                         (moonlets + p) -> vz += G*mk*DZ/D3;           
@@ -352,15 +353,95 @@ void vector_field(struct moonlet * moonlets){
             }       
       }
       #endif
+      
+      /******** Accelerations due to springs between particles of the viscoelastic body ********/
+      if (viscoelastic_bool){
+            int j;
+            typ xk, yk, zk, xp, yp, zp, L, r, dL;
+            for (j = 0; j < N_connections; j ++){ //Travelling through all the connections
+                  k  = (connections + j) -> Pair.fst;
+                  p  = (connections + j) -> Pair.snd;
+                  L  = (connections + j) -> rest_length;
+                  xk = (moonlets    + k) -> x;
+                  yk = (moonlets    + k) -> y;
+                  zk = (moonlets    + k) -> z;
+                  mk = (moonlets    + k) -> mass;
+                  xp = (moonlets    + p) -> x;
+                  yp = (moonlets    + p) -> y;
+                  zp = (moonlets    + p) -> z;
+                  mp = (moonlets    + p) -> mass;
+                  DX = xk - xp;  DY = yk - yp;  DZ = zk - zp;
+                  r  = sqrt(DX*DX + DY*DY + DZ*DZ);
+                  dL = r - L;
+                  K  = spring_modulus*L*dL/r;
+                  /******** Updating the accelerations ********/
+                  (moonlets + k) -> vx -= K*DX/mk;
+                  (moonlets + k) -> vy -= K*DY/mk;
+                  (moonlets + k) -> vz -= K*DZ/mk;
+                  (moonlets + p) -> vx += K*DX/mp;
+                  (moonlets + p) -> vy += K*DY/mp;
+                  (moonlets + p) -> vz += K*DZ/mp;
+            }
+      }
+}
+
+
+void KelvinVoigtDamping(struct moonlet * X){
+
+      /******** Computes the acceleration due to the dampers in the Kelvin-Voigt models of the viscoelastic body ********/
+      /******** The array xx is updated. This function is only called (by "kick") when viscoelastic_bool is 1    ********/
+      
+      
+      int j, k, p;
+      typ xk, yk, zk, vxk, vyk, vzk, mk, xp, yp, zp, vxp, vyp, vzp, mp, L, drdv, K, dX, dY, dZ, dvX, dvY, dvZ, dr;
+
+      for (j = 0; j < N_connections; j ++){ //Travelling through all the connections
+            k    = (connections + j) -> Pair.fst;
+            p    = (connections + j) -> Pair.snd;
+            L    = (connections + j) -> rest_length;
+            xk   = (X + k) -> x;
+            yk   = (X + k) -> y;
+            zk   = (X + k) -> z;
+            vxk  = (X + k) -> vx;
+            vyk  = (X + k) -> vy;
+            vzk  = (X + k) -> vz;
+            mk   = (X + k) -> mass;
+            xp   = (X + p) -> x;
+            yp   = (X + p) -> y;
+            zp   = (X + p) -> z;
+            vxp  = (X + p) -> vx;
+            vyp  = (X + p) -> vy;
+            vzp  = (X + p) -> vz;
+            mp   = (X + p) -> mass;
+            /******** Updating the speeds ********/
+            vxk += 0.5*timestep*(xx + k) -> vx;
+            vyk += 0.5*timestep*(xx + k) -> vy;
+            vzk += 0.5*timestep*(xx + k) -> vz;
+            vxp += 0.5*timestep*(xx + p) -> vx;
+            vyp += 0.5*timestep*(xx + p) -> vy;
+            vzp += 0.5*timestep*(xx + p) -> vz;
+            dX   =  xk -  xp;  dY  =  yk -  yp;  dZ  =  zk -  zp;
+            dvX  = vxk - vxp;  dvY = vyk - vyp;  dvZ = vzk - vzp;
+            drdv = dX*dvX + dY*dvY + dZ*dvZ;
+            dr   = sqrt(dX*dX   + dY*dY   + dZ*dZ);
+            K    = damping_coefficient*L*drdv/(dr*dr);
+            /******** Updating the accelerations ********/
+            (xx + k) -> vx -= K*dX/mk;
+            (xx + k) -> vy -= K*dY/mk;
+            (xx + k) -> vz -= K*dZ/mk;
+            (xx + p) -> vx += K*dX/mp;
+            (xx + p) -> vy += K*dY/mp;
+            (xx + p) -> vz += K*dZ/mp;
+      }
 }
 
 
 void tides(struct moonlet * X){
 
-      /******** When this function is called, the body array xx contains the acceleration without tides    ********/
-      /******** This function uses the knowledge of the acceleration without tides in order to compute the ********/
-      /******** speed at the middle of the kick phase. Then, the acceleration due to tides can be computed ********/
-      /******** and is added to the acceleration without tides in the array xx                             ********/
+      /******** When this function is called (by "kick"), the body array xx contains the acceleration without tides ********/
+      /******** This function uses the knowledge of the acceleration without tides in order to compute the speed at ********/
+      /******** the middle of the kick phase. Then, the acceleration due to tides can be computed and is added to   ********/
+      /******** the acceleration without tides in the array xx                                                      ********/
       
       three_largest_moonlets(X); //Only the three largest bodies raise tides. I retrieve their indexes
       typ largest_positions [9]; //Positions  of the three largest bodies at t - Delta t
@@ -474,11 +555,11 @@ void collision(struct moonlet * moonlets, int a, int b, typ f){
       
       
       /******** Calculating the new speeds after impact ********/
-      typ dr_dot_dv = (xa-xb)*(vx_a-vx_b)+(ya-yb)*(vy_a-vy_b)+(za-zb)*(vz_a-vz_b); //Scalar product dv.dr where dr=r_b-r_a and dv=v_b-v_a are the relative position and speed
-      typ alpha = f*m_a*m_b/((m_a+m_b)*R*R);                                       //Factor such that J=alpha*(dv.dr)*dr
-      typ Jx = alpha*dr_dot_dv*(xb-xa);                                            //x component of J
-      typ Jy = alpha*dr_dot_dv*(yb-ya);                                            //y component of J
-      typ Jz = alpha*dr_dot_dv*(zb-za);                                            //z component of J
+      typ dr_dot_dv = (xa - xb)*(vx_a - vx_b) + (ya - yb)*(vy_a - vy_b) + (za - zb)*(vz_a - vz_b); //Dot product dv.dr where dr=r_b-r_a and dv=v_b-v_a are the relative position and speed
+      typ alpha     = f*m_a*m_b/((m_a + m_b)*R*R);                                                 //Factor such that J=alpha*(dv.dr)*dr
+      typ Jx        = alpha*dr_dot_dv*(xb - xa);                                                   //Vector J
+      typ Jy        = alpha*dr_dot_dv*(yb - ya);
+      typ Jz        = alpha*dr_dot_dv*(zb - za);
       
       
       /******** Calculating the speeds after impact ********/
@@ -959,8 +1040,3 @@ void get_neighbours_mesh(struct moonlet * moonlets){
             }
       }
 }
-
-
-
-
-

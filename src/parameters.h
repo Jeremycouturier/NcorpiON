@@ -42,7 +42,6 @@
 #define pth "/home/user/Documents/NcorpiON/"
 
 
-
 /**************************************************************************/
 /******** Defining booleans to determine the behaviour of NcorpiON ********/
 /**************************************************************************/
@@ -73,6 +72,7 @@
 #define resume_simulation_bool   0   //Determines if, at the end of the simulation, NcorpiON generates a file named init.txt that can be used to resume the simulation. The file init.txt
                                      //is stored at the path indicated above. To resume the simulation, you need to set random_initial_bool to 0, initial_cartesian_bool to 1, and N_0 to
                                      //the number of lines of init.txt. If init.txt already exists in path pth, it will be overwritten. Simulation's variables should be updated.
+#define viscoelastic_bool        0   //Determines if NcorpiON is used to simulate a viscoelastic body. The body is discretized by N_0 points linked by Kelvin-Voigt models.
 
 /******** Booleans relative to interactions with the central mass or a distant object. Set to 0 if central_mass_bool is 0 ********/
 #define J2_bool                  0   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
@@ -107,7 +107,8 @@
 /******** Defining a system of units for the simulation. If random_initial_bool is 0, then the units in the file init.txt must be the simulation's units ********/
 #define R_unit 1.0                   //If central_mass_bool is 1, then radius of the central body. Otherwise, unimportant for the simulation. You define your own unit of length.
 #define M_unit 1.0                   //If central_mass_bool is 1, then   mass of the central body. Otherwise this is the mass for conversions cartesian <-> elliptic
-#define G 39.47841760435743          //The gravitational constant. It is here set to 4*pi^2, so that a body of semi-major axis 1 orbiting a mass 1 has a period 1
+#define G 39.47841760435743          //The gravitational constant. It is here set to 4*pi^2, so that a body of semi-major axis 1 orbiting a mass 1 has a period 1.
+                                     //If viscoelastic_bool is 1, M_unit and R_unit are the mass and mean radius of the viscoelastic body to be simulated.
                                      //Note that R_unit and M_unit do not necessarily have to be 1, they should just be equal to the mass and radius of the central body in the system
                                      //of units that you want to use for the simulation. It is generally advised to use a system of units such that the simulation will not have to
                                      //manipulate absurdely large or small floating points numbers. If central_mass_bool is 0, then you don't have to define R_unit and you should define
@@ -131,7 +132,16 @@
 #define f_tilde 0.3                  //A parameter controlling the mass of bodies spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
 #define Rroche 2.9                   //The Roche radius where bodies spawn from the inner fluid disk (in simulation's units). The radius of tidal disruption is low_dumping_threshold
                                      //defined below. Must be larger than both low_dumping_threshold and than R_unit.
-
+                                     
+/******** Physical constants relative to viscoelasticity ********/
+#define n_vertices 2000              //Number of vertices in the shape-model. This is the number of lines of pth/shape_model.txt. Shouldn't exceed a few thousands
+#define spring_modulus 400.0         //The modulus of the springs in the Kelvin-Voigt model. Must be given in simulation's units. Force is -spring_modulus*L*dL with L the rest_length
+#define damping_coefficient 0.25     //The damping coefficient of the dampers in the Kelvin-Voigt models. Force is -damping_coefficient*L*dL/dt with L the rest_length
+#define spring_failure 1.05          //The springs of the Kelvin-Voigt connections break if length/equilibrium_length > spring_failure.
+#define connecting_distance 0.02515  //The minimal distance between two particles for them to be connected.
+#define minimal_distance 0.00872     //Minimal initial distance between two particles. Shouldn't be more than 0.7*(V/N_0)^(1/3) where V is the volume of the shape-model. NcorpiON will
+                                     //draw N_0 particles inside the shape model to be linked by Kelvin-Voigt models by making sure than no two particles are closer than that.
+                                     
 
 
 /*******************************************************/

@@ -1,8 +1,8 @@
 /**************************************************************************************/
 /**************************************************************************************/
 /**************************************************************************************/
-/******** @file    physics.h                                                   ********/
-/******** @brief   Header file to physics.c                                    ********/
+/******** @file    spring.h                                                    ********/
+/******** @brief   Header file to spring.c                                     ********/
 /******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
 /********                                                                      ********/
 /******** @section 	LICENSE                                                ********/
@@ -27,37 +27,49 @@
 /**************************************************************************************/
 
 
-#ifndef _PHYSICS_H_
-#define _PHYSICS_H_
-
+#ifndef _SPRING_H_
+#define _SPRING_H_
 
 #include "parameters.h"
-#include "structure.h"
+
+/******** Defining the connection structure between two particles (Kelvin-Voigt model) ********/
+struct connection {
+      struct pair Pair;       //The pair of particles linked by the connection
+      typ rest_length;        //The rest length of the spring
+      typ equilibrium_length; //The equilibrium length of the spring. Unknown until the viscous body has been integrated to equilibrium
+};
 
 
-void vector_field(struct moonlet * moonlets);
+extern struct connection * connections; //The array of connections between particles of the viscoelastic body
+extern struct chain * first;            //This chain will contain the index of the first  particle of the connection
+extern struct chain * second;           //This chain will contain the index of the second particle of the connection
+extern int N_connections;               //The total number of connections in the viscoelastic body
 
 
-void KelvinVoigtDamping(struct moonlet * X);
+struct moonlet * generate_visco_elastic_body();
 
 
-void tides(struct moonlet * X);
+void generate_connections(struct moonlet * viscoelastic);
 
 
-void collision(struct moonlet * moonlets, int a, int b, typ f);
+void overlap(struct moonlet * viscoelastic);
 
 
-void merger(struct moonlet * moonlets, int a, int b);
+void deOverlap(struct moonlet * viscoelastic, int a, int b);
 
 
-void fragmentation(struct moonlet * moonlets, int a, int b);
+void viscoelastic_flattree(struct node * FlatTree, struct moonlet * viscoelastic, int generating);
 
 
-void collision_treatment(struct moonlet * moonlets, int a, int b, int type_of_collision);
+int connects(struct moonlet * viscoelastic, int a, int b);
 
 
-void get_neighbours_mesh(struct moonlet * moonlets);
-
+struct connection make_connection(struct moonlet * viscoelastic, int a, int b);
 
 
 #endif
+
+
+
+
+

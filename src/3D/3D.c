@@ -76,7 +76,7 @@ int main(int argc, char* argv[]){
       MPI_Recv(dtt, 3, MPI_TYP, !rank, 0, MPI_COMM_WORLD, &status);
       MPI_Recv(att, 2, MPI_INT, !rank, 0, MPI_COMM_WORLD, &status);
       r -> dt               = dtt[0];
-      typ length            = dtt[1] - dtt[0];
+      typ length            = dtt[1];
       radius_blow_up_factor = dtt[2];
       central_mass_bool     = att[0];
       int browser_port      = att[1];
@@ -90,6 +90,7 @@ int main(int argc, char* argv[]){
       reb_simulation_integrate(r, length);  //Pseudo - integrating. Only what is done in the heartbeat function serves a purpose
 
       /******** Finishing ********/
+      usleep(10000000.);
       MPI_Finalize();
       reb_simulation_stop_server(r);
       reb_simulation_free(r);
