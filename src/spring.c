@@ -73,63 +73,89 @@ struct moonlet * generate_visco_elastic_body(){
             abort();
       }
       
-      /******** Generating the array of vertices ********/
-      typ * vertices = (typ *)malloc(3*n_vertices*sizeof(typ));
-      if (vertices == NULL){
-            fprintf(stderr, "Error : Cannot allocate array of vertices in function generate_visco_elastic_body.\n");
-            abort();
-      }
-      
-      /******** Retrieving all the vertices from the file pth/shape_model.txt ********/
-      char fileOfVertices[800]; 
-      strcpy(fileOfVertices, pth);
-      strcat(fileOfVertices, "shape_model.txt");
-      readFromFile(fileOfVertices, vertices, 3*n_vertices);
-      
-      /******** Getting the largest distance between a vertice and the origin ********/
-      for (j = 0; j < n_vertices; j ++){
-            distance = vertices[3*j]*vertices[3*j] + vertices[3*j + 1]*vertices[3*j + 1] + vertices[3*j + 2]*vertices[3*j + 2];
-            if (distance > maxD){
-                  maxD = distance;
+      if (random_initial_bool){
+            /******** Generating the array of vertices ********/
+            typ * vertices = (typ *)malloc(3*n_vertices*sizeof(typ));
+            if (vertices == NULL){
+                  fprintf(stderr, "Error : Cannot allocate array of vertices in function generate_visco_elastic_body.\n");
+                  abort();
             }
-      }
-      maxD = sqrt(maxD);
       
-      /******** Drawing the points of the viscoelastic body ********/
-      while (currentN < N_0){
-            X = rdm(-maxD, maxD);
-            Y = rdm(-maxD, maxD);
-            Z = rdm(-maxD, maxD);
-            distance        = sqrt(X*X + Y*Y + Z*Z);
-            distance2       = sqrt(vertices[0]*vertices[0] + vertices[1]*vertices[1] + vertices[2]*vertices[2]);
-            costheta_max    = (X*vertices[0] + Y*vertices[1] + Z*vertices[2])/(distance * distance2);
-            closest_vertice = 0;
-            for (j = 1; j < n_vertices; j ++){ //Getting the id of the vertice most collinear with the current point
-                  distance2 = sqrt(vertices[3*j]*vertices[3*j] + vertices[3*j + 1]*vertices[3*j + 1] + vertices[3*j + 2]*vertices[3*j + 2]);
-                  costheta  = (X*vertices[3*j] + Y*vertices[3*j + 1] + Z*vertices[3*j + 2])/(distance * distance2);
-                  if (costheta > costheta_max){
-                        costheta_max = costheta;
-                        closest_vertice = j;
+            /******** Retrieving all the vertices from the file pth/shape_model.txt ********/
+            char fileOfVertices[800]; 
+            strcpy(fileOfVertices, pth);
+            strcat(fileOfVertices, "shape_model.txt");
+            readFromFile(fileOfVertices, vertices, 3*n_vertices);
+      
+            /******** Getting the largest distance between a vertice and the origin ********/
+            for (j = 0; j < n_vertices; j ++){
+                  distance = vertices[3*j]*vertices[3*j] + vertices[3*j + 1]*vertices[3*j + 1] + vertices[3*j + 2]*vertices[3*j + 2];
+                  if (distance > maxD){
+                        maxD = distance;
                   }
             }
-            distance2 = sqrt(vertices[3*closest_vertice]*vertices[3*closest_vertice] 
-            + vertices[3*closest_vertice + 1]*vertices[3*closest_vertice + 1] + vertices[3*closest_vertice + 2]*vertices[3*closest_vertice + 2]);
-            if (distance < distance2){ //The point is inside the viscoelastic body
-                  (viscoelastic + currentN) -> x      = X;
-                  (viscoelastic + currentN) -> y      = Y;
-                  (viscoelastic + currentN) -> z      = Z;
-                  (viscoelastic + currentN) -> vx     = 0.;
-                  (viscoelastic + currentN) -> vy     = 0.;
-                  (viscoelastic + currentN) -> vz     = 0.;
-                  (viscoelastic + currentN) -> mass   = m;
-                  (viscoelastic + currentN) -> radius = minimal_distance/2.0;
-                  currentN ++;
-            }
-      }
-      free(vertices);  vertices = NULL;
+            maxD = sqrt(maxD);
       
-      /******** Making sure that particles do not overlap ********/
-      overlap(viscoelastic);
+            /******** Drawing the points of the viscoelastic body ********/
+            while (currentN < N_0){
+                  X = rdm(-maxD, maxD);
+                  Y = rdm(-maxD, maxD);
+                  Z = rdm(-maxD, maxD);
+                  distance        = sqrt(X*X + Y*Y + Z*Z);
+                  distance2       = sqrt(vertices[0]*vertices[0] + vertices[1]*vertices[1] + vertices[2]*vertices[2]);
+                  costheta_max    = (X*vertices[0] + Y*vertices[1] + Z*vertices[2])/(distance * distance2);
+                  closest_vertice = 0;
+                  for (j = 1; j < n_vertices; j ++){ //Getting the id of the vertice most collinear with the current point
+                        distance2 = sqrt(vertices[3*j]*vertices[3*j] + vertices[3*j + 1]*vertices[3*j + 1] + vertices[3*j + 2]*vertices[3*j + 2]);
+                        costheta  = (X*vertices[3*j] + Y*vertices[3*j + 1] + Z*vertices[3*j + 2])/(distance * distance2);
+                        if (costheta > costheta_max){
+                              costheta_max = costheta;
+                              closest_vertice = j;
+                        }
+                  }
+                  distance2 = sqrt(vertices[3*closest_vertice]*vertices[3*closest_vertice] 
+                  + vertices[3*closest_vertice + 1]*vertices[3*closest_vertice + 1] + vertices[3*closest_vertice + 2]*vertices[3*closest_vertice + 2]);
+                  if (distance < distance2){ //The point is inside the viscoelastic body
+                        (viscoelastic + currentN) -> x      = X;
+                        (viscoelastic + currentN) -> y      = Y;
+                        (viscoelastic + currentN) -> z      = Z;
+                        (viscoelastic + currentN) -> vx     = 0.;
+                        (viscoelastic + currentN) -> vy     = 0.;
+                        (viscoelastic + currentN) -> vz     = 0.;
+                        (viscoelastic + currentN) -> mass   = m;
+                        (viscoelastic + currentN) -> radius = minimal_distance/2.0;
+                        currentN ++;
+                  }
+            }
+            free(vertices);  vertices = NULL;
+      
+            /******** Making sure that particles do not overlap ********/
+            overlap(viscoelastic);
+      }
+      else{
+            /******** Generating particles from files ********/
+            char fileOfIC[800]; 
+            strcpy(fileOfIC, pth);
+            strcat(fileOfIC, "init.txt");
+            typ * IC = (typ *)malloc(8*N_0*sizeof(typ));
+            if (IC == NULL){
+                  fprintf(stderr, "Error : Cannot allocate array for initial conditions in function generate_visco_elastic_body.\n");
+                  abort();
+            }
+            readFromFile(fileOfIC, IC, 8*N_0);
+            for (j = 0; j < N_0; j ++){
+                  (viscoelastic + j) -> x      = *(IC + 8*j);
+                  (viscoelastic + j) -> y      = *(IC + 8*j + 1);
+                  (viscoelastic + j) -> z      = *(IC + 8*j + 2);
+                  (viscoelastic + j) -> vx     = *(IC + 8*j + 3);
+                  (viscoelastic + j) -> vy     = *(IC + 8*j + 4);
+                  (viscoelastic + j) -> vz     = *(IC + 8*j + 5);
+                  (viscoelastic + j) -> mass   = *(IC + 8*j + 6);
+                  (viscoelastic + j) -> radius = *(IC + 8*j + 7);
+            }
+            free(IC);
+            IC = NULL;
+      }
       
       /******** Filling the unused cells of the body array with whatever ********/
       for (j = N_0; j < N_max; j ++){
@@ -169,72 +195,113 @@ void generate_connections(struct moonlet * viscoelastic){
       
       
       struct boxdot * root = NULL;
-      int i, j, index1, index2, index;
+      int i, j, k, index1, index2, index;
       
-      /******** Getting the total number of connections and the ids of the connecting particles ********/
-      if (brute_force_bool){
-            for (i = 0; i < N_0; i ++){
-                  for (j = 0; j < i; j ++){
-                        if (connects(viscoelastic, i, j)){
-                              N_connections ++;
-                              add(i, &first);
-                              add(j, &second);
+      if (random_initial_bool){
+            /******** Getting the total number of connections and the ids of the connecting particles ********/
+            if (brute_force_bool){
+                  for (i = 0; i < N_0; i ++){
+                        for (j = 0; j < i; j ++){
+                              if (connects(viscoelastic, i, j)){
+                                    N_connections ++;
+                                    add(i, &first);
+                                    add(j, &second);
+                              }
                         }
                   }
             }
-      }
-      else{ //FalcON
-            for (j = 0; j < N_0; j ++){
-                  (viscoelastic + j) -> radius = connecting_distance/2.0;
+            else{ //FalcON
+                  for (j = 0; j < N_0; j ++){
+                        (viscoelastic + j) -> radius = connecting_distance/2.0;
+                  }
+                  root     = root_cell(viscoelastic);
+                  FlatTree = flattree_init(root);
+                  clear_boxdot(&root);
+                  center_and_maxR_flattree(FlatTree, viscoelastic);
+                  rmax_and_rcrit_flattree (FlatTree, viscoelastic);                   
+                  viscoelastic_flattree   (FlatTree, viscoelastic, 0);   
             }
-            root     = root_cell(viscoelastic);
-            FlatTree = flattree_init(root);
-            clear_boxdot(&root);
-            center_and_maxR_flattree(FlatTree, viscoelastic);
-            rmax_and_rcrit_flattree (FlatTree, viscoelastic);                   
-            viscoelastic_flattree   (FlatTree, viscoelastic, 0);   
-      }
-      if(falcON_bool){ //Resetting the octree and the associated data
-            for (j = 0; j < N_0; j ++){
-                  (viscoelastic + j) -> radius = minimal_distance/2.0;
+            if(falcON_bool){ //Resetting the octree and the associated data
+                  for (j = 0; j < N_0; j ++){
+                        (viscoelastic + j) -> radius = minimal_distance/2.0;
+                  }
+                  for (j = 0; j < cell_id; j ++){
+                        free((FlatTree + j) -> dots);
+                        (FlatTree + j) -> dots = NULL;
+                  }
+                  free(FlatTree);
+                  FlatTree       = NULL;
+                  how_many_cells = 0;
+                  cell_id        = 0;
             }
-            for (j = 0; j < cell_id; j ++){
-                  free((FlatTree + j) -> dots);
-                  (FlatTree + j) -> dots = NULL;
-            }
-            free(FlatTree);
-            FlatTree       = NULL;
-            how_many_cells = 0;
-            cell_id        = 0;
-      }
       
-      /******** Generating the array of connections ********/
-      index       = 0;
-      index1      = first  -> how_many - 1;
-      index2      = second -> how_many - 1;
-      connections = (struct connection *)malloc(N_connections*sizeof(struct connection));
-      if (connections == NULL){
-            fprintf(stderr, "Cannot allocate array of %d connections in function generate_connections\n", N_connections);
-            abort();
-      }
-      while (first != NULL){
-            
-            i           = (first  -> ids)[index1];
-            j           = (second -> ids)[index2];
-            *(connections + index) = make_connection(viscoelastic, i, j);
-            index1 --;  index2 --; //Switching to the next pair of connecting particles
-            if (index1 < 0){
-                  first  = first  -> queue;
-                  index1 = max_ids_per_node - 1;
+            /******** Generating the array of connections ********/
+            index       = 0;
+            index1      = first  -> how_many - 1;
+            index2      = second -> how_many - 1;
+            connections = (struct connection *)malloc(N_connections*sizeof(struct connection));
+            if (connections == NULL){
+                  fprintf(stderr, "Cannot allocate array of %d connections in function generate_connections\n", N_connections);
+                  abort();
             }
-            if (index2 < 0){
-                  second = second -> queue;
-                  index2 = max_ids_per_node - 1;
+            while (first != NULL){
+                  i           = (first  -> ids)[index1];
+                  j           = (second -> ids)[index2];
+                  *(connections + index) = make_connection(viscoelastic, i, j);
+                  index1 --;  index2 --; //Switching to the next pair of connecting particles
+                  if (index1 < 0){
+                        first  = first  -> queue;
+                        index1 = max_ids_per_node - 1;
+                  }
+                  if (index2 < 0){
+                        second = second -> queue;
+                        index2 = max_ids_per_node - 1;
+                  }
+                  index ++;
             }
-            index ++;
+            clear_chain(&first);
+            clear_chain(&second);
       }
-      clear_chain(&first);
-      clear_chain(&second);
+      else{
+            typ Xi, Yi, Zi, Xj, Yj, Zj, rest_length, eq_length;
+            char fileOfIC[800]; 
+            strcpy(fileOfIC, pth);
+            strcat(fileOfIC, "connections.txt");
+            typ * IC = (typ *)malloc(150*N_0*sizeof(typ));
+            if (IC == NULL){
+                  fprintf(stderr, "Error : Cannot allocate array for initial conditions in function generate_visco_elastic_body.\n");
+                  abort();
+            }
+            N_connections = readFromFile_withoutConstraint(fileOfIC, IC, 150*N_0);
+            if (N_connections % 3){
+                  fprintf(stderr, "There was a problem in reading the file connections.txt in function generate_connections.\n");
+                  abort();
+            }
+            N_connections /= 3;
+            connections = (struct connection *)malloc(N_connections*sizeof(struct connection));
+            if (connections == NULL){
+                  fprintf(stderr, "Cannot allocate array of %d connections in function generate_connections.\n", N_connections);
+                  abort();
+            }
+            for (k = 0; k < N_connections; k ++){
+                  i           = (int) (*(IC + 3*k));
+                  j           = (int) (*(IC + 3*k + 1));
+                  rest_length =        *(IC + 3*k + 2);
+                  Xi          = (viscoelastic + i) -> x;
+                  Yi          = (viscoelastic + i) -> y;
+                  Zi          = (viscoelastic + i) -> z;
+                  Xj          = (viscoelastic + j) -> x;
+                  Yj          = (viscoelastic + j) -> y;
+                  Zj          = (viscoelastic + j) -> z;
+                  eq_length   = sqrt((Xi - Xj)*(Xi - Xj) + (Yi - Yj)*(Yi - Yj) + (Zi - Zj)*(Zi - Zj));
+                  (connections + k) -> Pair.fst           = i;
+                  (connections + k) -> Pair.snd           = j;
+                  (connections + k) -> rest_length        = rest_length;
+                  (connections + k) -> equilibrium_length = eq_length;
+            }
+            free(IC);
+            IC = NULL;
+      }
 }
 
 
@@ -548,14 +615,6 @@ struct connection make_connection(struct moonlet * viscoelastic, int a, int b){
       C.equilibrium_length = 0.; //Will be properly initialized later
       return C;
 }
-
-
-
-
-
-
-
-
 
 
 

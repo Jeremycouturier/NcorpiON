@@ -1121,6 +1121,37 @@ void readFromFile(char * file_name, typ * storage, int n_data){
 }
 
 
+int readFromFile_withoutConstraint(char * file_name, typ * storage, int storage_size){
+
+      /******** Same as above but the number of data to be read does not need to be specified. ********/
+      /******** Returns the number of data read by the function. The size allocated to storage ********/
+      /******** is specified instead                                                           ********/
+
+      FILE * file = fopen(file_name, "r");
+      if (file == NULL){
+            fprintf(stderr, "Error : Could not open file in function readFromFile_withoutConstraint.\n");
+            abort();
+      }
+      typ i = 0.0;
+      int j = 0;
+      int returnValue = 1;
+ 
+      while (returnValue == 1){
+            if (j > storage_size){
+                  fprintf(stderr, "Error : There are too many data in the file in function readFromFile_withoutConstraint given the buffer's size.\n");
+                  abort();
+            }
+            returnValue = fscanf(file, "%lf", &i);
+            if (returnValue == 1){
+                  *(storage + j) = i;
+            }
+            j ++;
+      }
+      fclose(file);
+      return j - 1;
+}
+
+
 void total_momentum(struct moonlet * moonlets, typ * momentum){
 
       /******** Computes the total momentum of the system and stores it in the array momentum ********/

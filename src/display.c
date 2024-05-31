@@ -37,6 +37,7 @@
 #include "ffm.h"
 #include "rk4.h"
 #include "display.h"
+#include "spring.h"
 #include <errno.h>
 #include <math.h>
 #include <stdint.h>
@@ -512,7 +513,38 @@ void resume(struct moonlet * moonlets){
             }
       }     
       fclose(init_file);
+      
+      #if viscoelastic_bool
+            /******** Printing the connections on the file pth/connections.txt ********/ 
+            char connection_path[800];
+            int a, b;
+            typ rest_length;
+            strcpy(connection_path, pth);
+            strcat(connection_path, "connections.txt");
+            FILE * connection_file = fopen(connection_path, "w");
+            if (connection_file == NULL){
+                  fprintf(stderr, "Error : Cannot create or open file connections.txt in function resume.\n");
+                  abort();
+            }
+            for (j = 0; j < N_connections; j ++){
+                  rest_length = (connections + j) -> rest_length;
+                  a           = (connections + j) -> Pair.fst;
+                  b           = (connections + j) -> Pair.snd;
+                  fprintf(connection_file, "%.1lf %.1lf %.13lf\n", (typ) a, (typ) b, rest_length);
+            }
+            fclose(connection_file);
+      #endif
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
