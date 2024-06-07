@@ -83,7 +83,7 @@ void kick(struct moonlet * X, struct moonlet * C, void (*F)(struct moonlet *)){
                   (X + i) -> vz += timestep * (xx + i) -> vz;
             }
       }
-      if (central_mass_bool){ //Applying the kick to the central body
+      if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){ //Applying the kick to the central body or the perturbing body
             C -> vx += timestep * CM_acc[0];  C -> vy += timestep * CM_acc[1];  C -> vz += timestep * CM_acc[2];
       }
 }
@@ -104,7 +104,7 @@ void drift(struct moonlet * X, struct moonlet * C){
                   (X + i) -> z += timestep * (X + i) -> vz;
             }
       }
-      if (central_mass_bool){ //Applying the drift to the central body
+      if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){ //Applying the drift to the central body or to the perturbing body
             C -> x += timestep * C -> vx;  C -> y += timestep * C -> vy;  C -> z += timestep * C -> vz;
       }
 }
@@ -230,7 +230,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       
       /******** Resetting global variables relative to the boxdot tree ********/
       if ((mutual_bool || collision_bool) && !brute_force_bool && !force_naive_bool && (falcON_bool || standard_tree_bool)){
-            for (j = 0; j < cell_id; j++){
+            for (j = 0; j < cell_id; j ++){
                   free((FlatTree + j) -> dots);
                   (FlatTree + j) -> dots = NULL;
             }
@@ -356,7 +356,7 @@ void integration_tree(typ t){
 
 
       /******** Performs the numerical integration using a tree algorithm (falcON or standard tree) ********/
-      /******** for mutual interactions treatment. t is the final time.                             ********/
+      /******** for mutual interactions treatment. t is the total time.                             ********/
 
 
       /******** Initializing the array of bodies ********/
@@ -379,7 +379,7 @@ void integration_tree(typ t){
       printf("progress = %.1lf %%\n", 0.0);
       if (write_to_files_bool){
             readme();
-            if (central_mass_bool){
+            if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
                   CM_buffer = CM;
             }
             display(moonlets);
@@ -440,7 +440,7 @@ void integration_tree(typ t){
                               *(moonlet_buffer + j) = *(moonlets + j);
                         }
                   }
-                  if (central_mass_bool){
+                  if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
                         CM_buffer = CM;
                   }
                   timestep /= -2.0;
@@ -471,7 +471,7 @@ void integration_tree(typ t){
                         brute_force(moonlets);
                   }
                   else{
-                        if (!mutual_bool){
+                        if (!mutual_bool){ //The tree was not previously made and must be made now
                               root     = root_cell(moonlets);
                               FlatTree = flattree_init(root);
                               clear_boxdot(&root);
@@ -509,12 +509,14 @@ void integration_tree(typ t){
       }
       
       /******** Last file saving ********/
-      if (central_mass_bool){
+      if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
             CM_buffer = CM;
       }
-      timestep /= -2.0;
-      drift(moonlets, &CM_buffer); //Performing half a backward drift
-      timestep *= -2.0;
+      if (t > 0.0){
+            timestep /= -2.0;
+            drift(moonlets, &CM_buffer); //Performing half a backward drift
+            timestep *= -2.0;
+      }
       if (write_to_files_bool){
             display(moonlets);
       }
@@ -538,7 +540,7 @@ void integration_mesh(typ t){
 
 
       /******** Performs the numerical integration using a mesh algorithm ********/
-      /******** for mutual interactions treatment. t is the final time.   ********/
+      /******** for mutual interactions treatment. t is the total time.   ********/
 
 
       /******** Initializing the array of bodies ********/
@@ -561,7 +563,7 @@ void integration_mesh(typ t){
       printf("progress = %.1lf %%\n", 0.0);
       if (write_to_files_bool){
             readme();
-            if (central_mass_bool){
+            if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
                   CM_buffer = CM;
             }
             display(moonlets);
@@ -606,7 +608,7 @@ void integration_mesh(typ t){
                               *(moonlet_buffer + j) = *(moonlets + j);
                         }
                   }
-                  if (central_mass_bool){
+                  if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
                         CM_buffer = CM;
                   }
                   timestep /= -2.0;
@@ -668,24 +670,26 @@ void integration_mesh(typ t){
       }
       
       /******** Last file saving ********/
-      if (central_mass_bool){
+      if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
             CM_buffer = CM;
       }
-      timestep /= -2.0;
-      if (!force_naive_bool){
-            three_largest_moonlets(moonlets);
-            three_largest_three_first(moonlets);
-            get_neighbours_mesh(moonlets);
+      if (t > 0.0){
+            timestep /= -2.0;
+            if (!force_naive_bool){
+                  three_largest_moonlets(moonlets);
+                  three_largest_three_first(moonlets);
+                  get_neighbours_mesh(moonlets);
+            }
+            kick(moonlets, &CM_buffer, vector_field); //Performing half a backward kick
+            timestep *= -2.0;
       }
-      kick(moonlets, &CM_buffer, vector_field); //Performing half a backward kick
-      timestep *= -2.0;
       if (write_to_files_bool){
             display(moonlets);
       }
       if (resume_simulation_bool){
             resume(moonlets);
       }           
-      if (!force_naive_bool){
+      if (!force_naive_bool && t > 0.0){
             for (j = 0; j < how_many_modified; j ++){
                   index = *(modified_cells + j);
                   clear_chain(hash + index); //Reinitializing to NULL the index^th cell of the hash table
@@ -710,7 +714,7 @@ void integration_mesh(typ t){
 void integration_brute_force_SABA1(typ t){
 
 
-      /******** Performs the numerical integration with a brute force method. t is the final time ********/
+      /******** Performs the numerical integration with a brute force method. t is the total time ********/
 
 
       /******** Initializing the array of bodies ********/
@@ -733,7 +737,7 @@ void integration_brute_force_SABA1(typ t){
       printf("progress = %.1lf %%\n", 0.0);
       if (write_to_files_bool){
             readme();
-            if (central_mass_bool){
+            if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
                   CM_buffer = CM;
             }
             display(moonlets);
@@ -760,7 +764,7 @@ void integration_brute_force_SABA1(typ t){
                               *(moonlet_buffer + j) = *(moonlets + j);
                         }
                   }
-                  if (central_mass_bool){
+                  if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
                         CM_buffer = CM;
                   }
                   timestep /= -2.0;
@@ -794,12 +798,14 @@ void integration_brute_force_SABA1(typ t){
       }
       
       /******** Last file saving ********/
-      if (central_mass_bool){
+      if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
             CM_buffer = CM;
       }
-      timestep /= -2.0;
-      drift(moonlets, &CM_buffer); //Performing half a backward drift
-      timestep *= -2.0;
+      if (t > 0.0){
+            timestep /= -2.0;
+            drift(moonlets, &CM_buffer); //Performing half a backward drift
+            timestep *= -2.0;
+      }
       if (write_to_files_bool){
             display(moonlets);
       }

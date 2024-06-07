@@ -50,6 +50,151 @@ struct chain * second = NULL;
 int N_connections = 0;
 
 
+void precision(struct moonlet * viscoelastic){
+
+      /******** To be removed ********/
+
+      int i,j;
+      typ Xi, Yi, Zi, mi, Xj, Yj, Zj, mj, dx, dy, dz, r, r3, aX, aY, aZ;
+      struct boxdot * root = NULL;
+      
+      typ * acc = (typ *)malloc(3*N_0*sizeof(typ));
+      if (acc == NULL){
+            fprintf(stderr, "Cannot allocate memory for array in function precision\n");
+            abort();
+      }
+      for (i = 0; i < 3*N_0; i ++){
+            acc[i] = 0.;
+      }
+      
+      char path[800];
+      strcpy(path, pth);
+      strcat(path, "acc.txt");
+      FILE * file = fopen(path, "r");
+      if (file == NULL){
+            file = fopen(path, "w");
+            if (file == NULL){
+                  fprintf(stderr, "Cannot open file in function precision\n");
+                  abort();
+            }
+            clock_t t0, t1;
+            t0 = clock();
+            for (i = 0; i < N_0; i ++){
+                  Xi = (viscoelastic + i) -> x;
+                  Yi = (viscoelastic + i) -> y;
+                  Zi = (viscoelastic + i) -> z;
+                  mi = (viscoelastic + i) -> mass;
+                  for (j = 0; j < i; j ++){
+                        Xj = (viscoelastic + j) -> x;
+                        Yj = (viscoelastic + j) -> y;
+                        Zj = (viscoelastic + j) -> z;
+                        mj = (viscoelastic + j) -> mass;
+                        dx = Xi - Xj;  dy = Yi - Yj;  dz = Zi - Zj;
+                        r  = sqrt(dx*dx + dy*dy + dz*dz);
+                        r3 = r*r*r;
+                        aX = G*dx/r3;
+                        aY = G*dy/r3;
+                        aZ = G*dz/r3;
+                        acc[3*i]     -= aX*mj;
+                        acc[3*i + 1] -= aY*mj;
+                        acc[3*i + 2] -= aZ*mj;
+                        acc[3*j]     += aX*mi;
+                        acc[3*j + 1] += aY*mi;
+                        acc[3*j + 2] += aZ*mi;
+                  }
+                  printf("%d/%d\n", i, N_0);
+            }
+            t1 = clock();
+            printf("Brute-force = %.3lf seconds\n", ((typ) (t1 - t0))/(typ) CLOCKS_PER_SEC);
+            for (i = 0; i < N_0; i ++){
+                  fprintf(file, "%.14lf %.14lf %.14lf\n", acc[3*i], acc[3*i + 1], acc[3*i + 2]);
+            }
+            fclose(file);
+      }
+      else{
+            fclose(file);
+            readFromFile(path, acc, 3*N_0);
+            clock_t t0, t1;
+            
+            t0 = clock();
+            root     = root_cell(viscoelastic);
+            FlatTree = flattree_init(root);
+            clear_boxdot(&root);
+            com_flattree(FlatTree, viscoelastic);
+            Mtot     = FlatTree -> M0;
+            rmax_flattree(FlatTree, viscoelastic);
+            rcrit_flattree(FlatTree);
+            tensor_initialization();
+            if (expansion_order >= 3){
+                  multipole_flattree(FlatTree, viscoelastic);
+            }
+            Cm_flattree(FlatTree, viscoelastic);              
+            Cm_downtree(FlatTree, viscoelastic);
+            t1 = clock();
+            printf("FalcON (random order)  = %.3lf seconds\n", ((typ) (t1 - t0))/(typ) CLOCKS_PER_SEC);
+            for (j = 0; j < cell_id; j ++){
+                  free((FlatTree + j) -> dots);
+                  (FlatTree + j) -> dots = NULL;
+            }
+            free(FlatTree);
+            FlatTree = NULL;
+            how_many_cells = 0;
+            cell_id = 0;
+            tensor_free();
+            
+            t0 = clock();
+            root     = root_cell(viscoelastic);
+            FlatTree = flattree_init(root);
+            clear_boxdot(&root);
+            com_flattree(FlatTree, viscoelastic);
+            Mtot     = FlatTree -> M0;
+            rmax_flattree(FlatTree, viscoelastic);
+            rcrit_flattree(FlatTree);
+            tensor_initialization();
+            if (expansion_order >= 3){
+                  multipole_flattree(FlatTree, viscoelastic);
+            }
+            Cm_flattree(FlatTree, viscoelastic);              
+            Cm_downtree(FlatTree, viscoelastic);
+            t1 = clock();
+            printf("FalcON (Hilbert order) = %.3lf seconds\n", ((typ) (t1 - t0))/(typ) CLOCKS_PER_SEC);
+
+            char path_falcON[800];
+            strcpy(path_falcON, pth);
+            strcat(path_falcON, "acc_falcON");
+            char expansion[20];
+            char Theta_min[20];
+            sprintf(expansion, "%d", expansion_order);
+            sprintf(Theta_min, "%.1lf", theta_min);
+            strcat(path_falcON, "_p=");
+            strcat(path_falcON, expansion);
+            strcat(path_falcON, "_theta_min=");
+            strcat(path_falcON, Theta_min);
+            strcat(path_falcON, ".txt");
+            FILE * file_falcON = fopen(path_falcON, "w");
+            if (file_falcON == NULL){
+                  fprintf(stderr, "Cannot open file file_falcON in function precision\n");
+                  abort();
+            }
+            for (i = 0; i < N_0; i ++){
+                  fprintf(file_falcON, "%.14lf %.14lf %.14lf\n", C1Moonlets[3*i], C1Moonlets[3*i + 1], C1Moonlets[3*i + 2]);
+            }
+            fclose(file_falcON);
+            
+            for (j = 0; j < cell_id; j ++){
+                  free((FlatTree + j) -> dots);
+                  (FlatTree + j) -> dots = NULL;
+            }
+            free(FlatTree);
+            FlatTree = NULL;
+            how_many_cells = 0;
+            cell_id = 0;
+            tensor_free();
+      }
+      free(acc);  acc = NULL;
+}
+
+
 struct moonlet * generate_visco_elastic_body(){
 
       /******** Similar to the function populate in structure.c, but populates    ********/
@@ -74,60 +219,84 @@ struct moonlet * generate_visco_elastic_body(){
       }
       
       if (random_initial_bool){
-            /******** Generating the array of vertices ********/
-            typ * vertices = (typ *)malloc(3*n_vertices*sizeof(typ));
-            if (vertices == NULL){
-                  fprintf(stderr, "Error : Cannot allocate array of vertices in function generate_visco_elastic_body.\n");
-                  abort();
-            }
       
-            /******** Retrieving all the vertices from the file pth/shape_model.txt ********/
+            /******** Trying to retrieve the vertices from the file pth/shape_model.txt ********/
             char fileOfVertices[800]; 
             strcpy(fileOfVertices, pth);
             strcat(fileOfVertices, "shape_model.txt");
-            readFromFile(fileOfVertices, vertices, 3*n_vertices);
-      
-            /******** Getting the largest distance between a vertice and the origin ********/
-            for (j = 0; j < n_vertices; j ++){
-                  distance = vertices[3*j]*vertices[3*j] + vertices[3*j + 1]*vertices[3*j + 1] + vertices[3*j + 2]*vertices[3*j + 2];
-                  if (distance > maxD){
-                        maxD = distance;
-                  }
-            }
-            maxD = sqrt(maxD);
-      
-            /******** Drawing the points of the viscoelastic body ********/
-            while (currentN < N_0){
-                  X = rdm(-maxD, maxD);
-                  Y = rdm(-maxD, maxD);
-                  Z = rdm(-maxD, maxD);
-                  distance        = sqrt(X*X + Y*Y + Z*Z);
-                  distance2       = sqrt(vertices[0]*vertices[0] + vertices[1]*vertices[1] + vertices[2]*vertices[2]);
-                  costheta_max    = (X*vertices[0] + Y*vertices[1] + Z*vertices[2])/(distance * distance2);
-                  closest_vertice = 0;
-                  for (j = 1; j < n_vertices; j ++){ //Getting the id of the vertice most collinear with the current point
-                        distance2 = sqrt(vertices[3*j]*vertices[3*j] + vertices[3*j + 1]*vertices[3*j + 1] + vertices[3*j + 2]*vertices[3*j + 2]);
-                        costheta  = (X*vertices[3*j] + Y*vertices[3*j + 1] + Z*vertices[3*j + 2])/(distance * distance2);
-                        if (costheta > costheta_max){
-                              costheta_max = costheta;
-                              closest_vertice = j;
+            FILE * file = fopen(fileOfVertices, "r");
+            if (file == NULL){
+                  printf("Warning : Could not find the file shape_model.txt in the location provided. NcorpiON will use a sphere of radius R_unit = %lf instead.\n", R_unit);
+                  /******** Drawing the points of the viscoelastic from a sphere of radius R_unit ********/
+                  while (currentN < N_0){
+                        X = rdm(-R_unit, R_unit);
+                        Y = rdm(-R_unit, R_unit);
+                        Z = rdm(-R_unit, R_unit);
+                        if (X*X + Y*Y + Z*Z < R_unit*R_unit){
+                              (viscoelastic + currentN) -> x      = X;
+                              (viscoelastic + currentN) -> y      = Y;
+                              (viscoelastic + currentN) -> z      = Z;
+                              (viscoelastic + currentN) -> vx     = 0.;
+                              (viscoelastic + currentN) -> vy     = 0.;
+                              (viscoelastic + currentN) -> vz     = 0.;
+                              (viscoelastic + currentN) -> mass   = m;
+                              (viscoelastic + currentN) -> radius = minimal_distance/2.0;
+                              currentN ++;
                         }
                   }
-                  distance2 = sqrt(vertices[3*closest_vertice]*vertices[3*closest_vertice] 
-                  + vertices[3*closest_vertice + 1]*vertices[3*closest_vertice + 1] + vertices[3*closest_vertice + 2]*vertices[3*closest_vertice + 2]);
-                  if (distance < distance2){ //The point is inside the viscoelastic body
-                        (viscoelastic + currentN) -> x      = X;
-                        (viscoelastic + currentN) -> y      = Y;
-                        (viscoelastic + currentN) -> z      = Z;
-                        (viscoelastic + currentN) -> vx     = 0.;
-                        (viscoelastic + currentN) -> vy     = 0.;
-                        (viscoelastic + currentN) -> vz     = 0.;
-                        (viscoelastic + currentN) -> mass   = m;
-                        (viscoelastic + currentN) -> radius = minimal_distance/2.0;
-                        currentN ++;
-                  }
             }
-            free(vertices);  vertices = NULL;
+            else{
+                  fclose(file);
+                  /******** Generating the array of vertices ********/
+                  typ * vertices = (typ *)malloc(3*n_vertices*sizeof(typ));
+                  if (vertices == NULL){
+                        fprintf(stderr, "Error : Cannot allocate array of vertices in function generate_visco_elastic_body.\n");
+                        abort();
+                  }
+                  readFromFile(fileOfVertices, vertices, 3*n_vertices);
+      
+                  /******** Getting the largest distance between a vertice and the origin ********/
+                  for (j = 0; j < n_vertices; j ++){
+                        distance = vertices[3*j]*vertices[3*j] + vertices[3*j + 1]*vertices[3*j + 1] + vertices[3*j + 2]*vertices[3*j + 2];
+                        if (distance > maxD){
+                              maxD = distance;
+                        }
+                  }
+                  maxD = sqrt(maxD);
+      
+                  /******** Drawing the points of the viscoelastic body from the shape-model ********/
+                  while (currentN < N_0){
+                        X = rdm(-maxD, maxD);
+                        Y = rdm(-maxD, maxD);
+                        Z = rdm(-maxD, maxD);
+                        distance        = sqrt(X*X + Y*Y + Z*Z);
+                        distance2       = sqrt(vertices[0]*vertices[0] + vertices[1]*vertices[1] + vertices[2]*vertices[2]);
+                        costheta_max    = (X*vertices[0] + Y*vertices[1] + Z*vertices[2])/(distance * distance2);
+                        closest_vertice = 0;
+                        for (j = 1; j < n_vertices; j ++){ //Getting the id of the vertice most collinear with the current point
+                              distance2 = sqrt(vertices[3*j]*vertices[3*j] + vertices[3*j + 1]*vertices[3*j + 1] + vertices[3*j + 2]*vertices[3*j + 2]);
+                              costheta  = (X*vertices[3*j] + Y*vertices[3*j + 1] + Z*vertices[3*j + 2])/(distance * distance2);
+                              if (costheta > costheta_max){
+                                    costheta_max = costheta;
+                                    closest_vertice = j;
+                              }
+                        }
+                        distance2 = sqrt(vertices[3*closest_vertice]*vertices[3*closest_vertice] 
+                        + vertices[3*closest_vertice + 1]*vertices[3*closest_vertice + 1] + vertices[3*closest_vertice + 2]*vertices[3*closest_vertice + 2]);
+                        if (distance < distance2){ //The point is inside the viscoelastic body
+                              (viscoelastic + currentN) -> x      = X;
+                              (viscoelastic + currentN) -> y      = Y;
+                              (viscoelastic + currentN) -> z      = Z;
+                              (viscoelastic + currentN) -> vx     = 0.;
+                              (viscoelastic + currentN) -> vy     = 0.;
+                              (viscoelastic + currentN) -> vz     = 0.;
+                              (viscoelastic + currentN) -> mass   = m;
+                              (viscoelastic + currentN) -> radius = minimal_distance/2.0;
+                              currentN ++;
+                        }
+                  }
+                  free(vertices);  vertices = NULL;
+            }
       
             /******** Making sure that particles do not overlap ********/
             overlap(viscoelastic);
@@ -176,6 +345,9 @@ struct moonlet * generate_visco_elastic_body(){
             }
       }
       
+      /******** To be removed ********/
+      //precision(viscoelastic);
+      
       /******** Generating the connections ********/
       generate_connections(viscoelastic);
       printf("Number of connections = %d\n", N_connections);
@@ -196,6 +368,8 @@ void generate_connections(struct moonlet * viscoelastic){
       
       struct boxdot * root = NULL;
       int i, j, k, index1, index2, index;
+      struct chain * fst = NULL;
+      struct chain * snd = NULL;
       
       if (random_initial_bool){
             /******** Getting the total number of connections and the ids of the connecting particles ********/
@@ -244,17 +418,19 @@ void generate_connections(struct moonlet * viscoelastic){
                   fprintf(stderr, "Cannot allocate array of %d connections in function generate_connections\n", N_connections);
                   abort();
             }
-            while (first != NULL){
-                  i           = (first  -> ids)[index1];
-                  j           = (second -> ids)[index2];
+            fst = first;
+            snd = second;
+            while (fst != NULL){
+                  i           = (fst -> ids)[index1];
+                  j           = (snd -> ids)[index2];
                   *(connections + index) = make_connection(viscoelastic, i, j);
                   index1 --;  index2 --; //Switching to the next pair of connecting particles
                   if (index1 < 0){
-                        first  = first  -> queue;
+                        fst = fst -> queue;
                         index1 = max_ids_per_node - 1;
                   }
                   if (index2 < 0){
-                        second = second -> queue;
+                        snd = snd -> queue;
                         index2 = max_ids_per_node - 1;
                   }
                   index ++;
@@ -342,7 +518,7 @@ void overlap(struct moonlet * viscoelastic){
                   cell_id        = 0;
             }
             count ++;            
-            if (count > 512){
+            if (count > 1024){
                   fprintf(stderr, "Error : While loop never exits in function overlap. Maybe minimal_distance is too large in the parameter file?\n");
                   abort();
             }
@@ -615,6 +791,61 @@ struct connection make_connection(struct moonlet * viscoelastic, int a, int b){
       C.equilibrium_length = 0.; //Will be properly initialized later
       return C;
 }
+
+
+typ get_perturbing_true_anomaly(typ time){
+
+      /******** Computes the true anomaly of the perturbing body from the differential equation  ********/
+      /******** dnu/dt = sqrt(mu)*(1 + e cos nu)^2/(a(1-e^2))^(3/2) using a Runge-Kutta 4 method ********/
+      /******** The periodicity is used to prevent any long-term error accumulation.             ********/
+      /******** This is equivalent to solving Kepler's equation.                                 ********/
+
+      int j, N_step;
+      typ K1, K2, K3, K4;
+      typ period, t, dt, n_step, partial_tra, previous_tra, num;
+      typ denom = sqrt(pert_sma*(1.0 - pert_ecc*pert_ecc)); denom *= denom*denom;
+      typ sq_mu = sqrt(G*(pert_mass + M_unit));
+
+      /******** Establishing the integration time and the timestep to be used ********/
+      period  = 2.0*M_PI/sq_mu*sqrt(pert_sma*pert_sma*pert_sma);
+      t       = pert_ecc < 1. ? fmod(time, period) : time;
+      n_step  = pert_ecc < 1. ? floor(256.0*t/period) + 1.0 : 256.0;
+      dt      = t/n_step;
+      n_step *= pert_ecc < 1. && pert_ecc > 0.8 ? 4. : 1.; //Decreasing the timestep in case of highly eccentric elliptic trajectory
+      dt     /= pert_ecc < 1. && pert_ecc > 0.8 ? 4. : 1.;
+      N_step  = (int) n_step;
+      if (fabs(t - n_step*dt) > 1.0e-13){
+            fprintf(stderr, "Error : Wrong computation of the integration time in function get_perturbing_true_anomaly");
+            abort();
+      }
+      
+      /******** Integrating ********/
+      previous_tra = pert_tra;
+      for (j = 0; j < N_step; j ++){
+            partial_tra   = previous_tra;
+            num           = 1.0 + pert_ecc * cos(partial_tra);
+            K1            = sq_mu*num*num/denom;
+            partial_tra   = previous_tra + 0.5*K1*dt;
+            num           = 1.0 + pert_ecc * cos(partial_tra);
+            K2            = sq_mu*num*num/denom;
+            partial_tra   = previous_tra + 0.5*K2*dt;
+            num           = 1.0 + pert_ecc * cos(partial_tra);
+            K3            = sq_mu*num*num/denom;
+            partial_tra   = previous_tra + K3*dt;
+            num           = 1.0 + pert_ecc * cos(partial_tra);
+            K4            = sq_mu*num*num/denom;
+            previous_tra += dt*(K1 + 2.0*K2 + 2.0*K3 + K4)/6.0;
+      }
+      
+      return previous_tra;
+}
+
+
+
+
+
+
+
 
 
 

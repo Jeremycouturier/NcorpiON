@@ -645,7 +645,7 @@ void get_s1_s2_s3(int k, int n, int * s1, int * s2, int * s3){
       /******** of symmetrical tensor T^(n). For example, if k = 12 and n = 5, then s1 = 1, s2 = 2 and s3 = 2. Therefore, when ********/
       /******** the tensor T^(5) is stored in an array T5[21], then T5[12] stores T_12233 and all the permutations             ********/
       
-      int n1 = (int) floor(0.5*(sqrt(1.0+8.0*(typ) k)-1.0));
+      int n1 = (int) floor(0.5*(sqrt(1.0 + 8.0*(typ) k) - 1.0));
       int n2 = k - (n1*(n1 + 1))/2;
       *s1 = n - n1;
       *s2 = n1 - n2;
@@ -658,7 +658,7 @@ void get_s2_s3(int k, int * s2, int * s3){
 
       /******** Same as above but depends only on k and computes s2 and s3 only ********/
       
-      int n1 = (int) floor(0.5*(sqrt(1.0+8.0*(typ) k)-1.0));
+      int n1 = (int) floor(0.5*(sqrt(1.0 + 8.0*(typ) k) - 1.0));
       int n2 = k - (n1*(n1 + 1))/2;
       *s2 = n1 - n2;
       *s3 = n2;
@@ -671,8 +671,8 @@ void s1s2s3_from_kn_init(){
       /******** In order not to call function get_s1_s2_s3 too many times, I store its return values in a table s1s2s3_from_kn ********/
       
       int k, n, s1, s2, s3;
-      for (k = 0; k < 28; k++){
-            for (n = 0; n < 7; n++){
+      for (k = 0; k < 28; k ++){
+            for (n = 0; n < 7; n ++){
                   get_s1_s2_s3(k, n, &s1, &s2, &s3);
                   s1s2s3_from_kn[k][n][0] = s1;
                   s1s2s3_from_kn[k][n][1] = s2;
@@ -711,8 +711,8 @@ void k_from_s2s3_init(){
       int k;
       int i,j;
       
-      for (i = 0; i <= 6; i++){ // i is the number of 2's
-            for (j = 0; j <= 6; j++){ // j is the number of 3's
+      for (i = 0; i <= 6; i ++){ // i is the number of 2's
+            for (j = 0; j <= 6; j ++){ // j is the number of 3's
                   get_k(i, j, &k);
                   k_from_s2s3[i][j] = k;
             }
@@ -733,22 +733,22 @@ void indexes_from_kn(int k, int n, int * ijklmn){
       
       while (s1 > 0){
             ijklmn[p] = 1;
-            p++;
-            s1--;
+            p ++;
+            s1 --;
       }
       while (s2 > 0){
             ijklmn[p] = 2;
-            p++;
-            s2--;
+            p ++;
+            s2 --;
       }
       while (s3 > 0){
             ijklmn[p] = 3;
-            p++;
-            s3--;
+            p ++;
+            s3 --;
       }
       while (p < 6){
             ijklmn[p] = 0;
-            p++;
+            p ++;
       }
 }
 
@@ -854,8 +854,8 @@ void q1_from_q2q3(int * q1, int q2, int q3){
       /******** Function auxiliary to inner_product. Gives q1 as a function of q2 and q3 ********/
 
       int n1_2, n1_3, n2_2, n2_3, n1, n2, s2_2, s2_3, s3_2, s3_3, s2, s3;
-      n1_2 = (int) floor(0.5*(sqrt(1.0+8.0*(typ) q2) - 1.0));
-      n1_3 = (int) floor(0.5*(sqrt(1.0+8.0*(typ) q3) - 1.0));
+      n1_2 = (int) floor(0.5*(sqrt(1.0 + 8.0*(typ) q2) - 1.0));
+      n1_3 = (int) floor(0.5*(sqrt(1.0 + 8.0*(typ) q3) - 1.0));
       n2_2 = q2 - (n1_2*(n1_2 + 1))/2;
       n2_3 = q3 - (n1_3*(n1_3 + 1))/2;
       s2_2 = n1_2 - n2_2;
@@ -1704,19 +1704,19 @@ void gradR(typ * R, typ * grad, int p){
 
 void inner_product(typ * T1, typ * T2, typ * T3, int p, int q, typ factor){
 
-      /******** Computes the inner product between the tensor T1 of order p + q (max 6) and the tensor T2        ********/
-      /******** of order p. The result is accumulated into the tensor T3 of order q with a factor factor.        ********/
-      /******** T1, T2 and T3 are assumed to be arrays of sizes (p+q+1)(p+q+2)/2, (p+1)(p+2)/2 and (q+1)(q+2)/2. ********/
-      /******** The tensor T3 is not overwritten                                                                 ********/
+      /******** Computes the inner product between the tensor T1 of order p + q (max 6) and the tensor T2 ********/
+      /******** of order p. The result is accumulated into the tensor T3 of order q with a factor factor. ********/
+      /******** T1, T2 and T3 are assumed to be arrays of respective sizes (p+q+1)(p+q+2)/2, (p+1)(p+2)/2 ********/
+      /******** and (q+1)(q+2)/2. The tensor T3 is not overwritten, but accumulated instead               ********/
 
       int q1, q2, q3; //Indexes into the arrays T1, T2 and T3
       int T2_size = ((p + 1)*(p + 2))/2;
       int T3_size = ((q + 1)*(q + 2))/2;
       int perm; //Number of tensor index permutations
       
-      for (q3 = 0; q3 < T3_size; q3++){ //Looping over the components of the tensor to be computed
+      for (q3 = 0; q3 < T3_size; q3 ++){ //Looping over the components of the tensor to be computed
             for (q2 = 0; q2 < T2_size; q2++){  //Looping over the components of T2, in order to accumulate T3[q3]
-                  perm = perm_from_kn[q2][p];  //number of permutations that can be done with the indexes of T2
+                  perm = perm_from_kn[q2][p];  //Number of permutations that can be done with the indexes of T2
                   q1 = q1fromq2q3[q2][q3];     //Retrieving the array index of T1
                   T3[q3] += T1[q1] * T2[q2] * (typ) perm * factor; //Accumulating into tensor T3 with a factor factor
             }
@@ -1736,13 +1736,13 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
       /******** This function computes the tensors C^(m) between interacting cells, or the      ********/
       /******** acceleration C^(1) in case of interaction between bodies, but does not pass     ********/
       /******** the C^(m) down the tree. It is assumed that the array C1Moonlets, whose indexes ********/
-      /******** 3*a to 3*a+2 contain the acceleration of body a, is given initialized to 0.0    ********/
+      /******** 3*a to 3*a + 2 contain the acceleration of body a, is given initialized to 0.0  ********/
       /******** Similarly, it is assumed that the C^(m) are 0.0 upon calling this function      ********/
       
       
       /******** It is hard to tell in advance how many pairs will be treated by the tree walk   ********/
       /******** I expect it will be at most factor * cell_id, but that might have to be changed ********/
-      int factor = (int) floor(250.0 * 0.5 / theta_min);
+      int factor = (int) floor(350.0 * 0.5 / theta_min);
       struct pair * stack = (struct pair *)malloc(factor * cell_id * sizeof(struct pair)); //Stack of pairs of ids of nodes that have to be treated
       if (stack == NULL){
             fprintf(stderr, "Error : Cannot allocate memory for the stack in function Cm_flattree.\n");
@@ -1795,17 +1795,17 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                         for (p = 0; p < Na; p++){
                               for (q = p + 1; q < Na; q++){
                                     s = dots_a[p]; //Id of first  moonlet
-                                    u = dots_a[q]; //Id of second monnlet
-                                    ms = (moonlets + s) -> mass;
-                                    Rs = (moonlets + s) -> radius;
+                                    u = dots_a[q]; //Id of second monnlet 
                                     xs = (moonlets + s) -> x;
                                     ys = (moonlets + s) -> y;
                                     zs = (moonlets + s) -> z;
-                                    mu = (moonlets + u) -> mass;
-                                    Ru = (moonlets + u) -> radius;
+                                    ms = (moonlets + s) -> mass;
+                                    Rs = (moonlets + s) -> radius;
                                     xu = (moonlets + u) -> x;
                                     yu = (moonlets + u) -> y;
                                     zu = (moonlets + u) -> z;
+                                    mu = (moonlets + u) -> mass;
+                                    Ru = (moonlets + u) -> radius;
                                     dx = xs - xu;
                                     dy = ys - yu;
                                     dz = zs - zu;
@@ -1815,12 +1815,12 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                                     omega2_x = G*dx/r3;
                                     omega2_y = G*dy/r3;
                                     omega2_z = G*dz/r3;
-                                    C1Moonlets[3*s]   -= mu*omega2_x;
-                                    C1Moonlets[3*s+1] -= mu*omega2_y;
-                                    C1Moonlets[3*s+2] -= mu*omega2_z;
-                                    C1Moonlets[3*u]   += ms*omega2_x;
-                                    C1Moonlets[3*u+1] += ms*omega2_y;
-                                    C1Moonlets[3*u+2] += ms*omega2_z;
+                                    C1Moonlets[3*s]     -= mu*omega2_x;
+                                    C1Moonlets[3*s + 1] -= mu*omega2_y;
+                                    C1Moonlets[3*s + 2] -= mu*omega2_z;
+                                    C1Moonlets[3*u]     += ms*omega2_x;
+                                    C1Moonlets[3*u + 1] += ms*omega2_y;
+                                    C1Moonlets[3*u + 2] += ms*omega2_z;
                               }
                         }
                   }
@@ -1832,11 +1832,11 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                               fprintf(stderr, "Error : The stack is not big enough in function Cm_flattree. Try increasing the value of factor.\n");
                               abort();
                         }
-                        for (p = idFirstChild; p < idLastChild; p++){
-                              for (q = p; q < idLastChild; q++){
+                        for (p = idFirstChild; p < idLastChild; p ++){
+                              for (q = p; q < idLastChild; q ++){
                                     (stack + j) -> fst = p;
                                     (stack + j) -> snd = q;
-                                    j++;
+                                    j ++;
                               }
                         }
                   }
@@ -1849,16 +1849,16 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                               for (q = 0; q < Nb; q++){
                                     s = dots_a[p]; //Id of first  body
                                     u = dots_b[q]; //Id of second body
-                                    ms = (moonlets + s) -> mass;
-                                    Rs = (moonlets + s) -> radius;
                                     xs = (moonlets + s) -> x;
                                     ys = (moonlets + s) -> y;
                                     zs = (moonlets + s) -> z;
-                                    mu = (moonlets + u) -> mass;
-                                    Ru = (moonlets + u) -> radius;
+                                    ms = (moonlets + s) -> mass;
+                                    Rs = (moonlets + s) -> radius;
                                     xu = (moonlets + u) -> x;
                                     yu = (moonlets + u) -> y;
                                     zu = (moonlets + u) -> z;
+                                    mu = (moonlets + u) -> mass;
+                                    Ru = (moonlets + u) -> radius;
                                     dx = xs - xu;
                                     dy = ys - yu;
                                     dz = zs - zu;
@@ -1868,12 +1868,12 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                                     omega2_x = G*dx/r3;
                                     omega2_y = G*dy/r3;
                                     omega2_z = G*dz/r3;
-                                    C1Moonlets[3*s]   -= mu*omega2_x;
-                                    C1Moonlets[3*s+1] -= mu*omega2_y;
-                                    C1Moonlets[3*s+2] -= mu*omega2_z;
-                                    C1Moonlets[3*u]   += ms*omega2_x;
-                                    C1Moonlets[3*u+1] += ms*omega2_y;
-                                    C1Moonlets[3*u+2] += ms*omega2_z;
+                                    C1Moonlets[3*s]     -= mu*omega2_x;
+                                    C1Moonlets[3*s + 1] -= mu*omega2_y;
+                                    C1Moonlets[3*s + 2] -= mu*omega2_z;
+                                    C1Moonlets[3*u]     += ms*omega2_x;
+                                    C1Moonlets[3*u + 1] += ms*omega2_y;
+                                    C1Moonlets[3*u + 2] += ms*omega2_z;
                               }
                         }  
                   }
@@ -1896,7 +1896,7 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                               
                               if (expansion_order >= 2){
                                     gradR(R, grad2, 2);  //Computing the second gradient
-                                    for (p = 0; p < 6; p++){
+                                    for (p = 0; p < 6; p ++){
                                           C2_a[p] = M0_b * grad2[p];
                                           C2_b[p] = M0_a * grad2[p];
                                     }
@@ -1905,7 +1905,7 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                                           M2_a = M2FlatTree + 6*a;
                                           M2_b = M2FlatTree + 6*b;
                                           gradR(R, grad3, 3);  //Computing the third gradient
-                                          for (p = 0; p < 10; p++){
+                                          for (p = 0; p < 10; p ++){
                                                 C3_a[p] =  M0_b * grad3[p];
                                                 C3_b[p] = -M0_a * grad3[p];
                                           }
@@ -1920,7 +1920,7 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                                                 M3_a = M3FlatTree + 10*a;
                                                 M3_b = M3FlatTree + 10*b;
                                                 gradR(R, grad4, 4);  //Computing the fourth gradient
-                                                for (p = 0; p < 15; p++){
+                                                for (p = 0; p < 15; p ++){
                                                       C4_a[p] = M0_b * grad4[p];
                                                       C4_b[p] = M0_a * grad4[p];
                                                 }
@@ -1933,7 +1933,7 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                                                       M4_a = M4FlatTree + 15*a;
                                                       M4_b = M4FlatTree + 15*b;
                                                       gradR(R, grad5, 5);  //Computing the fifth gradient
-                                                      for (p = 0; p < 21; p++){
+                                                      for (p = 0; p < 21; p ++){
                                                             C5_a[p] =  M0_b * grad5[p];
                                                             C5_b[p] = -M0_a * grad5[p];
                                                       }
@@ -1948,7 +1948,7 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                                                             M5_a = M5FlatTree + 21*a;
                                                             M5_b = M5FlatTree + 21*b;
                                                             gradR(R, grad6, 6);  //Computing the sixth gradient
-                                                            for (p = 0; p < 28; p++){
+                                                            for (p = 0; p < 28; p ++){
                                                                   C6_a[p] = M0_b * grad6[p];
                                                                   C6_b[p] = M0_a * grad6[p];
                                                             }
@@ -1969,23 +1969,23 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                               ((FlatTree + a) -> C1)[0] += C1_a[0];  ((FlatTree + a) -> C1)[1] += C1_a[1];  ((FlatTree + a) -> C1)[2] += C1_a[2];
                               ((FlatTree + b) -> C1)[0] += C1_b[0];  ((FlatTree + b) -> C1)[1] += C1_b[1];  ((FlatTree + b) -> C1)[2] += C1_b[2];
                               if(expansion_order >= 2){
-                                    for (p = 0; p < 6; p++){
+                                    for (p = 0; p < 6; p ++){
                                           C2FlatTree[6*a + p] += C2_a[p];  C2FlatTree[6*b + p] += C2_b[p];
                                     }
                                     if(expansion_order >= 3){
-                                          for (p = 0; p < 10; p++){
+                                          for (p = 0; p < 10; p ++){
                                                 C3FlatTree[10*a + p] += C3_a[p];  C3FlatTree[10*b + p] += C3_b[p];
                                           }
                                           if(expansion_order >= 4){
-                                                for (p = 0; p < 15; p++){
+                                                for (p = 0; p < 15; p ++){
                                                       C4FlatTree[15*a + p] += C4_a[p];  C4FlatTree[15*b + p] += C4_b[p];
                                                 }
                                                 if(expansion_order >= 5){
-                                                      for (p = 0; p < 21; p++){
+                                                      for (p = 0; p < 21; p ++){
                                                             C5FlatTree[21*a + p] += C5_a[p];  C5FlatTree[21*b + p] += C5_b[p];
                                                       }
                                                       if(expansion_order >= 6){
-                                                            for (p = 0; p < 28; p++){
+                                                            for (p = 0; p < 28; p ++){
                                                                   C6FlatTree[28*a + p] += C6_a[p];  C6FlatTree[28*b + p] += C6_b[p];
                                                             }
                                                       }
@@ -2000,20 +2000,20 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                               if ((!(Na > N_cc_post && Nb > N_cc_post) && Na*Nb < N_cc_post) || (how_many_children_a == 0 && how_many_children_b == 0)){ //Direct interaction
                                     dots_a = (FlatTree + a) -> dots;
                                     dots_b = (FlatTree + b) -> dots;
-                                    for (p = 0; p < Na; p++){
-                                          for (q = 0; q < Nb; q++){
-                                                s = dots_a[p]; //Id of first  body
-                                                u = dots_b[q]; //Id of second body
-                                                ms = (moonlets + s) -> mass;
-                                                Rs = (moonlets + s) -> radius;
+                                    for (p = 0; p < Na; p ++){
+                                          for (q = 0; q < Nb; q ++){
+                                                s  = dots_a[p]; //Id of first  body
+                                                u  = dots_b[q]; //Id of second body
                                                 xs = (moonlets + s) -> x;
                                                 ys = (moonlets + s) -> y;
                                                 zs = (moonlets + s) -> z;
-                                                mu = (moonlets + u) -> mass;
-                                                Ru = (moonlets + u) -> radius;
+                                                ms = (moonlets + s) -> mass;
+                                                Rs = (moonlets + s) -> radius;
                                                 xu = (moonlets + u) -> x;
                                                 yu = (moonlets + u) -> y;
                                                 zu = (moonlets + u) -> z;
+                                                mu = (moonlets + u) -> mass;
+                                                Ru = (moonlets + u) -> radius;
                                                 dx = xs - xu;
                                                 dy = ys - yu;
                                                 dz = zs - zu;
@@ -2041,38 +2041,38 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                                     if (how_many_children_a == 0){ //Subdivising b
                                           idFirstChild = (FlatTree + b) -> idFirstChild;
                                           idLastChild  = idFirstChild + how_many_children_b;
-                                          for (p = idFirstChild; p < idLastChild; p++){
+                                          for (p = idFirstChild; p < idLastChild; p ++){
                                                 (stack + j) -> fst = a;
                                                 (stack + j) -> snd = p;
-                                                j++;
+                                                j ++;
                                           }
                                     }
                                     else if (how_many_children_b == 0){ //Subdivising a
                                           idFirstChild = (FlatTree + a) -> idFirstChild;
                                           idLastChild  = idFirstChild + how_many_children_a;
-                                          for (p = idFirstChild; p < idLastChild; p++){
+                                          for (p = idFirstChild; p < idLastChild; p ++){
                                                 (stack + j) -> fst = b;
                                                 (stack + j) -> snd = p;
-                                                j++;
+                                                j ++;
                                           }
                                     }
                                     else{ //Both cells have children, subdivising the largest (in term of critical radius)
                                           if (r_crit_a < r_crit_b){ //Subdivising b
                                                 idFirstChild = (FlatTree + b) -> idFirstChild;
                                                 idLastChild  = idFirstChild + how_many_children_b;
-                                                for (p = idFirstChild; p < idLastChild; p++){
+                                                for (p = idFirstChild; p < idLastChild; p ++){
                                                       (stack + j) -> fst = a;
                                                       (stack + j) -> snd = p;
-                                                      j++;
+                                                      j ++;
                                                 }
                                           }
                                           else{ //Subdivising a
                                                 idFirstChild = (FlatTree + a) -> idFirstChild;
                                                 idLastChild  = idFirstChild + how_many_children_a;
-                                                for (p = idFirstChild; p < idLastChild; p++){
+                                                for (p = idFirstChild; p < idLastChild; p ++){
                                                       (stack + j) -> fst = b;
                                                       (stack + j) -> snd = p;
-                                                      j++;
+                                                      j ++;
                                                 }
                                           }
                                     }
@@ -2080,7 +2080,7 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                         }
                   }
             }
-            i++;
+            i ++;
       }
       free(stack);
       stack = NULL;
@@ -2119,7 +2119,7 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
 
       /******** Putting the root cell in the stack ********/
       stack[j] = 0;
-      j++;
+      j ++;
 
       while (j > i){
             a = stack[i];
@@ -2147,7 +2147,7 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
                         if (expansion_order >= 3){
                               C3  = C3FlatTree + 10*a;
                               C3p = C3FlatTree + 10*idParent;
-                              for (p = 0; p < 10; p++){
+                              for (p = 0; p < 10; p ++){
                                     C3[p] += C3p[p];
                               }
                               X2[0]  = R[0]*R[0]; X2[1] = R[0]*R[1]; X2[2] = R[0]*R[2]; X2[3] = R[1]*R[1]; X2[4] = R[1]*R[2]; X2[5] = R[2]*R[2];
@@ -2164,10 +2164,10 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
                               if (expansion_order >= 4){
                                     C4  = C4FlatTree + 15*a;
                                     C4p = C4FlatTree + 15*idParent;
-                                    for (p = 0; p < 15; p++){
+                                    for (p = 0; p < 15; p ++){
                                           C4[p] += C4p[p];
                                     }
-                                    for (p = 0; p < 10; p++){
+                                    for (p = 0; p < 10; p ++){
                                           get_Xn_overwrite(p, 3, R, 1.0, X3);
                                     }
                                     inner_product(C4p, X3, C1, 3, 1, 0.1666666666666666666666666667);
@@ -2177,10 +2177,10 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
                                     if (expansion_order >= 5){
                                           C5  = C5FlatTree + 21*a;
                                           C5p = C5FlatTree + 21*idParent;
-                                          for (p = 0; p < 21; p++){
+                                          for (p = 0; p < 21; p ++){
                                                 C5[p] += C5p[p];
                                           }
-                                          for (p = 0; p < 15; p++){
+                                          for (p = 0; p < 15; p ++){
                                                 get_Xn_overwrite(p, 4, R, 1.0, X4);
                                           }
                                           inner_product(C5p, X4, C1, 4, 1, 0.0416666666666666666666666667);
@@ -2191,10 +2191,10 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
                                           if (expansion_order >= 6){
                                                 C6  = C6FlatTree + 28*a;
                                                 C6p = C6FlatTree + 28*idParent;
-                                                for (p = 0; p < 28; p++){
+                                                for (p = 0; p < 28; p ++){
                                                       C6[p] += C6p[p];
                                                 }
-                                                for (p = 0; p < 21; p++){
+                                                for (p = 0; p < 21; p ++){
                                                       get_Xn_overwrite(p, 5, R, 1.0, X5);
                                                 }
                                                 inner_product(C6p, X5, C1, 5, 1, 0.0083333333333333333333333333);
@@ -2214,19 +2214,19 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
             if (how_many_children > 0){
                   idFirstChild = (FlatTree + a) -> idFirstChild;
                   idLastChild  = idFirstChild + how_many_children;
-                  for (p = idFirstChild; p < idLastChild; p++){
+                  for (p = idFirstChild; p < idLastChild; p ++){
                         stack[j] = p;
-                        j++;
+                        j ++;
                   }
             }
             
             /******** If the node has no children, I shift and accumulate its C^(n) to its body ********/
             else{
-                  Na = (FlatTree + a) -> how_many_dots;
+                  Na   = (FlatTree + a) -> how_many_dots;
                   dots = (FlatTree + a) -> dots;
-                  com = (FlatTree + a) -> com;
-                  for (p = 0; p < Na; p++){
-                        b = dots[p];
+                  com  = (FlatTree + a) -> com;
+                  for (p = 0; p < Na; p ++){
+                        b  = dots[p];
                         C1 = (FlatTree + a) -> C1;                       
                         C1Moonlets[3*b] += C1[0];  C1Moonlets[3*b + 1] += C1[1];  C1Moonlets[3*b + 2] += C1[2];
                         

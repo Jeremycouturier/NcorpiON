@@ -91,7 +91,7 @@ void vector_field(struct moonlet * moonlets){
       }
       #endif
       
-      for (k = 0; k <= largest_id; k++){
+      for (k = 0; k <= largest_id; k ++){
             if (*(exists + k)){ //Checking whether or not there is a body in the kth cell of the body array
             
                   X  = (moonlets + k) -> x;
@@ -354,33 +354,66 @@ void vector_field(struct moonlet * moonlets){
       }
       #endif
       
-      /******** Accelerations due to springs between particles of the viscoelastic body ********/
+      /******** Accelerations of the particles of the viscoelastic body ********/
       if (viscoelastic_bool){
             int j;
             typ xk, yk, zk, xp, yp, zp, L, r, dL;
+            /******** Acceleration due to the springs ********/
             for (j = 0; j < N_connections; j ++){ //Travelling through all the connections
                   k  = (connections + j) -> Pair.fst;
                   p  = (connections + j) -> Pair.snd;
                   L  = (connections + j) -> rest_length;
-                  xk = (moonlets    + k) -> x;
-                  yk = (moonlets    + k) -> y;
-                  zk = (moonlets    + k) -> z;
-                  mk = (moonlets    + k) -> mass;
-                  xp = (moonlets    + p) -> x;
-                  yp = (moonlets    + p) -> y;
-                  zp = (moonlets    + p) -> z;
-                  mp = (moonlets    + p) -> mass;
-                  DX = xk - xp;  DY = yk - yp;  DZ = zk - zp;
-                  r  = sqrt(DX*DX + DY*DY + DZ*DZ);
-                  dL = r - L;
-                  K  = spring_modulus*L*dL/r;
-                  /******** Updating the accelerations ********/
-                  (moonlets + k) -> vx -= K*DX/mk;
-                  (moonlets + k) -> vy -= K*DY/mk;
-                  (moonlets + k) -> vz -= K*DZ/mk;
-                  (moonlets + p) -> vx += K*DX/mp;
-                  (moonlets + p) -> vy += K*DY/mp;
-                  (moonlets + p) -> vz += K*DZ/mp;
+                  if (exists[k] && exists[p]){
+                        xk = (moonlets    + k) -> x;
+                        yk = (moonlets    + k) -> y;
+                        zk = (moonlets    + k) -> z;
+                        mk = (moonlets    + k) -> mass;
+                        xp = (moonlets    + p) -> x;
+                        yp = (moonlets    + p) -> y;
+                        zp = (moonlets    + p) -> z;
+                        mp = (moonlets    + p) -> mass;
+                        DX = xk - xp;  DY = yk - yp;  DZ = zk - zp;
+                        r  = sqrt(DX*DX + DY*DY + DZ*DZ);
+                        dL = r - L;
+                        K  = spring_modulus*L*dL/r;
+                        /******** Updating the accelerations ********/
+                        (moonlets + k) -> vx -= K*DX/mk;
+                        (moonlets + k) -> vy -= K*DY/mk;
+                        (moonlets + k) -> vz -= K*DZ/mk;
+                        (moonlets + p) -> vx += K*DX/mp;
+                        (moonlets + p) -> vy += K*DY/mp;
+                        (moonlets + p) -> vz += K*DZ/mp;
+                  }
+            }
+            /******** Tidal acceleration due to the perturbator ********/
+            if (pert_mass > 0.){ //The perturbing body affects the center of mass of the viscoelastic body
+                  need_to_reduce_COM_bool = 1;  
+                  typ cart[6];
+                  typ nu = get_perturbing_true_anomaly(time_elapsed + t_init);              //Retrieving the true anomaly of the perturbing body
+                  mu = G*(pert_mass + M_unit);
+                  ell2cart(pert_sma, pert_ecc, pert_inc, nu, pert_aop, pert_lan, mu, cart); //Retrieving the coordinates  of the perturbing body
+                  if (openGL_bool || (viscoelastic_bool && pert_mass > 0.)){                //For visualization in webGL or writing to files
+                        CM.x  = cart[0] + 0.5*timestep*cart[3];  CM.y  = cart[1] + 0.5*timestep*cart[4];  CM.z  = cart[2] + 0.5*timestep*cart[5];
+                        CM.vx = cart[3];                         CM.vy = cart[4];                         CM.vz = cart[5];
+                        
+                  }
+                  mu = G*pert_mass;
+                  XX = cart[0] + 0.5*timestep*cart[3];  YY = cart[1] + 0.5*timestep*cart[4];  ZZ = cart[2] + 0.5*timestep*cart[5];
+                  Rk = sqrt(XX*XX + YY*YY + ZZ*ZZ);
+                  aX = mu*XX/(Rk*Rk*Rk);  aY = mu*YY/(Rk*Rk*Rk);  aZ = mu*ZZ/(Rk*Rk*Rk); //Acceleration at the center of mass
+                  for (j = 0; j <= largest_id; j ++){
+                        if (exists[j]){
+                              /******** Vector going from the current point in the viscoelastic body towards the perturbing body ********/
+                              X  = XX - (moonlets + j) -> x;
+                              Y  = YY - (moonlets + j) -> y;
+                              Z  = ZZ - (moonlets + j) -> z;
+                              Rp = sqrt(X*X + Y*Y + Z*Z);
+                              /******** Updating the accelerations ********/
+                              (moonlets + j) -> vx += mu*X/(Rp*Rp*Rp) - aX;
+                              (moonlets + j) -> vy += mu*Y/(Rp*Rp*Rp) - aY;
+                              (moonlets + j) -> vz += mu*Z/(Rp*Rp*Rp) - aZ;
+                        }
+                  }
             }
       }
 }
@@ -399,39 +432,41 @@ void KelvinVoigtDamping(struct moonlet * X){
             k    = (connections + j) -> Pair.fst;
             p    = (connections + j) -> Pair.snd;
             L    = (connections + j) -> rest_length;
-            xk   = (X + k) -> x;
-            yk   = (X + k) -> y;
-            zk   = (X + k) -> z;
-            vxk  = (X + k) -> vx;
-            vyk  = (X + k) -> vy;
-            vzk  = (X + k) -> vz;
-            mk   = (X + k) -> mass;
-            xp   = (X + p) -> x;
-            yp   = (X + p) -> y;
-            zp   = (X + p) -> z;
-            vxp  = (X + p) -> vx;
-            vyp  = (X + p) -> vy;
-            vzp  = (X + p) -> vz;
-            mp   = (X + p) -> mass;
-            /******** Updating the speeds ********/
-            vxk += 0.5*timestep*(xx + k) -> vx;
-            vyk += 0.5*timestep*(xx + k) -> vy;
-            vzk += 0.5*timestep*(xx + k) -> vz;
-            vxp += 0.5*timestep*(xx + p) -> vx;
-            vyp += 0.5*timestep*(xx + p) -> vy;
-            vzp += 0.5*timestep*(xx + p) -> vz;
-            dX   =  xk -  xp;  dY  =  yk -  yp;  dZ  =  zk -  zp;
-            dvX  = vxk - vxp;  dvY = vyk - vyp;  dvZ = vzk - vzp;
-            drdv = dX*dvX + dY*dvY + dZ*dvZ;
-            dr   = sqrt(dX*dX   + dY*dY   + dZ*dZ);
-            K    = damping_coefficient*L*drdv/(dr*dr);
-            /******** Updating the accelerations ********/
-            (xx + k) -> vx -= K*dX/mk;
-            (xx + k) -> vy -= K*dY/mk;
-            (xx + k) -> vz -= K*dZ/mk;
-            (xx + p) -> vx += K*dX/mp;
-            (xx + p) -> vy += K*dY/mp;
-            (xx + p) -> vz += K*dZ/mp;
+            if (exists[k] && exists[p]){
+                  xk   = (X + k) -> x;
+                  yk   = (X + k) -> y;
+                  zk   = (X + k) -> z;
+                  vxk  = (X + k) -> vx;
+                  vyk  = (X + k) -> vy;
+                  vzk  = (X + k) -> vz;
+                  mk   = (X + k) -> mass;
+                  xp   = (X + p) -> x;
+                  yp   = (X + p) -> y;
+                  zp   = (X + p) -> z;
+                  vxp  = (X + p) -> vx;
+                  vyp  = (X + p) -> vy;
+                  vzp  = (X + p) -> vz;
+                  mp   = (X + p) -> mass;
+                  /******** Updating the speeds ********/
+                  vxk += 0.5*timestep*(xx + k) -> vx;
+                  vyk += 0.5*timestep*(xx + k) -> vy;
+                  vzk += 0.5*timestep*(xx + k) -> vz;
+                  vxp += 0.5*timestep*(xx + p) -> vx;
+                  vyp += 0.5*timestep*(xx + p) -> vy;
+                  vzp += 0.5*timestep*(xx + p) -> vz;
+                  dX   =  xk -  xp;  dY  =  yk -  yp;  dZ  =  zk -  zp;
+                  dvX  = vxk - vxp;  dvY = vyk - vyp;  dvZ = vzk - vzp;
+                  drdv = dX*dvX + dY*dvY + dZ*dvZ;
+                  dr   = sqrt(dX*dX   + dY*dY   + dZ*dZ);
+                  K    = damping_coefficient*L*drdv/(dr*dr);
+                  /******** Updating the accelerations ********/
+                  (xx + k) -> vx -= K*dX/mk;
+                  (xx + k) -> vy -= K*dY/mk;
+                  (xx + k) -> vz -= K*dZ/mk;
+                  (xx + p) -> vx += K*dX/mp;
+                  (xx + p) -> vy += K*dY/mp;
+                  (xx + p) -> vz += K*dZ/mp;
+            }
       }
 }
 

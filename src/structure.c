@@ -98,7 +98,7 @@ int need_to_reduce_COM_bool;
 int n_output;
 
 
-typ * ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega){
+void ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ mu, typ * cart){
 
       /******** Returns the array [X,Y,Z,vX,vY,vZ] of the cartesian coordinates                                ********/
       /******** a is the semi-major axis, e is the eccentricity, i is the inclination, nu is the true anomaly, ********/
@@ -106,9 +106,10 @@ typ * ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega){
       
       typ X,Y,Z,vX,vY,vZ; //Cartesian coordinates
       typ X_buff,Y_buff,vX_buff,vY_buff; //Buffer for cartesian coordinates
-      typ r;  //Body's distance to Earth's center
-      typ n;  //Body's mean motion
-      typ mu; //Gravitational parameter
+      typ r;    //Body's distance to Earth's center
+      typ g;    //Angular momentum per unit mass
+      typ dnudt;
+      typ drdt;
       typ cosnu    = cos(nu);
       typ sinnu    = sin(nu);
       typ cosvarpi = cos(omega + Omega);
@@ -122,15 +123,16 @@ typ * ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega){
 
       /********  In the orbital plane (see e.g. Laskar & Robutel 1995)  ********/
       r  = a*(1.0 - e*e)/(1.0 + e*cosnu);
-      mu = G*M_unit;
       if (J2_bool && central_mass_bool){ //Using the geometric elliptical elements instead of the osculating ones in case of an oblate Earth (See Greenberg, 1981)
             mu = mu*(1.0 + 1.5*J2*R_unit*R_unit/(a*a));
       }
-      n       = sqrt(mu/(a*a*a));
+      g       = sqrt(mu*a*(1.0 - e*e));
+      dnudt   = g/(r*r);
+      drdt    = a*e*dnudt*sinnu*(1.0 - e*e)/((1.0 + e*cosnu)*(1.0 + e*cosnu));
       X_buff  = r*cosnu;
       Y_buff  = r*sinnu;
-      vX_buff = -n*a/sqrt(1.0 - e*e)*sinnu;
-      vY_buff =  n*a/sqrt(1.0 - e*e)*(e + cosnu);
+      vX_buff = drdt*cosnu - r*dnudt*sinnu;
+      vY_buff = drdt*sinnu + r*dnudt*cosnu;
       
       /********  Rotations to convert to reference plane (see e.g. Laskar & Robutel 1995)  ********/      
       X  =  X_buff*(pp*cosvarpi + dpq*sinvarpi) +  Y_buff*(dpq*cosvarpi - pp*sinvarpi);
@@ -140,16 +142,13 @@ typ * ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega){
       Z  =  X_buff*(2.0*q*chi*sinvarpi - 2.0*p*chi*cosvarpi) +  Y_buff*(2.0*p*chi*sinvarpi + 2.0*q*chi*cosvarpi);
       vZ = vX_buff*(2.0*q*chi*sinvarpi - 2.0*p*chi*cosvarpi) + vY_buff*(2.0*p*chi*sinvarpi + 2.0*q*chi*cosvarpi);
       
-      /********  Returning the cartesian coordinates  ********/
-      typ * cart = (typ *)malloc(sizeof(typ)*6);
+      /********  Writing the cartesian coordinates  ********/
       * cart      = X;
       *(cart + 1) = Y;
       *(cart + 2) = Z;
       *(cart + 3) = vX;
       *(cart + 4) = vY;
       *(cart + 5) = vZ;
-      return cart;
-
 }
 
 
@@ -324,22 +323,20 @@ struct moonlet init(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ densi
       /******** omega is the argument of periapsis, Omega is the longitude of the ascending node and m is the mass ********/
 
       struct moonlet mlt;
-      mlt.radius = rad;                                 //Initializing the radius
-      typ m = 4.0/3.0*M_PI*density*rad*rad*rad;         //Defining the mass
-      mlt.mass = m;                                     //Initializing the mass
+      mlt.radius = rad;                                    //Initializing the radius
+      typ m = 4.0/3.0*M_PI*density*rad*rad*rad;            //Defining the mass
+      mlt.mass = m;                                        //Initializing the mass
       
-      typ * cart = ell2cart(a, e, i, nu, omega, Omega); //Computing the cartesian coordinates from the orbital elements
-      mlt.x  = * cart;                                  //Initializing the cartesian coordinates
+      typ cart[6] = {a, e, i, nu, omega, Omega};
+      ell2cart(a, e, i, nu, omega, Omega, G*M_unit, cart); //Computing the cartesian coordinates from the orbital elements
+      mlt.x  = * cart;                                     //Initializing the cartesian coordinates
       mlt.y  = *(cart + 1);
       mlt.z  = *(cart + 2);
       mlt.vx = *(cart + 3);
       mlt.vy = *(cart + 4);
       mlt.vz = *(cart + 5);
-      free(cart);
-      cart = NULL;
       
       return mlt;
-
 }
 
 
@@ -481,7 +478,7 @@ void variable_initialization(){
       timestep                = time_step;
       largest_id              = N_0 - 1;
       first_passage           = 1;
-      time_elapsed            = 0.0;
+      time_elapsed            = 0.;
       how_many_free           = 0;
       how_many_moonlets       = N_0;
       how_many_cells          = 0;
@@ -615,10 +612,16 @@ void array_initialization(){
             }
       }
       if (openGL_bool){
-            sending_buffer = (typ *)malloc(8*(N_max + central_mass_bool)*sizeof(typ));
+            sending_buffer = (typ *)malloc(8*(N_max + (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)))*sizeof(typ));
             for (p = 0; p <= largest_id; p ++){
                   *(sending_buffer + p) = 0.;
             }
+      }
+      if (viscoelastic_bool){
+            typ cart[6];
+            typ nu = get_perturbing_true_anomaly(t_init);
+            ell2cart(pert_sma, pert_ecc, pert_inc, nu, pert_aop, pert_lan, G*(pert_mass + M_unit), cart);
+            CM.x = cart[0];  CM.y = cart[1];  CM.z = cart[2];  CM.vx = cart[3];  CM.vy = cart[4];  CM.vz = cart[5];  CM.radius = pert_radius;
       }
 }
 
@@ -1283,11 +1286,6 @@ void verify(){
       if(!type_check(typeof(spawned_density),           typ)){fprintf(stderr, "Error : spawned_density must be given as a floating-point number.\n");       abort();}
       if(!type_check(typeof(f_tilde),                   typ)){fprintf(stderr, "Error : f_tilde must be given as a floating-point number.\n");               abort();}
       if(!type_check(typeof(Rroche),                    typ)){fprintf(stderr, "Error : Rroche must be given as a floating-point number.\n");                abort();}
-      if(!type_check(typeof(spring_modulus),            typ)){fprintf(stderr, "Error : spring_modulus must be given as a floating-point number.\n");        abort();}
-      if(!type_check(typeof(damping_coefficient),       typ)){fprintf(stderr, "Error : damping_coefficient must be given as a floating-point number.\n");   abort();}
-      if(!type_check(typeof(spring_failure),            typ)){fprintf(stderr, "Error : spring_failure must be given as a floating-point number.\n");        abort();}
-      if(!type_check(typeof(connecting_distance),       typ)){fprintf(stderr, "Error : connecting_distance must be given as a floating-point number.\n");   abort();}
-      if(!type_check(typeof(minimal_distance),          typ)){fprintf(stderr, "Error : minimal_distance must be given as a floating-point number.\n");      abort();}
       if(!type_check(typeof(t_end),                     typ)){fprintf(stderr, "Error : t_end must be given as a floating-point number.\n");                 abort();}
       if(!type_check(typeof(time_step),                 typ)){fprintf(stderr, "Error : time_step must be given as a floating-point number.\n");             abort();}
       if(!type_check(typeof(low_dumping_threshold),     typ)){fprintf(stderr, "Error : low_dumping_threshold must be given as a floating-point number.\n"); abort();}
@@ -1304,6 +1302,18 @@ void verify(){
       if(!type_check(typeof(inclination_min),           typ)){fprintf(stderr, "Error : inclination_min must be given as a floating-point number.\n");       abort();}
       if(!type_check(typeof(inclination_max),           typ)){fprintf(stderr, "Error : inclination_max must be given as a floating-point number.\n");       abort();}
       if(!type_check(typeof(radius_blow_up_factor),     typ)){fprintf(stderr, "Error : radius_blow_up_factor must be given as a floating-point number.\n"); abort();}
+      if(!type_check(typeof(spring_modulus),            typ)){fprintf(stderr, "Error : spring_modulus must be given as a floating-point number.\n");        abort();}
+      if(!type_check(typeof(damping_coefficient),       typ)){fprintf(stderr, "Error : damping_coefficient must be given as a floating-point number.\n");   abort();}
+      if(!type_check(typeof(connecting_distance),       typ)){fprintf(stderr, "Error : connecting_distance must be given as a floating-point number.\n");   abort();}
+      if(!type_check(typeof(minimal_distance),          typ)){fprintf(stderr, "Error : minimal_distance must be given as a floating-point number.\n");      abort();}
+      if(!type_check(typeof(pert_sma),                  typ)){fprintf(stderr, "Error : pert_sma must be given as a floating-point number.\n");              abort();}
+      if(!type_check(typeof(pert_ecc),                  typ)){fprintf(stderr, "Error : pert_ecc must be given as a floating-point number.\n");              abort();}
+      if(!type_check(typeof(pert_inc),                  typ)){fprintf(stderr, "Error : pert_inc must be given as a floating-point number.\n");              abort();}
+      if(!type_check(typeof(pert_tra),                  typ)){fprintf(stderr, "Error : pert_tra must be given as a floating-point number.\n");              abort();}
+      if(!type_check(typeof(pert_aop),                  typ)){fprintf(stderr, "Error : pert_aop must be given as a floating-point number.\n");              abort();}
+      if(!type_check(typeof(pert_lan),                  typ)){fprintf(stderr, "Error : pert_lan must be given as a floating-point number.\n");              abort();}
+      if(!type_check(typeof(pert_mass),                 typ)){fprintf(stderr, "Error : pert_mass must be given as a floating-point number.\n");             abort();}
+      if(!type_check(typeof(pert_radius),               typ)){fprintf(stderr, "Error : pert_radius must be given as a floating-point number.\n");           abort();}
       if(!type_check(typeof(theta_min),                 typ)){fprintf(stderr, "Error : theta_min must be given as a floating-point number.\n");             abort();}
       if(!type_check(typeof(root_sidelength),           typ)){fprintf(stderr, "Error : root_sidelength must be given as a floating-point number.\n");       abort();}
       if(!type_check(typeof(collision_cube_min),        typ)){fprintf(stderr, "Error : collision_cube_min must be given as a floating-point number.\n");    abort();}

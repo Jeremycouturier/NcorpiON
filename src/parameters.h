@@ -50,8 +50,8 @@
 #define write_to_files_bool      0   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
                                      //You can also set this boolean to 0 if you only want to 3D visualize the simulation in your browser.
 #define make_animation_bool      0   //Determines if animations of the simulation are produced. write_to_files_bool and write_elliptic_bool must both be set to 1
-#define write_cartesian_bool     0   //Determines if the cartesian elements x, y, z, vx, vy, vz   should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
-#define write_elliptic_bool      1   //Determines if the elliptic  elements a, lambda, k, h, q, p should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
+#define write_cartesian_bool     1   //Determines if the cartesian elements x, y, z, vx, vy, vz   should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
+#define write_elliptic_bool      0   //Determines if the elliptic  elements a, lambda, k, h, q, p should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
                                      //If write_to_files_bool is 1 but both write_cartesian_bool and write_elliptic_bool are 0, then only radius.txt, mass.txt and stat.txt are output
 #define central_mass_bool        1   //Determines if there is a central mass. If 0, none of the bodies in the simulation play any particular role. If 1, the central body is initially
                                      //at (x,y,z,vx,vy,vz) = {0.0} and treated independently. Should be set to 1 if one body is very massive and if brute_force_bool is 0, so gravity
@@ -72,7 +72,10 @@
 #define resume_simulation_bool   0   //Determines if, at the end of the simulation, NcorpiON generates a file named init.txt that can be used to resume the simulation. The file init.txt
                                      //is stored at the path indicated above. To resume the simulation, you need to set random_initial_bool to 0, initial_cartesian_bool to 1, and N_0 to
                                      //the number of lines of init.txt. If init.txt already exists in path pth, it will be overwritten. Simulation's variables should be updated.
-#define viscoelastic_bool        0   //Determines if NcorpiON is used to simulate a viscoelastic body. The body is discretized by N_0 points linked by Kelvin-Voigt models.
+#define viscoelastic_bool        0   //Determines if NcorpiON is used to simulate a viscoelastic body. The body is discretized by N_0 points linked by Kelvin-Voigt models. If random_
+                                     //initial_bool is 1, then a file pth/shape_model.txt should be provided to define the boundary of of the viscoelastic body. If it is not provided, a
+                                     //sphere of radius R_unit will be taken. If random_initial_bool is 0, the body is retrieved from the files init.txt and connections.txt that can have
+                                     //been created by a previous simulation where resume_simulation_bool was set to 1.
 
 /******** Booleans relative to interactions with the central mass or a distant object. Set to 0 if central_mass_bool is 0 ********/
 #define J2_bool                  0   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
@@ -107,7 +110,7 @@
 /******** Defining a system of units for the simulation. If random_initial_bool is 0, then the units in the file init.txt must be the simulation's units ********/
 #define R_unit 1.0                   //If central_mass_bool is 1, then radius of the central body. Otherwise, unimportant for the simulation. You define your own unit of length.
 #define M_unit 1.0                   //If central_mass_bool is 1, then   mass of the central body. Otherwise this is the mass for conversions cartesian <-> elliptic
-#define G 39.47841760435743          //The gravitational constant. It is here set to 4*pi^2, so that a body of semi-major axis 1 orbiting a mass 1 has a period 1.
+#define G 39.47841760435743          //The gravitational constant. If you set it to 4*pi^2, then a particle of semi-major axis 1 orbiting a mass 1 has a period 1.
                                      //If viscoelastic_bool is 1, M_unit and R_unit are the mass and mean radius of the viscoelastic body to be simulated.
                                      //Note that R_unit and M_unit do not necessarily have to be 1, they should just be equal to the mass and radius of the central body in the system
                                      //of units that you want to use for the simulation. It is generally advised to use a system of units such that the simulation will not have to
@@ -118,7 +121,7 @@
 
 /******** Physical constants relative to interactions with the central body (J2, inner disk, central tides) or a distant object. Unimportant if central_mass_bool is 0 ********/
 #define Tearth 3.4076                //Central body's sideral period in units of the surface orbital period. Must be > 1. Earth's current value is 17.038
-                                     //In case of tides, the sideral period changes and this is the value at t = 0.
+                                     //In case of tides, the sideral period changes and this is the value at initial time.
 #define J2_value 0.0                 //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body)
                                      //where Omega is the sideral frequency and Omega_crit = sqrt(G*M_unit/R_unit^3)
 #define k2 1.5                       //Second Love number of the central body. Here the value is for a fluid body (zero shear modulus). The constant timelag model is used
@@ -127,20 +130,11 @@
 #define star_semi_major 23481.066    //The semi-major axis of the orbit of the system around the distant object in simulation units.
 #define star_mass 332946.0434581987  //The mass of the distant object in simulation units.
 #define obliquity 0.0                //The angle between the simulation's reference plane and the orbit of the distant object.
-#define inner_mass 0.014             //Mass of the inner fluid disk at t = 0.
+#define inner_mass 0.014             //Mass of the inner fluid disk at initial time.
 #define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
 #define f_tilde 0.3                  //A parameter controlling the mass of bodies spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
 #define Rroche 2.9                   //The Roche radius where bodies spawn from the inner fluid disk (in simulation's units). The radius of tidal disruption is low_dumping_threshold
                                      //defined below. Must be larger than both low_dumping_threshold and than R_unit.
-                                     
-/******** Physical constants relative to viscoelasticity ********/
-#define n_vertices 2000              //Number of vertices in the shape-model. This is the number of lines of pth/shape_model.txt. Shouldn't exceed a few thousands
-#define spring_modulus 400.0         //The modulus of the springs in the Kelvin-Voigt model. Must be given in simulation's units. Force is -spring_modulus*L*dL with L the rest_length
-#define damping_coefficient 0.25     //The damping coefficient of the dampers in the Kelvin-Voigt models. Force is -damping_coefficient*L*dL/dt with L the rest_length
-#define spring_failure 1.05          //The springs of the Kelvin-Voigt connections break if length/equilibrium_length > spring_failure.
-#define connecting_distance 0.02515  //The minimal distance between two particles for them to be connected.
-#define minimal_distance 0.00872     //Minimal initial distance between two particles. Shouldn't be more than 0.7*(V/N_0)^(1/3) where V is the volume of the shape-model. NcorpiON will
-                                     //draw N_0 particles inside the shape model to be linked by Kelvin-Voigt models by making sure than no two particles are closer than that.
                                      
 
 
@@ -149,37 +143,67 @@
 /*******************************************************/
 
 /******** General parameters ********/
-#define N_max 15000                  //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
-#define N_0 1000                     //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
-#define t_end 256.0                  //Total simulation length    (in simulation's units)
+#define N_max 90000                  //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
+#define N_0 10000                    //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
+#define t_init 0.0                   //Time at the beginning of the simulation (in simulation's units)
+#define t_end 32.0                   //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end-t_init)/time_step is not integer
 #define time_step 0.015625           //Timestep of the simulation (in simulation's units)
-#define output_step 32               //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
+#define output_step 1                //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define low_dumping_threshold 2.0    //Threshold (in simulation's units) below  which bodies are dumped from the simulation. Unimportant if central_mass_bool is 0.
 #define high_dumping_threshold 128.0 //Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
 
 /******** Specific parameters ********/
 #define max_ids_per_node 173         //The maximum number of ids in each node of the unrolled linked lists (chains). Choose such that sizeof(struct chain) be a multiple of the cache line
 #define softening_parameter 0.0      //The softening parameter for mutual gravitational interations, in units of the sum of the radii.
-#define seed 129425372               //The seed used for random number generation. Unimportant if seed_bool is 0.
-#define switch_to_brute_force 0      //Threshold for N below which the program switches to the brute-force method for mutual interactions. Unimportant if brute_force_bool is 1
+#define seed 129425373               //The seed used for random number generation. Unimportant if seed_bool is 0.
+#define switch_to_brute_force 256    //Threshold for N below which the program switches to the brute-force method for mutual interactions. Unimportant if brute_force_bool is 1
 
 /******** Bounds for initial conditions. Unimportant if random_initial_bool is 0. The initial conditions are drawn uniformly at random between these bounds ********/
-#define radius_min 0.01              //Minimal radius                   of a body at t = 0
-#define radius_max 0.06              //Maximal radius                   of a body at t = 0
-#define density_min 0.1448           //Minimal density                  of a body at t = 0
-#define density_max 0.1448           //Maximal density                  of a body at t = 0
-#define eccentricity_min 0.0         //Minimal eccentricity             of a body at t = 0
-#define eccentricity_max 0.2         //Maximal eccentricity             of a body at t = 0
-#define sma_min 2.9                  //Minimal semi-major axis          of a body at t = 0
-#define sma_max 14.0                 //Maximal semi-major axis          of a body at t = 0
-#define inclination_min 0.0          //Minimal inclination (in radians) of a body at t = 0
-#define inclination_max 0.174533     //Maximal inclination (in radians) of a body at t = 0
+#define radius_min 0.004             //Minimal radius                   of a body at initial time
+#define radius_max 0.03              //Maximal radius                   of a body at initial time
+#define density_min 0.1448           //Minimal density                  of a body at initial time
+#define density_max 0.1448           //Maximal density                  of a body at initial time
+#define eccentricity_min 0.0         //Minimal eccentricity             of a body at initial time
+#define eccentricity_max 0.2         //Maximal eccentricity             of a body at initial time
+#define sma_min 2.9                  //Minimal semi-major axis          of a body at initial time
+#define sma_max 14.0                 //Maximal semi-major axis          of a body at initial time
+#define inclination_min 0.0          //Minimal inclination (in radians) of a body at initial time
+#define inclination_max 0.174533     //Maximal inclination (in radians) of a body at initial time
                                      //The true longitude, argument of pericenter and longitude of the ascending node are drawn uniformly at random between 0 and 2*M_PI
                                      //These bounds must be defined in the simulation's units
                                      
 /******** Parameters relative to 3D visualization with REBOUND. Unimportant if openGL_bool is 0 ********/
 #define browser_port 1234            //The http port where your browser will communicate with REBOUND. You can visualize several simulations at the same time if you change the port
-#define radius_blow_up_factor 4.0    //All the bodies, except the central mass (if any), are displayed with a radius that much larger than their true radius. Can enhance visualization
+#define radius_blow_up_factor 3.0    //All the bodies, except the central mass (if any), are displayed with a radius that much larger than their true radius. Can enhance visualization
+
+/******** Parameters relative to viscoelasticity. Unimportant if viscoelastic_bool is 0 ********/
+                                     //NcorpiON allows for a visco-elastic body to be simulated. The body is discretized by N_0 points connected by Kelvin-Voigt models (a spring and
+                                     //a damper in parallel). If the user sets random_initial_bool to 1, then the points of the discretization are drawn at random inside a shape model
+                                     //(if file pth/shape_model.txt is provided) or inside a sphere of radius R_unit (if no such file is provided). Once the points have been generated,
+                                     //the initial distance between them is the rest_length of the springs. At the beginning of the simulation, the body will slightly collapse due to
+                                     //gravity but will then reach equilibrium due to the damping and the spring's reaction (as long as perturbing_mass is set to 0.0, as to remove tides)
+                                     //The idea is to run a first simulation with random_initial_bool set to 1 to allow the body to rest. If resume_simulation_bool is also set to 1, then
+                                     //files init.txt and connections.txt are generated and allow for a second simulation to start from a body at rest (by setting random_initial_bool to
+                                     //0 this time). The perturbing mass can then be set to a non-zero value to generate tidal forces in the second simulation. The file shape_model.txt 
+                                     //has 3 columns (x,y,z) and as many lines as vertices. It defines the surface of the viscoelastic body. NcorpiON will assume that the shape model
+                                     //is given in the principal axis frame (X,Y,Z) with Z towards the shortest axis, but this is not a requirement.
+#define n_vertices 2000              //Number of vertices in the shape-model. This is the number of lines of pth/shape_model.txt. Shouldn't exceed a few thousands
+#define spring_modulus 400.0         //The expected modulus of the body. Spring stiffness is k = spring_modulus*L. Force is -spring_modulus*L*dL with L the rest_length
+#define damping_coefficient 0.125    //The damping coefficient of the dampers in the Kelvin-Voigt models. Force is -damping_coefficient*L*dL/dt with L the rest_length
+#define connecting_distance 0.0234862//The minimal distance between two particles for them to be initially connected.
+#define minimal_distance 0.0063898   //Minimal initial distance between two particles. Shouldn't be more than 0.7*(V/N_0)^(1/3) where V is the volume of the body.
+                                     //NcorpiON will draw N_0 particles inside the shape model by making sure than no two particles are closer than that.
+                                     //The six following parameters define the orbit of the point-mass perturbator, in an inertial reference frame.
+#define pert_sma -11690.1474151781531//The perturbator is on a Keplerian trajectory defined by the six elements (semi-major axis, eccentricity, inclination, true anomaly, argument of
+#define pert_ecc 4.2399307249518     //periapsis, longitude of ascending node), given by these six parameters (in radians and simulation's units). The gravitational parameter used to
+#define pert_inc 2.8418842771365     //convert these elliptic elements into cartesian coordinates is mu = G*(perturbing_mass + M_unit), which means that these 6 elliptic elements define
+#define pert_tra -0.0000000092695    //the trajectory of the vector pointing from the viscoelastic body to the perturbing body. The Keplerian orbit can be hyperbolic (perturbing_ecc can
+#define pert_aop -2.5680969201791    //exceed 1), but then, the semi-major axis perturbing_sma must be negative and the true anomaly must verify |tra| < acos(-1/e). pert_ecc cannot be 1.
+#define pert_lan 2.6575357407213     //The true anomaly is given at the time t = 0, not at the initial time t_init.
+#define pert_mass 0.//97904401542201.0//Mass of the perturbator (in simulation's units). First set to 0.0 in order to remove tides on the viscoelastic body and let it rest
+#define pert_radius 6371.0           //Radius of the perturbator (for visualization purposes only. Does not matter if openGL_bool is 0)
+
+
 
 /*************************************************************************************************************************/
 /******** Parameters relative to tree-based algorithms (falcON and the standard tree code). If either falcON_bool ********/
@@ -190,12 +214,12 @@
 #define expansion_order 3            //The order p of the Taylor expansions. This is p = 3 in Dehnen (2002). NcorpiON allows up to p = 6. Minimum is 1 as order 0 yields no acceleration
 #define theta_min 0.5                //Minimal value of the tolerance parameter theta. Must be strictly less than 1. Sensible values are 0.2 < theta_min < 0.8
                                      //The precision (and computational time) of the mutual gravity computed by Ncorpion increases with increasing p and decreasing theta_min.
-#define subdivision_threshold 17     //A cubic cell is not divided as long as it contains at most that many bodies. Called s in Dehnen (2002). Must be > 0. The precision does not depend
+#define subdivision_threshold 23     //A cubic cell is not divided as long as it contains at most that many bodies. Called s in Dehnen (2002). Must be > 0. The precision does not depend
                                      //on this threshold, but the computational time does. Suggested values are 5 < s < 200 but must be tweaked by the user to obtain the best performances
 #define root_sidelength 128.0        //Sidelength of the root cell (in simulation's units). Should be machine representable. Particles outside of the root cell don't feel others.
 #define level_max 25                 //The maximum allowed number of levels in the tree. Root is at level 0 and a cell at level level_max - 1 is never divided.
 #define child_multipole_threshold 1  //If number of bodies/number of children is at most this threshold then the multipole moments of a cell are computed directly from the bodies.
-                                     //Otherwise, they are computed from that of the children
+                                     //Otherwise, they are computed from that of the children. Choose 1 for p < 5, and a small integer otherwise.
 
 /******** Parameters specifically relative to mutual gravity computation with falcON algorithm ********/
 #define N_cc_pre 8                   //For two cells with N1 and N2 bodies, if N1N2 < N_cc_pre, then the interaction is computed brute-forcely, regardless of their well-separation

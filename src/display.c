@@ -253,7 +253,7 @@ void display(struct moonlet * moonlets){
       typ inner_fluid_disk_mass;
       typ maxR = 0.0;
       
-      if (central_mass_bool){
+      if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
             if (write_cartesian_bool){
                   X  = CM_buffer.x;
                   Y  = CM_buffer.y;
@@ -416,7 +416,8 @@ void readme(){
       fprintf(file, "\n");
       fprintf(file, "You should also find here two files named mass.txt and radius.txt for the masses and radii, with the same convention as for the other files.\n");
       fprintf(file, "If you set central_mass_bool to 1 in the parameter file, then the central body of your simulation is always displayed in the first column.\n");
-      fprintf(file, "Finally, you will also find a file stat.txt containing some statistics about the simulation. As for the other files, it contains one line per output,\n");
+      fprintf(file, "If you set viscoelastic_bool to 1 in the parameter file, then the perturbing body of your simulation is always displayed in the first column.\n");
+      fprintf(file, "Finally, you will also find a file stat.txt containing some statistics about the simulation. Like the other files, it contains one line per output,\n");
       fprintf(file, "but unlike the other files, it has a constant number of columns. Its columns are :\n");
       fprintf(file, "Time, N, number of collisions, largest radius, total body mass, central mass, inner fluid disk mass, number of mergers, super-catastrophic collisions,\n");
       fprintf(file, "half-fragmentations, full-fragmentations, length of day, J2, evection resonance.\n");
@@ -433,10 +434,10 @@ void rebound(struct moonlet * moonlets){
       /******** of the simulation on port 1234 of the user's web browser  ********/
 
       int j;
-      int N = central_mass_bool;
+      int N = central_mass_bool || (viscoelastic_bool && pert_mass > 0.);
       
       /******** Filling the buffer with the bodies' coordinates ********/
-      if(central_mass_bool){
+      if(central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
             sending_buffer[0] = CM.x;
             sending_buffer[1] = CM.y;
             sending_buffer[2] = CM.z;

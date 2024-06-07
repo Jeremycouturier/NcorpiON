@@ -149,7 +149,7 @@ extern typ * sending_buffer;
 
 
 
-typ * ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega);
+void ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ mu, typ * cart);
 
 
 void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp);

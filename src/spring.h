@@ -46,6 +46,10 @@ extern struct chain * second;           //This chain will contain the index of t
 extern int N_connections;               //The total number of connections in the viscoelastic body
 
 
+
+void precision(struct moonlet * viscoelastic); //To be removed
+
+
 struct moonlet * generate_visco_elastic_body();
 
 
@@ -65,6 +69,9 @@ int connects(struct moonlet * viscoelastic, int a, int b);
 
 
 struct connection make_connection(struct moonlet * viscoelastic, int a, int b);
+
+
+typ get_perturbing_true_anomaly(typ time);
 
 
 #endif

@@ -68,16 +68,18 @@ int main(int argc, char* argv[]){
       /******** Preparing the simulation ********/
       struct reb_simulation * r = reb_simulation_create();
       r -> integrator = REB_INTEGRATOR_NONE; //No integrator. REBOUND is only used for visualization
-      r -> heartbeat = heartbeat;  
+      r -> heartbeat = heartbeat;
+      r -> exact_finish_time = 0;
       
-      /******** Receiving the timestep and the length of the simulation from NcorpiON ********/
-      typ * dtt = (typ *)malloc(3*sizeof(typ));
+      /******** Receiving some informations from NcorpiON ********/
+      typ * dtt = (typ *)malloc(4*sizeof(typ));
       int * att = (int *)malloc(2*sizeof(int));
-      MPI_Recv(dtt, 3, MPI_TYP, !rank, 0, MPI_COMM_WORLD, &status);
+      MPI_Recv(dtt, 4, MPI_TYP, !rank, 0, MPI_COMM_WORLD, &status);
       MPI_Recv(att, 2, MPI_INT, !rank, 0, MPI_COMM_WORLD, &status);
       r -> dt               = dtt[0];
-      typ length            = dtt[1];
+      typ until             = dtt[1];
       radius_blow_up_factor = dtt[2];
+      r -> t                = dtt[3];
       central_mass_bool     = att[0];
       int browser_port      = att[1];
       free(dtt);  dtt = NULL;
@@ -87,10 +89,9 @@ int main(int argc, char* argv[]){
       reb_simulation_start_server(r, browser_port);
       printf("The 3D visualization will start in 5 seconds.\n");
       usleep(5000000.);                     //Waiting 5 seconds to give the user enough time to open a web browser tab
-      reb_simulation_integrate(r, length);  //Pseudo - integrating. Only what is done in the heartbeat function serves a purpose
+      reb_simulation_integrate(r, until);   //Pseudo - integrating. Only what is done in the heartbeat function serves a purpose
 
       /******** Finishing ********/
-      usleep(10000000.);
       MPI_Finalize();
       reb_simulation_stop_server(r);
       reb_simulation_free(r);
@@ -103,13 +104,13 @@ void heartbeat(struct reb_simulation * r){
       /******** Receives the next timestep from NcorpiON and updates the particle array ********/
       
       int N, j;
-      
+
       /******** Communicating with NcorpiON ********/
       MPI_Status status;
       MPI_Recv(&N, 1, MPI_INT, !rank, 0, MPI_COMM_WORLD, &status);       //Receiving the number of bodies
       typ * buffer = (typ *)malloc(8*N*sizeof(typ));                     //Allocating receiving buffer
       MPI_Recv(buffer, 8*N, MPI_TYP, !rank, 0, MPI_COMM_WORLD, &status); //Receiving the bodies' coordinates
-      
+
       /******** Updating the simulation ********/
       reb_simulation_remove_all_particles(r);                            //I first remove all the bodies from the simulation
       for (j = 0; j < N; j ++){                                          //I now recreate the bodies with their new coordinates and add them back to the simulation
