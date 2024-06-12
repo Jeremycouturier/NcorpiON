@@ -32,11 +32,20 @@
 
 #include "parameters.h"
 
+
 /******** Defining the connection structure between two particles (Kelvin-Voigt model) ********/
 struct connection {
       struct pair Pair;       //The pair of particles linked by the connection
       typ rest_length;        //The rest length of the spring
-      typ equilibrium_length; //The equilibrium length of the spring. Unknown until the viscous body has been integrated to equilibrium
+};
+
+
+/******** Defining a quaternion structure to perform rotations from one vector to another ********/
+struct quaternion {
+      typ w;
+      typ x;
+      typ y;
+      typ z;
 };
 
 
@@ -44,7 +53,7 @@ extern struct connection * connections; //The array of connections between parti
 extern struct chain * first;            //This chain will contain the index of the first  particle of the connection
 extern struct chain * second;           //This chain will contain the index of the second particle of the connection
 extern int N_connections;               //The total number of connections in the viscoelastic body
-
+extern typ shapeV;                      //The volume of the shape model
 
 
 void precision(struct moonlet * viscoelastic); //To be removed
@@ -54,6 +63,12 @@ struct moonlet * generate_visco_elastic_body();
 
 
 void generate_connections(struct moonlet * viscoelastic);
+
+
+void make_rotate(struct moonlet * viscoelastic);
+
+
+void point_angular_momentum(struct moonlet * viscoelastic);
 
 
 void overlap(struct moonlet * viscoelastic);
@@ -72,6 +87,18 @@ struct connection make_connection(struct moonlet * viscoelastic, int a, int b);
 
 
 typ get_perturbing_true_anomaly(typ time);
+
+
+void quaternion_norm(struct quaternion * q);
+
+
+struct quaternion get_quaternion(typ ux, typ uy, typ uz, typ vx, typ vy, typ vz);
+
+
+void rotate_with_quaternion(typ x, typ y, typ z, struct quaternion q, typ * xr, typ * yr, typ * zr);
+
+
+void three_closest_nodes(struct moonlet * viscoelastic, int k, int * indexes);
 
 
 #endif

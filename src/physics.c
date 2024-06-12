@@ -55,7 +55,7 @@ void vector_field(struct moonlet * moonlets){
       typ mu, mk;
       typ Xp, Yp, Zp, mp, DX, DY, DZ, D, D3, softening, Rk, Rp;
       typ X_sun, Y_sun, Z_sun, KK;
-      typ aX = 0.0, aY = 0.0, aZ = 0.0;
+      typ aX, aY, aZ;
       
       if (central_mass_bool){
             XX        = CM.x;  YY = CM.y;  ZZ = CM.z;
@@ -115,7 +115,9 @@ void vector_field(struct moonlet * moonlets){
                         CM_acc[1] += G*mk*DY/r3;
                         CM_acc[2] += G*mk*DZ/r3;
                   }
-                  
+                  else{
+                        aX = 0.;  aY = 0.;  aZ = 0.;
+                  }                  
                   
                   /******** Contribution from the Earth symmetrical equatorial bulge ********/
                   if (J2_bool){
@@ -471,85 +473,48 @@ void KelvinVoigtDamping(struct moonlet * X){
 }
 
 
-void tides(struct moonlet * X){
+void tides(struct moonlet * bodies){
 
       /******** When this function is called (by "kick"), the body array xx contains the acceleration without tides ********/
       /******** This function uses the knowledge of the acceleration without tides in order to compute the speed at ********/
       /******** the middle of the kick phase. Then, the acceleration due to tides can be computed and is added to   ********/
       /******** the acceleration without tides in the array xx                                                      ********/
       
-      three_largest_moonlets(X); //Only the three largest bodies raise tides. I retrieve their indexes
-      typ largest_positions [9]; //Positions  of the three largest bodies at t - Delta t
-      typ largest_velocities[9]; //Velocities of the three largest bodies at t
-      int j, k;
       
-      /******** Estimating the velocities in the middle of the kick phase ********/
-      for (k = 0; k <= 2; k ++){
-            if (three_largest_indexes[k] != -1 && *(exists + three_largest_indexes[k])){
-                  largest_velocities[3*k]     = (X + three_largest_indexes[k]) -> vx + 0.5*timestep * (xx + three_largest_indexes[k]) -> vx;
-                  largest_velocities[3*k + 1] = (X + three_largest_indexes[k]) -> vy + 0.5*timestep * (xx + three_largest_indexes[k]) -> vy;
-                  largest_velocities[3*k + 2] = (X + three_largest_indexes[k]) -> vz + 0.5*timestep * (xx + three_largest_indexes[k]) -> vz;
-            }
-      }
+      int j;
+      typ X, Y, Z, vX, vY, vZ, m, K, r2, r10, rv, r_x_OmX, r_x_OmY, aX, aY, aZ;
+      typ R5 = R_unit*R_unit*R_unit*R_unit*R_unit;
+      typ A  = 3.0*k2*G*R5;
+      typ M  = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit) : CM.mass);
       
-      /******** Computing the r_k^\star at t - Delta t ********/
-      for (k = 0; k <= 2; k ++){
-            if (three_largest_indexes[k] != -1 && *(exists + three_largest_indexes[k])){
-                  largest_positions [3*k]     = (X + three_largest_indexes[k]) -> x - Delta_t * (largest_velocities[3*k]     + SideralOmega*(X + three_largest_indexes[k]) -> y);
-                  largest_positions [3*k + 1] = (X + three_largest_indexes[k]) -> y - Delta_t * (largest_velocities[3*k + 1] - SideralOmega*(X + three_largest_indexes[k]) -> x);
-                  largest_positions [3*k + 2] = (X + three_largest_indexes[k]) -> z - Delta_t * (largest_velocities[3*k + 2]);
-            }
-      }
-      
-      /******** Computing the tidal acceleration ********/
-      typ R_unit3 = R_unit *R_unit*R_unit;
-      typ R_unit5 = R_unit3*R_unit*R_unit;
-      typ scalar_product;
-      typ xj, yj, zj, xk, yk, zk;
-      typ rj2, rk2, rj5rk5, mj, mk, factor;
       for (j = 0; j <= largest_id; j ++){ //Looping over all bodies
             if (*(exists + j)){
-                  for (k = 0; k <= 2; k ++){ //Looping over all three perturbing bodies
-                        if (three_largest_indexes[k] != -1 && *(exists + three_largest_indexes[k])){
-                              xj = (X + j) -> x;
-                              yj = (X + j) -> y;
-                              zj = (X + j) -> z;
-                              xk = largest_positions[3*k];
-                              yk = largest_positions[3*k + 1];
-                              zk = largest_positions[3*k + 2];
-                              scalar_product = xj*xk + yj*yk + yj*yk;
-                              rj2 = xj*xj + yj*yj + zj*zj;
-                              rk2 = xk*xk + yk*yk + zk*zk;
-                              rj5rk5 = rj2 * rj2 * rk2 * rk2 * sqrt(rj2*rk2);
-                              mj  = (X + j) -> mass;
-                              mk  = (X + three_largest_indexes[k]) -> mass;
-                              
-                              /******** Adding the contributions from tides to the acceleration ********/
-                              factor = 1.5*k2*G*mk*R_unit5/rj5rk5;
-                              (xx + j) -> vx += factor*(rk2*xj - 5.0/rj2*scalar_product*scalar_product*xj + 2.0*scalar_product*xk);
-                              (xx + j) -> vy += factor*(rk2*yj - 5.0/rj2*scalar_product*scalar_product*yj + 2.0*scalar_product*yk);
-                              (xx + j) -> vz += factor*(rk2*zj - 5.0/rj2*scalar_product*scalar_product*zj + 2.0*scalar_product*zk);
-                              
-                              /******** Computing the new sideral rotation of the central body ********/
-                              SideralOmega -= 3.0*k2*timestep*G*mj*mk*R_unit3/(dimensionless_moi*M_unit*rj5rk5)*scalar_product*(xj*yk - yj*xk);
-                              
-                              /******** If j is not one of the three largest bodies, I must consider the reciprocal interaction to conserve angular momentum ********/
-                              /******** I limit myself to elastic tides for the reciprocal interaction                                                       ********/
-                              if (j != *three_largest_indexes && j != three_largest_indexes[1] && j != three_largest_indexes[2]){
-                                    xk = (X + three_largest_indexes[k]) -> x;
-                                    yk = (X + three_largest_indexes[k]) -> y;
-                                    zk = (X + three_largest_indexes[k]) -> z;
-                                    rk2 = xk*xk + yk*yk + zk*zk;
-                                    rj5rk5 = rj2 * rj2 * rk2 * rk2 * sqrt(rj2*rk2);
-                                    factor = 1.5*k2*G*mj*R_unit5/rj5rk5;
-                                    scalar_product = xj*xk + yj*yk + yj*yk;
-                                    (xx + three_largest_indexes[k]) -> vx += factor*(rj2*xk - 5.0/rk2*scalar_product*scalar_product*xk + 2.0*scalar_product*xj);
-                                    (xx + three_largest_indexes[k]) -> vy += factor*(rj2*yk - 5.0/rk2*scalar_product*scalar_product*yk + 2.0*scalar_product*yj);
-                                    (xx + three_largest_indexes[k]) -> vz += factor*(rj2*zk - 5.0/rk2*scalar_product*scalar_product*zk + 2.0*scalar_product*zj);
-                                    SideralOmega -= 3.0*k2*timestep*G*mj*mk*R_unit3/(dimensionless_moi*M_unit*rj5rk5)*scalar_product*(xk*yj - yk*xj);
-                              }
-                        }
-                  }
+                  X       = (bodies + j) -> x - CM.x;
+                  Y       = (bodies + j) -> y - CM.y;
+                  Z       = (bodies + j) -> z - CM.z;
+                  vX      = (bodies + j) -> vx - CM.vx + 0.5*timestep*((xx + j) -> vx - CM_acc[0]);
+                  vY      = (bodies + j) -> vy - CM.vy + 0.5*timestep*((xx + j) -> vy - CM_acc[1]);
+                  vZ      = (bodies + j) -> vz - CM.vz + 0.5*timestep*((xx + j) -> vz - CM_acc[2]);
+                  m       = (bodies + j) -> mass;
+                  r2      = X*X + Y*Y + Z*Z;
+                  r10     = r2*r2*r2*r2*r2;
+                  rv      = X*vX + Y*vY + Z*vZ;
+                  r_x_OmX =  Y*SideralOmega; //r_cross_Omega
+                  r_x_OmY = -X*SideralOmega;
+                  K       = A*m/r10;
+                  aX      = K*(r2*X + Delta_t*(2.0*rv*X + r2*(vX + r_x_OmX)));
+                  aY      = K*(r2*Y + Delta_t*(2.0*rv*Y + r2*(vY + r_x_OmY)));
+                  aZ      = K*(r2*Z + Delta_t*(2.0*rv*Z + r2*vZ));
+                  /******** Updating the acceleration of body n° j ********/
+                  (xx + j) -> vx -= aX;
+                  (xx + j) -> vy -= aY;
+                  (xx + j) -> vz -= aZ;
+                  /******** Updating the acceleration of the central body ********/
+                  CM_acc[0] += aX*m/M;
+                  CM_acc[1] += aY*m/M;
+                  CM_acc[2] += aZ*m/M;
+                  /******** Updating the sideral rotation of the central body (to conserve angular momentum along Z) ********/
+                  SideralOmega += timestep*m/(dimensionless_moi*M*R_unit*R_unit)*(X*aY - Y*aX);
             }
       }
 }
@@ -795,7 +760,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             lose_moonlet(b);
             *(did_collide + a) = one_collision_only_bool;
             super_catastrophic_count ++;
-            if (m_tilde < frag_threshold){ //Body a is discarded as well
+            if (m_tilde < frag_threshold/4.0){ //Body a is discarded as well
                   lose_moonlet(a);
             }
             return;

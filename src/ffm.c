@@ -2667,7 +2667,3 @@ void print_boxdot(struct boxdot * BoxDot){
       free(stack);
       stack = NULL;
 }
-
-
-
-

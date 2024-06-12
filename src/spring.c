@@ -48,6 +48,7 @@ struct connection * connections = NULL;
 struct chain * first  = NULL;
 struct chain * second = NULL;
 int N_connections = 0;
+typ shapeV;
 
 
 void precision(struct moonlet * viscoelastic){
@@ -203,7 +204,7 @@ struct moonlet * generate_visco_elastic_body(){
       int j;
       typ maxD = 0.;
       typ costheta, costheta_max;
-      typ distance, distance2;
+      typ distance, distance2, radius;
       typ X, Y, Z;
       int currentN = 0;
       int closest_vertice;
@@ -226,7 +227,8 @@ struct moonlet * generate_visco_elastic_body(){
             strcat(fileOfVertices, "shape_model.txt");
             FILE * file = fopen(fileOfVertices, "r");
             if (file == NULL){
-                  printf("Warning : Could not find the file shape_model.txt in the location provided. NcorpiON will use a sphere of radius R_unit = %lf instead.\n", R_unit);
+                  printf("Could not find the file shape_model.txt in the path 'pth'. NcorpiON will use a sphere of radius R_unit = %lf instead.\n", R_unit);
+                  shapeV = 4.0*M_PI*R_unit*R_unit*R_unit/3.0; //The volume of the body is that of a sphere
                   /******** Drawing the points of the viscoelastic from a sphere of radius R_unit ********/
                   while (currentN < N_0){
                         X = rdm(-R_unit, R_unit);
@@ -240,7 +242,6 @@ struct moonlet * generate_visco_elastic_body(){
                               (viscoelastic + currentN) -> vy     = 0.;
                               (viscoelastic + currentN) -> vz     = 0.;
                               (viscoelastic + currentN) -> mass   = m;
-                              (viscoelastic + currentN) -> radius = minimal_distance/2.0;
                               currentN ++;
                         }
                   }
@@ -248,14 +249,19 @@ struct moonlet * generate_visco_elastic_body(){
             else{
                   fclose(file);
                   /******** Generating the array of vertices ********/
-                  typ * vertices = (typ *)malloc(3*n_vertices*sizeof(typ));
-                  if (vertices == NULL){
-                        fprintf(stderr, "Error : Cannot allocate array of vertices in function generate_visco_elastic_body.\n");
+                  typ * vertices = NULL;
+                  int n_vertices;
+                  vertices = readFromFile_withoutConstraint(fileOfVertices, &n_vertices);
+                  if (n_vertices % 3 != 0){
+                        fprintf(stderr, "Error : The file at path 'pth/shape_model.txt' must have exactly three columns per line.\n");
                         abort();
                   }
-                  readFromFile(fileOfVertices, vertices, 3*n_vertices);
+                  n_vertices /= 3;
+                  if (n_vertices*N_0 > 100000000 || n_vertices*N_0 < 0){
+                        printf("Warning : With %d vertices in the shape model and %d nodes, the generation may take a while.\n", n_vertices, N_0);
+                  }
       
-                  /******** Getting the largest distance between a vertice and the origin ********/
+                  /******** Getting the largest distance between a vertice of the shape-model and the origin ********/
                   for (j = 0; j < n_vertices; j ++){
                         distance = vertices[3*j]*vertices[3*j] + vertices[3*j + 1]*vertices[3*j + 1] + vertices[3*j + 2]*vertices[3*j + 2];
                         if (distance > maxD){
@@ -265,7 +271,10 @@ struct moonlet * generate_visco_elastic_body(){
                   maxD = sqrt(maxD);
       
                   /******** Drawing the points of the viscoelastic body from the shape-model ********/
+                  typ monteCarloProbability; //Using a Monte-Carlo method to estimate the volume of the shape-model
+                  unsigned int N_total = 0;
                   while (currentN < N_0){
+                        N_total ++;
                         X = rdm(-maxD, maxD);
                         Y = rdm(-maxD, maxD);
                         Z = rdm(-maxD, maxD);
@@ -291,14 +300,19 @@ struct moonlet * generate_visco_elastic_body(){
                               (viscoelastic + currentN) -> vy     = 0.;
                               (viscoelastic + currentN) -> vz     = 0.;
                               (viscoelastic + currentN) -> mass   = m;
-                              (viscoelastic + currentN) -> radius = minimal_distance/2.0;
                               currentN ++;
                         }
                   }
                   free(vertices);  vertices = NULL;
+                  monteCarloProbability = ((typ) N_0) / ((typ) N_total);
+                  shapeV                = monteCarloProbability*8.0*maxD*maxD*maxD; //Estimation of the volume of the shape-model
             }
       
             /******** Making sure that particles do not overlap ********/
+            radius = 0.5*minimal_distance*pow(shapeV/(typ) N_0, 1.0/3.0);
+            for (j = 0; j < N_0; j ++){
+                  (viscoelastic + j) -> radius = radius;
+            }
             overlap(viscoelastic);
       }
       else{
@@ -345,12 +359,15 @@ struct moonlet * generate_visco_elastic_body(){
             }
       }
       
-      /******** To be removed ********/
-      //precision(viscoelastic);
-      
       /******** Generating the connections ********/
       generate_connections(viscoelastic);
       printf("Number of connections = %d\n", N_connections);
+      
+      /******** Making the viscoelastic body rotate ********/
+      make_rotate(viscoelastic);
+      
+      /******** Pointing the viscoelastic body's angular momentum towards a particular direction in the inertial frame ********/
+      point_angular_momentum(viscoelastic);
       
       /******** Communicating with REBOUND for 3D visualization ********/
       if (openGL_bool){
@@ -370,9 +387,11 @@ void generate_connections(struct moonlet * viscoelastic){
       int i, j, k, index1, index2, index;
       struct chain * fst = NULL;
       struct chain * snd = NULL;
+      typ connecting_distance = pow(3.0*connections_per_node*shapeV/(4.0*M_PI*(typ) N_0), 1.0/3.0);
+      typ radius = 0.5*minimal_distance*pow(shapeV/(typ) N_0, 1.0/3.0);
       
       if (random_initial_bool){
-            /******** Getting the total number of connections and the ids of the connecting particles ********/
+            /******** Connecting nodes ********/
             if (brute_force_bool){
                   for (i = 0; i < N_0; i ++){
                         for (j = 0; j < i; j ++){
@@ -386,19 +405,19 @@ void generate_connections(struct moonlet * viscoelastic){
             }
             else{ //FalcON
                   for (j = 0; j < N_0; j ++){
-                        (viscoelastic + j) -> radius = connecting_distance/2.0;
+                        (viscoelastic + j) -> radius = 0.5*connecting_distance;
                   }
                   root     = root_cell(viscoelastic);
                   FlatTree = flattree_init(root);
                   clear_boxdot(&root);
                   center_and_maxR_flattree(FlatTree, viscoelastic);
-                  rmax_and_rcrit_flattree (FlatTree, viscoelastic);                   
-                  viscoelastic_flattree   (FlatTree, viscoelastic, 0);   
+                  rmax_and_rcrit_flattree (FlatTree, viscoelastic);
+                  viscoelastic_flattree   (FlatTree, viscoelastic, 0);
+                  for (j = 0; j < N_0; j ++){
+                        (viscoelastic + j) -> radius = radius;
+                  }
             }
             if(falcON_bool){ //Resetting the octree and the associated data
-                  for (j = 0; j < N_0; j ++){
-                        (viscoelastic + j) -> radius = minimal_distance/2.0;
-                  }
                   for (j = 0; j < cell_id; j ++){
                         free((FlatTree + j) -> dots);
                         (FlatTree + j) -> dots = NULL;
@@ -408,6 +427,57 @@ void generate_connections(struct moonlet * viscoelastic){
                   how_many_cells = 0;
                   cell_id        = 0;
             }
+            
+            /******** Looking for particles not connected enough and connecting them more ********/
+            int indexes[3];
+            int * connection_per_body = (int *)malloc(N_0*sizeof(int));
+            if (connection_per_body == NULL){
+                  fprintf(stderr, "Cannot allocate memory for array connection_per_body in function generate_connections\n");
+                  abort();
+            }
+            for (j = 0; j < N_0; j ++){
+                  connection_per_body[j] = 0;
+            }
+            index1 = first  -> how_many - 1;
+            index2 = second -> how_many - 1;
+            fst    = first;
+            snd    = second;
+            while (fst != NULL){
+                  i = (fst -> ids)[index1];
+                  j = (snd -> ids)[index2];
+                  connection_per_body[i] ++;
+                  connection_per_body[j] ++;
+                  index1 --;  index2 --; //Switching to the next pair of connecting particles
+                  if (index1 < 0){
+                        fst = fst -> queue;
+                        index1 = max_ids_per_node - 1;
+                  }
+                  if (index2 < 0){
+                        snd = snd -> queue;
+                        index2 = max_ids_per_node - 1;
+                  }
+            }
+            for (j = 0; j < N_0; j ++){
+                  if (connection_per_body[j] == 0){      //That node needs three more connections
+                        three_closest_nodes(viscoelastic, j, indexes);
+                        N_connections += 3;
+                        add(j, &first);  add(* indexes,      &second);
+                        add(j, &first);  add(*(indexes + 1), &second);
+                        add(j, &first);  add(*(indexes + 2), &second);
+                  }
+                  else if (connection_per_body[j] == 1){ //That node needs two more connections
+                        three_closest_nodes(viscoelastic, j, indexes);
+                        N_connections += 2;
+                        add(j, &first);  add(*(indexes + 1), &second);
+                        add(j, &first);  add(*(indexes + 2), &second);
+                  }
+                  else if (connection_per_body[j] == 2){ //That node needs one more connection
+                        three_closest_nodes(viscoelastic, j, indexes);
+                        N_connections ++;
+                        add(j, &first);  add(*(indexes + 2), &second);
+                  }
+            }
+            free(connection_per_body);  connection_per_body = NULL;
       
             /******** Generating the array of connections ********/
             index       = 0;
@@ -421,8 +491,8 @@ void generate_connections(struct moonlet * viscoelastic){
             fst = first;
             snd = second;
             while (fst != NULL){
-                  i           = (fst -> ids)[index1];
-                  j           = (snd -> ids)[index2];
+                  i = (fst -> ids)[index1];
+                  j = (snd -> ids)[index2];
                   *(connections + index) = make_connection(viscoelastic, i, j);
                   index1 --;  index2 --; //Switching to the next pair of connecting particles
                   if (index1 < 0){
@@ -439,16 +509,12 @@ void generate_connections(struct moonlet * viscoelastic){
             clear_chain(&second);
       }
       else{
-            typ Xi, Yi, Zi, Xj, Yj, Zj, rest_length, eq_length;
+            typ rest_length;
             char fileOfIC[800]; 
             strcpy(fileOfIC, pth);
             strcat(fileOfIC, "connections.txt");
-            typ * IC = (typ *)malloc(150*N_0*sizeof(typ));
-            if (IC == NULL){
-                  fprintf(stderr, "Error : Cannot allocate array for initial conditions in function generate_visco_elastic_body.\n");
-                  abort();
-            }
-            N_connections = readFromFile_withoutConstraint(fileOfIC, IC, 150*N_0);
+            typ * IC = NULL;
+            IC = readFromFile_withoutConstraint(fileOfIC, &N_connections);
             if (N_connections % 3){
                   fprintf(stderr, "There was a problem in reading the file connections.txt in function generate_connections.\n");
                   abort();
@@ -463,20 +529,90 @@ void generate_connections(struct moonlet * viscoelastic){
                   i           = (int) (*(IC + 3*k));
                   j           = (int) (*(IC + 3*k + 1));
                   rest_length =        *(IC + 3*k + 2);
-                  Xi          = (viscoelastic + i) -> x;
-                  Yi          = (viscoelastic + i) -> y;
-                  Zi          = (viscoelastic + i) -> z;
-                  Xj          = (viscoelastic + j) -> x;
-                  Yj          = (viscoelastic + j) -> y;
-                  Zj          = (viscoelastic + j) -> z;
-                  eq_length   = sqrt((Xi - Xj)*(Xi - Xj) + (Yi - Yj)*(Yi - Yj) + (Zi - Zj)*(Zi - Zj));
                   (connections + k) -> Pair.fst           = i;
                   (connections + k) -> Pair.snd           = j;
                   (connections + k) -> rest_length        = rest_length;
-                  (connections + k) -> equilibrium_length = eq_length;
             }
-            free(IC);
-            IC = NULL;
+            free(IC);  IC = NULL;
+      }
+}
+
+
+void make_rotate(struct moonlet * viscoelastic){
+
+      /******** Makes the viscoelastic body rotate with angular frequency Omega = (OmegaX, OmegaY, OmegaZ) ********/
+      /******** in the fixed body reference frame. The vector Omega is given in the parameters file        ********/
+
+      if (OmegaX == 0. && OmegaY == 0. && OmegaZ == 0.){ //No rotation in this case
+            return;
+      }
+
+      int j;
+      typ X, Y, Z;
+      typ QxOm[3];
+      
+      for (j = 0; j < N_0; j ++){
+            X = (viscoelastic + j) -> x;
+            Y = (viscoelastic + j) -> y;
+            Z = (viscoelastic + j) -> z;
+            cross_product(OmegaX, OmegaY, OmegaZ, X, Y, Z, QxOm);
+            (viscoelastic + j) -> vx = QxOm[0];
+            (viscoelastic + j) -> vy = QxOm[1];
+            (viscoelastic + j) -> vz = QxOm[2];
+      }
+}
+
+
+void point_angular_momentum(struct moonlet * viscoelastic){
+
+      /******** Computes the direction of the angular momentum in the body-attached frame and then rotates ********/
+      /******** the whole viscoelastic body to make it match the desired direction in the inertial frame   ********/
+
+      if (OmegaX == 0. && OmegaY == 0. && OmegaZ == 0.){ //No rotation in this case
+            return;
+      }
+
+      int j;
+      typ X, Y, Z, vX, vY, vZ, m, gx, gy, gz, xr, yr, zr, vxr, vyr, vzr;
+      typ g[3] = {0., 0., 0.};
+      typ rxv[3];
+      struct quaternion q;
+      
+      /******** Computing the angular momentum ********/
+      for (j = 0; j < N_0; j ++){
+            X  = (viscoelastic + j) -> x;
+            Y  = (viscoelastic + j) -> y;
+            Z  = (viscoelastic + j) -> z;
+            vX = (viscoelastic + j) -> vx;
+            vY = (viscoelastic + j) -> vy;
+            vZ = (viscoelastic + j) -> vz;
+            m  = (viscoelastic + j) -> mass;
+            cross_product(m*X, m*Y, m*Z, vX, vY, vZ, rxv);
+            g[0] += rxv[0];  g[1] += rxv[1];  g[2] += rxv[2];
+      }
+      
+      /******** Generating a quaternion that rotates the whole body to make the angular momentum match its desired orientation ********/
+      gx = cos(lbd_long)*cos(beta_lat);
+      gy = sin(lbd_long)*cos(beta_lat);
+      gz = sin(beta_lat);
+      q  = get_quaternion(g[0], g[1], g[2], gx, gy, gz);
+      
+      /******** Rotating the whole viscoelastic body according to the quaternion q ********/
+      for (j = 0; j < N_0; j ++){
+            X  = (viscoelastic + j) -> x;
+            Y  = (viscoelastic + j) -> y;
+            Z  = (viscoelastic + j) -> z;
+            vX = (viscoelastic + j) -> vx;
+            vY = (viscoelastic + j) -> vy;
+            vZ = (viscoelastic + j) -> vz;
+            rotate_with_quaternion( X,  Y,  Z, q,  &xr,  &yr,  &zr);
+            rotate_with_quaternion(vX, vY, vZ, q, &vxr, &vyr, &vzr);
+            (viscoelastic + j) -> x  = xr;
+            (viscoelastic + j) -> y  = yr;
+            (viscoelastic + j) -> z  = zr;
+            (viscoelastic + j) -> vx = vxr;
+            (viscoelastic + j) -> vy = vyr;
+            (viscoelastic + j) -> vz = vzr;
       }
 }
 
@@ -755,7 +891,7 @@ int connects(struct moonlet * viscoelastic, int a, int b){
 
       /******** Returns 1 if the particles a and b are close enough to connect, and 0 else ********/
 
-
+      typ connecting_distance2 = pow(3.0*connections_per_node*shapeV/(4.0*M_PI*(typ) N_0), 2.0/3.0);
       typ Xa, Ya, Za, Xb, Yb, Zb;
       
       /******** Getting the spring's rest length ********/ 
@@ -766,7 +902,7 @@ int connects(struct moonlet * viscoelastic, int a, int b){
       Yb = (viscoelastic + b) -> y;
       Zb = (viscoelastic + b) -> z;
       
-      return ((Xa - Xb)*(Xa - Xb) + (Ya - Yb)*(Ya - Yb) + (Za - Zb)*(Za - Zb) < connecting_distance*connecting_distance ? 1 : 0);
+      return ((Xa - Xb)*(Xa - Xb) + (Ya - Yb)*(Ya - Yb) + (Za - Zb)*(Za - Zb) < connecting_distance2 ? 1 : 0);
 }
 
 
@@ -786,9 +922,7 @@ struct connection make_connection(struct moonlet * viscoelastic, int a, int b){
       Xb = (viscoelastic + b) -> x;
       Yb = (viscoelastic + b) -> y;
       Zb = (viscoelastic + b) -> z;
-      
-      C.rest_length        = sqrt((Xa - Xb)*(Xa - Xb) + (Ya - Yb)*(Ya - Yb) + (Za - Zb)*(Za - Zb));
-      C.equilibrium_length = 0.; //Will be properly initialized later
+      C.rest_length = sqrt((Xa - Xb)*(Xa - Xb) + (Ya - Yb)*(Ya - Yb) + (Za - Zb)*(Za - Zb));
       return C;
 }
 
@@ -841,11 +975,85 @@ typ get_perturbing_true_anomaly(typ time){
 }
 
 
+void quaternion_norm(struct quaternion * q){
+
+      /******** Normalizes the quaternion q ********/
+
+      typ w = q -> w;  typ x = q -> x;  typ y = q -> y;  typ z = q -> z;  
+      typ u = sqrt(w*w + x*x + y*y + z*z);
+      if (u == 0.){
+            return;
+      }
+      q -> w /= u;
+      q -> x /= u;
+      q -> y /= u;
+      q -> z /= u;
+}
 
 
+struct quaternion get_quaternion(typ ux, typ uy, typ uz, typ vx, typ vy, typ vz){
+
+      /******** Returns a quaternion that describes the shortest arc rotation between vectors u and v                               ********/
+      /******** https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another ********/
+      /******** Does not manage the exception u x v = 0, in which case any vector orthogonal to u must be put in (q.x, q.y, q.z)    ********/
+
+      typ udotv = ux*vx + uy*vy + uz*vz;
+      typ u2    = ux*ux + uy*uy + uz*uz;
+      typ v2    = vx*vx + vy*vy + vz*vz;
+      struct quaternion q;
+      q.w = udotv + sqrt(u2*v2);
+      q.x = uy*vz - uz*vy; //u cross v
+      q.y = uz*vx - ux*vz;
+      q.z = ux*vy - uy*vx;
+      quaternion_norm(&q);
+      return q;
+}
 
 
+void rotate_with_quaternion(typ x, typ y, typ z, struct quaternion q, typ * xr, typ * yr, typ * zr){
+   
+      /******** Stores into (xr, yr, zr) the coordinates of the vector (x, y, z) once rotated by the quaternion q ********/
+   
+      *xr = (1.0 - 2.0*q.y*q.y - 2.0*q.z*q.z)*x +       (2.0*q.x*q.y - 2.0*q.z*q.w)*y +       (2.0*q.x*q.z + 2.0*q.y*q.w)*z;
+      *yr =       (2.0*q.x*q.y + 2.0*q.z*q.w)*x + (1.0 - 2.0*q.x*q.x - 2.0*q.z*q.z)*y +       (2.0*q.y*q.z - 2.0*q.x*q.w)*z;
+      *zr =       (2.0*q.x*q.z - 2.0*q.y*q.w)*x +       (2.0*q.y*q.z + 2.0*q.x*q.w)*y + (1.0 - 2.0*q.x*q.x - 2.0*q.y*q.y)*z;
+}
 
 
+void three_closest_nodes(struct moonlet * viscoelastic, int k, int * indexes){
 
+      /******** Finds the three nodes closest to node k and stores their indexes.********/
+      /******** This fonction is called after the main connection stage on nodes ********/
+      /******** connected less than three times. Works brute-forcely             ********/
 
+      typ Xk, Yk, Zk, dX, dY, dZ, d1, d2, d3, dist;
+      int i1, i2, i3, j;
+
+      d1 = 1.0e300;  d2 = 1.0e300;  d3 = 1.0e300;
+      i1 = 0;        i2 = 0;        i3 = 0;
+      Xk = (viscoelastic + k) -> x;
+      Yk = (viscoelastic + k) -> y;
+      Zk = (viscoelastic + k) -> z;
+
+      for (j = 0; j < N_0; j ++){
+            dX   = (viscoelastic + j) -> x - Xk;
+            dY   = (viscoelastic + j) -> y - Yk;
+            dZ   = (viscoelastic + j) -> z - Zk;
+            dist = dX*dX + dY*dY + dZ*dZ;
+            if      (dist < d1){
+                  i3 = i2; d3 = d2;
+                  i2 = i1; d2 = d1;
+                  i1 = j;  d1 = dist;
+            }
+            else if (dist < d2){
+                  i3 = i2; d3 = d2;
+                  i2 = j;  d2 = dist;
+            }
+            else if (dist < d3){
+                  i3 = j;  d3 = dist;
+            }
+      }
+      * indexes      = i1;
+      *(indexes + 1) = i2;
+      *(indexes + 2) = i3;
+}

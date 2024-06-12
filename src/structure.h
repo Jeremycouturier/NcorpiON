@@ -218,7 +218,7 @@ int maximum(typ i, typ j, typ k);
 void readFromFile(char * file_name, typ * storage, int n_data);
 
 
-int readFromFile_withoutConstraint(char * file_name, typ * storage, int storage_size);
+typ * readFromFile_withoutConstraint(char * file_name, int * size);
 
 
 void total_momentum(struct moonlet * moonlets, typ * momentum);

@@ -77,7 +77,7 @@ void kick(struct moonlet * X, struct moonlet * C, void (*F)(struct moonlet *)){
       
       /******** Applying the kick ********/
       for(i = 0; i <= largest_id; i ++){            
-            if(*(exists + i)){ //Checking whether or not there is a body in the ith cell of the body array
+            if(*(exists + i)){ //Checking whether or not there is a body in the ith cell of the body array      
                   (X + i) -> vx += timestep * (xx + i) -> vx;
                   (X + i) -> vy += timestep * (xx + i) -> vy;
                   (X + i) -> vz += timestep * (xx + i) -> vz;
@@ -823,6 +823,3 @@ void integration_brute_force_SABA1(typ t){
       free(moonlet_buffer);
       moonlet_buffer = NULL;
 }
-
-
-

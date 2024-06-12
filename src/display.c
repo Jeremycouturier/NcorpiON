@@ -115,15 +115,15 @@ FILE ** file_opening(){
       }
       
       if (filer == NULL || filem == NULL || filestat == NULL){
-            fprintf(stderr, "Error : Cannot create or open output files.\n");
+            fprintf(stderr, "Error : Cannot create or open output files. Did you specify the path 'pth' in the parameter file ?\n");
             abort();
       }
       if (write_cartesian_bool && (filex == NULL || filey == NULL || filez == NULL || filevx == NULL || filevy == NULL || filevz == NULL)){
-            fprintf(stderr, "Error : Cannot create or open output files.\n");
+            fprintf(stderr, "Error : Cannot create or open output files. Did you specify the path 'pth' in the parameter file ?\n");
             abort();
       }
       if (write_elliptic_bool && (filea == NULL || filel == NULL || filek == NULL || fileh == NULL || fileq == NULL || filep == NULL)){
-            fprintf(stderr, "Error : Cannot create or open output files.\n");
+            fprintf(stderr, "Error : Cannot create or open output files. Did you specify the path 'pth' in the parameter file ?\n");
             abort();
       }
       
@@ -319,7 +319,7 @@ void display(struct moonlet * moonlets){
       }
 
       /******** Writing statistics ********/
-      fprintf(filestat, "%.13lf %d %d %.13lf %.13lf %.13lf", time_elapsed, how_many_moonlets, collision_count, maxR, total_mass, CM.mass);
+      fprintf(filestat, "%.13lf %d %d %.13lf %.13lf %.13lf", time_elapsed + t_init, how_many_moonlets, collision_count, maxR, total_mass, CM.mass);
       if (inner_fluid_disk_bool && central_mass_bool){
             inner_fluid_disk_mass = fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit);
             fprintf(filestat, " %.13lf", inner_fluid_disk_mass);
@@ -536,20 +536,3 @@ void resume(struct moonlet * moonlets){
             fclose(connection_file);
       #endif
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

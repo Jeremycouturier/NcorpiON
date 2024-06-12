@@ -41,7 +41,7 @@ void vector_field(struct moonlet * moonlets);
 void KelvinVoigtDamping(struct moonlet * X);
 
 
-void tides(struct moonlet * X);
+void tides(struct moonlet * bodies);
 
 
 void collision(struct moonlet * moonlets, int a, int b, typ f);

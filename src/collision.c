@@ -997,4 +997,3 @@ void standard_tree_collision(struct node * FlatTree, struct moonlet * moonlets, 
       free(stack);
       stack = NULL;
 }
-

@@ -100,9 +100,9 @@ int n_output;
 
 void ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ mu, typ * cart){
 
-      /******** Returns the array [X,Y,Z,vX,vY,vZ] of the cartesian coordinates                                ********/
-      /******** a is the semi-major axis, e is the eccentricity, i is the inclination, nu is the true anomaly, ********/
-      /******** omega is the argument of periapsis and Omega is the longitude of the ascending node            ********/
+      /******** Returns the array [X,Y,Z,vX,vY,vZ] of the cartesian coordinates                               ********/
+      /******** a is the semi-major axis, e is the eccentricity, i is the inclination, nu is the true anomaly,********/
+      /******** omega is the argument of periapsis and Omega is the longitude of the ascending node           ********/
       
       typ X,Y,Z,vX,vY,vZ; //Cartesian coordinates
       typ X_buff,Y_buff,vX_buff,vY_buff; //Buffer for cartesian coordinates
@@ -1046,9 +1046,9 @@ void cross_product(typ u_1, typ u_2, typ u_3, typ v_1, typ v_2, typ v_3, typ * u
 
       /******** Fills uxv with the coordinates of the cross product u x v ********/
       
-      *uxv     = u_2*v_3 - u_3*v_2;
-      *(uxv+1) = u_3*v_1 - u_1*v_3;
-      *(uxv+2) = u_1*v_2 - u_2*v_1;
+      *uxv       = u_2*v_3 - u_3*v_2;
+      *(uxv + 1) = u_3*v_1 - u_1*v_3;
+      *(uxv + 2) = u_1*v_2 - u_2*v_1;
       
 }
 
@@ -1098,7 +1098,7 @@ void readFromFile(char * file_name, typ * storage, int n_data){
 
       FILE * file = fopen(file_name, "r");
       if (file == NULL){
-            fprintf(stderr, "Error : Could not open file in function readFromFile.\n");
+            fprintf(stderr, "Error : Could not open file in function readFromFile. Did you specify the path 'pth' in the parameter file ?\n");
             abort();
       }
       typ i = 0.0;
@@ -1107,7 +1107,7 @@ void readFromFile(char * file_name, typ * storage, int n_data){
  
       while (returnValue == 1){
             if (j > n_data){
-                  fprintf(stderr, "Error : There are too many data in init.txt given the value of N_0.\n");
+                  fprintf(stderr, "Error : There are too many data in path 'pth/init.txt' given the value of N_0. Update N_0 in src/parameters.h\n");
                   abort();
             }
             returnValue = fscanf(file, "%lf", &i);
@@ -1118,40 +1118,54 @@ void readFromFile(char * file_name, typ * storage, int n_data){
       }
       fclose(file);
       if (j != n_data + 1){
-            fprintf(stderr, "Error : There are not enough data in init.txt given the value of N_0.\n");
+            fprintf(stderr, "Error : There are not enough data in path 'pth/init.txt' given the value of N_0. Update N_0 in src/parameters.h\n");
             abort();
       }   
 }
 
 
-int readFromFile_withoutConstraint(char * file_name, typ * storage, int storage_size){
+typ * readFromFile_withoutConstraint(char * file_name, int * size){
 
       /******** Same as above but the number of data to be read does not need to be specified. ********/
-      /******** Returns the number of data read by the function. The size allocated to storage ********/
-      /******** is specified instead                                                           ********/
+      /******** Writes the number of data read in *size and returns the buffer                 ********/
 
       FILE * file = fopen(file_name, "r");
       if (file == NULL){
-            fprintf(stderr, "Error : Could not open file in function readFromFile_withoutConstraint.\n");
+            fprintf(stderr, "Error : Could not open file in function readFromFile_withoutConstraint. Did you specify the path 'pth' in the parameter file ?\n");
             abort();
       }
       typ i = 0.0;
       int j = 0;
       int returnValue = 1;
  
-      while (returnValue == 1){
-            if (j > storage_size){
-                  fprintf(stderr, "Error : There are too many data in the file in function readFromFile_withoutConstraint given the buffer's size.\n");
+      while (returnValue == 1){ //Obtaining the number of data to be read
+            returnValue = fscanf(file, "%lf", &i);
+            j ++;
+      }
+      j --;
+      *size = j;
+      typ * buffer = (typ *)malloc(j*sizeof(typ)); //Allocating memory for the buffer
+      if (buffer == NULL){
+            fprintf(stderr, "Could not allocate memory for the buffer in function readFromFile_withoutConstraint\n");
+            abort();
+      }
+      
+      rewind(file); //Going back to the beginning of the file
+      returnValue = 1;
+      j           = 0;
+      while (returnValue == 1){ //Reading the file a second time to store its data
+            if (j > *size){
+                  fprintf(stderr, "Error : The buffer is not big enough in function readFromFile_withoutConstraint.\n");
                   abort();
             }
             returnValue = fscanf(file, "%lf", &i);
             if (returnValue == 1){
-                  *(storage + j) = i;
+                  *(buffer + j) = i;
             }
             j ++;
       }
       fclose(file);
-      return j - 1;
+      return buffer;
 }
 
 
@@ -1304,7 +1318,7 @@ void verify(){
       if(!type_check(typeof(radius_blow_up_factor),     typ)){fprintf(stderr, "Error : radius_blow_up_factor must be given as a floating-point number.\n"); abort();}
       if(!type_check(typeof(spring_modulus),            typ)){fprintf(stderr, "Error : spring_modulus must be given as a floating-point number.\n");        abort();}
       if(!type_check(typeof(damping_coefficient),       typ)){fprintf(stderr, "Error : damping_coefficient must be given as a floating-point number.\n");   abort();}
-      if(!type_check(typeof(connecting_distance),       typ)){fprintf(stderr, "Error : connecting_distance must be given as a floating-point number.\n");   abort();}
+      if(!type_check(typeof(connections_per_node),      typ)){fprintf(stderr, "Error : connections_per_node must be given as a floating-point number.\n");  abort();}
       if(!type_check(typeof(minimal_distance),          typ)){fprintf(stderr, "Error : minimal_distance must be given as a floating-point number.\n");      abort();}
       if(!type_check(typeof(pert_sma),                  typ)){fprintf(stderr, "Error : pert_sma must be given as a floating-point number.\n");              abort();}
       if(!type_check(typeof(pert_ecc),                  typ)){fprintf(stderr, "Error : pert_ecc must be given as a floating-point number.\n");              abort();}
@@ -1314,6 +1328,11 @@ void verify(){
       if(!type_check(typeof(pert_lan),                  typ)){fprintf(stderr, "Error : pert_lan must be given as a floating-point number.\n");              abort();}
       if(!type_check(typeof(pert_mass),                 typ)){fprintf(stderr, "Error : pert_mass must be given as a floating-point number.\n");             abort();}
       if(!type_check(typeof(pert_radius),               typ)){fprintf(stderr, "Error : pert_radius must be given as a floating-point number.\n");           abort();}
+      if(!type_check(typeof(OmegaX),                    typ)){fprintf(stderr, "Error : OmegaX must be given as a floating-point number.\n");                abort();}
+      if(!type_check(typeof(OmegaY),                    typ)){fprintf(stderr, "Error : OmegaY must be given as a floating-point number.\n");                abort();}
+      if(!type_check(typeof(OmegaZ),                    typ)){fprintf(stderr, "Error : OmegaZ must be given as a floating-point number.\n");                abort();}
+      if(!type_check(typeof(lbd_long),                  typ)){fprintf(stderr, "Error : lbd_long must be given as a floating-point number.\n");              abort();}
+      if(!type_check(typeof(beta_lat),                  typ)){fprintf(stderr, "Error : beta_lat must be given as a floating-point number.\n");              abort();}
       if(!type_check(typeof(theta_min),                 typ)){fprintf(stderr, "Error : theta_min must be given as a floating-point number.\n");             abort();}
       if(!type_check(typeof(root_sidelength),           typ)){fprintf(stderr, "Error : root_sidelength must be given as a floating-point number.\n");       abort();}
       if(!type_check(typeof(collision_cube_min),        typ)){fprintf(stderr, "Error : collision_cube_min must be given as a floating-point number.\n");    abort();}
@@ -1326,7 +1345,6 @@ void verify(){
       if(!type_check(typeof(frag_threshold),            typ)){fprintf(stderr, "Error : frag_threshold must be given as a floating-point number.\n");        abort();}
 
       /******** I now verify that integer numbers stayed that way ********/
-      if(!type_check(typeof(n_vertices),                int)){fprintf(stderr, "Error : n_vertices must be given as an integer.\n");                         abort();}
       if(!type_check(typeof(N_max),                     int)){fprintf(stderr, "Error : N_max must be given as an integer.\n");                              abort();}
       if(!type_check(typeof(N_0),                       int)){fprintf(stderr, "Error : N_0 must be given as an integer.\n");                                abort();}
       if(!type_check(typeof(output_step),               int)){fprintf(stderr, "Error : output_step must be given as an integer.\n");                        abort();}
@@ -1396,5 +1414,8 @@ void verify(){
       if (viscoelastic_bool && collision_bool && (instant_merger_bool || fragmentation_bool)){
             fprintf(stderr, "Error : Collision can only be resolved elastically and inelastically when NcorpiON is used to simulate a viscoelastic body.\n");
             abort();
+      }
+      if (viscoelastic_bool && !reduce_to_COM_bool){
+            printf("Warning : The boolean reduce_to_COM_bool should be set to 1 so the viscoelastic body can be properly rotated.\n");
       }
 }

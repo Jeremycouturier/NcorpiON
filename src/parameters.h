@@ -110,7 +110,7 @@
 /******** Defining a system of units for the simulation. If random_initial_bool is 0, then the units in the file init.txt must be the simulation's units ********/
 #define R_unit 1.0                   //If central_mass_bool is 1, then radius of the central body. Otherwise, unimportant for the simulation. You define your own unit of length.
 #define M_unit 1.0                   //If central_mass_bool is 1, then   mass of the central body. Otherwise this is the mass for conversions cartesian <-> elliptic
-#define G 39.47841760435743          //The gravitational constant. If you set it to 4*pi^2, then a particle of semi-major axis 1 orbiting a mass 1 has a period 1.
+#define G 39.47841760435743447533796 //The gravitational constant. If you set it to 4*pi^2, then a particle of semi-major axis 1 orbiting a mass 1 has a period 1.
                                      //If viscoelastic_bool is 1, M_unit and R_unit are the mass and mean radius of the viscoelastic body to be simulated.
                                      //Note that R_unit and M_unit do not necessarily have to be 1, they should just be equal to the mass and radius of the central body in the system
                                      //of units that you want to use for the simulation. It is generally advised to use a system of units such that the simulation will not have to
@@ -143,10 +143,10 @@
 /*******************************************************/
 
 /******** General parameters ********/
-#define N_max 90000                  //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
-#define N_0 10000                    //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
-#define t_init 0.0                   //Time at the beginning of the simulation (in simulation's units)
-#define t_end 32.0                   //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end-t_init)/time_step is not integer
+#define N_max 20000                  //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
+#define N_0 2000                     //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
+#define t_init 0.                    //Time at the beginning of the simulation (in simulation's units)
+#define t_end 64.                    //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end-t_init)/time_step is not integer
 #define time_step 0.015625           //Timestep of the simulation (in simulation's units)
 #define output_step 1                //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define low_dumping_threshold 2.0    //Threshold (in simulation's units) below  which bodies are dumped from the simulation. Unimportant if central_mass_bool is 0.
@@ -174,34 +174,49 @@
                                      
 /******** Parameters relative to 3D visualization with REBOUND. Unimportant if openGL_bool is 0 ********/
 #define browser_port 1234            //The http port where your browser will communicate with REBOUND. You can visualize several simulations at the same time if you change the port
-#define radius_blow_up_factor 3.0    //All the bodies, except the central mass (if any), are displayed with a radius that much larger than their true radius. Can enhance visualization
+#define radius_blow_up_factor 4.0    //All the bodies, except the central mass (if any), are displayed with a radius that much larger than their true radius. Can enhance visualization
 
-/******** Parameters relative to viscoelasticity. Unimportant if viscoelastic_bool is 0 ********/
-                                     //NcorpiON allows for a visco-elastic body to be simulated. The body is discretized by N_0 points connected by Kelvin-Voigt models (a spring and
-                                     //a damper in parallel). If the user sets random_initial_bool to 1, then the points of the discretization are drawn at random inside a shape model
-                                     //(if file pth/shape_model.txt is provided) or inside a sphere of radius R_unit (if no such file is provided). Once the points have been generated,
-                                     //the initial distance between them is the rest_length of the springs. At the beginning of the simulation, the body will slightly collapse due to
-                                     //gravity but will then reach equilibrium due to the damping and the spring's reaction (as long as perturbing_mass is set to 0.0, as to remove tides)
-                                     //The idea is to run a first simulation with random_initial_bool set to 1 to allow the body to rest. If resume_simulation_bool is also set to 1, then
-                                     //files init.txt and connections.txt are generated and allow for a second simulation to start from a body at rest (by setting random_initial_bool to
-                                     //0 this time). The perturbing mass can then be set to a non-zero value to generate tidal forces in the second simulation. The file shape_model.txt 
-                                     //has 3 columns (x,y,z) and as many lines as vertices. It defines the surface of the viscoelastic body. NcorpiON will assume that the shape model
-                                     //is given in the principal axis frame (X,Y,Z) with Z towards the shortest axis, but this is not a requirement.
-#define n_vertices 2000              //Number of vertices in the shape-model. This is the number of lines of pth/shape_model.txt. Shouldn't exceed a few thousands
-#define spring_modulus 400.0         //The expected modulus of the body. Spring stiffness is k = spring_modulus*L. Force is -spring_modulus*L*dL with L the rest_length
+
+
+/**********************************************************************************************************************************************************/
+/******** Parameters relative to viscoelasticity. Unimportant if viscoelastic_bool is 0. NcorpiON allows for a visco-elastic body to be simulated. ********/
+/******** The body is discretized by N_0 nodes connected by Kelvin-Voigt models (a spring and a damper in parallel). If the user sets              ********/
+/******** random_initial_bool to 1, then the nodes of the discretization are drawn at random inside a shape model (if file pth/shape_model.txt is  ********/
+/******** provided) or inside a sphere of radius R_unit (if no such file is provided). Once the nodes have been generated, the initial distance    ********/
+/******** between them is the rest_length of the springs. At the beginning of the simulation, the body will slightly collapse due to gravity but   ********/
+/******** will then reach equilibrium due to the damping and the spring's reaction (as long as pert_mass is set to 0.0, as to remove tides).       ********/
+/******** The idea is to run a first simulation with random_initial_bool set to 1 to allow the body to rest. If resume_simulation_bool is also set ********/
+/******** to 1, then files init.txt and connections.txt are generated and allow for a second simulation to start from a body at rest (by setting   ********/
+/******** random_initial_bool to 0 this time). The perturbing mass can then be set to a non-zero value to generate tidal forces in the second      ********/
+/******** simulation. The file shape_model.txt has 3 columns (x,y,z) giving the coordinates of vertices on the surface of the viscoelastic body.   ********/
+/******** NcorpiON assumes that the shape model is in the principal axis frame (X,Y,Z) with Z towards the shortest axis, but this is not required  ********/
+/**********************************************************************************************************************************************************/
+
+#define spring_modulus 400.0         //The expected bulk modulus of the body. Spring stiffness is k = spring_modulus*L. Force is -spring_modulus*L*dL with L the rest_length
 #define damping_coefficient 0.125    //The damping coefficient of the dampers in the Kelvin-Voigt models. Force is -damping_coefficient*L*dL/dt with L the rest_length
-#define connecting_distance 0.0234862//The minimal distance between two particles for them to be initially connected.
-#define minimal_distance 0.0063898   //Minimal initial distance between two particles. Shouldn't be more than 0.7*(V/N_0)^(1/3) where V is the volume of the body.
-                                     //NcorpiON will draw N_0 particles inside the shape model by making sure than no two particles are closer than that.
-                                     //The six following parameters define the orbit of the point-mass perturbator, in an inertial reference frame.
+#define minimal_distance 0.6         //Minimal initial distance between two particles in units of (V/N_0)^(1/3) where V is the volume of the body. 0.3 < minimal_distance < 0.7 is best
+#define connections_per_node 25.0    //Expected value of the number of connections per node. Values larger than 12.0 are advised for structural integrity. Some nodes will be connected
+                                     //less than that as this is just the expected value. NcorpiON makes sure that no node is connected less than three times to prevent wandering.
+                                     
+/******** Orbit of the point-mass perturbator, in an inertial reference frame. ********/
 #define pert_sma -11690.1474151781531//The perturbator is on a Keplerian trajectory defined by the six elements (semi-major axis, eccentricity, inclination, true anomaly, argument of
 #define pert_ecc 4.2399307249518     //periapsis, longitude of ascending node), given by these six parameters (in radians and simulation's units). The gravitational parameter used to
 #define pert_inc 2.8418842771365     //convert these elliptic elements into cartesian coordinates is mu = G*(perturbing_mass + M_unit), which means that these 6 elliptic elements define
 #define pert_tra -0.0000000092695    //the trajectory of the vector pointing from the viscoelastic body to the perturbing body. The Keplerian orbit can be hyperbolic (perturbing_ecc can
 #define pert_aop -2.5680969201791    //exceed 1), but then, the semi-major axis perturbing_sma must be negative and the true anomaly must verify |tra| < acos(-1/e). pert_ecc cannot be 1.
 #define pert_lan 2.6575357407213     //The true anomaly is given at the time t = 0, not at the initial time t_init.
-#define pert_mass 0.//97904401542201.0//Mass of the perturbator (in simulation's units). First set to 0.0 in order to remove tides on the viscoelastic body and let it rest
+#define pert_mass 0.//97904401542201.//Mass of the perturbator (in simulation's units). First set to 0.0 in order to remove tides on the viscoelastic body and let it rest
 #define pert_radius 6371.0           //Radius of the perturbator (for visualization purposes only. Does not matter if openGL_bool is 0)
+
+/******** Rotation of the viscoelastic body, in the fixed body frame (same reference frame as the shape model). Set all three to 0.0 for no rotation  ********/
+#define OmegaX 0.152752              //X-component of the rotation vector. The rotation vector is Omega = (OmegaX, OmegaY, OmegaZ)
+#define OmegaY 0.080406              //Y-component of the rotation vector. To be given in radians per unit of time of the simulation
+#define OmegaZ 0.419375              //Z-component of the rotation vector. To be given in radians per unit of time of the simulation
+
+/******** These two parameters define the direction of the angular momentum of the viscoelastic body in the inertial reference frame (the perturbator's orbit frame) ********/
+#define lbd_long 4.31096             //The corresponding unit vector is (X,Y,Z) = (cos lbd_long*cos beta_lat, sin lbd_long*cos beta_lat, sin beta_lat). After generating the rotation
+#define beta_lat -1.029744           //in the fixed-body frame, NcorpiON computes the direction of the angular momentum and rotates the whole body in order to make it match (X,Y,Z)
+                                     //To be given in radians. See https://ssp.imcce.fr/forms/ssocard for these two values in the case of small solar system bodies.
 
 
 
@@ -252,7 +267,7 @@
 
 #define collision_cube_min 80.0      //Minimal sidelength of the mesh-grid (in simulation's units). The mesh-size will never be less than collision_cube_min/collision_cube_cells
 #define collision_cube_cells 1024    //Number of mesh cells per dimension of the collision cube. Must be even. For 16+ GiB of RAM (resp. 8 or 4 GiB), choose ~1000 (resp. ~800 or ~500)
-#define how_many_neighbours 16.0     //The desired expected number of neighbours for a body
+#define how_many_neighbours 16.0     //Expected value of the number of neighbours for a body
 
 
 
