@@ -29,7 +29,7 @@ or if you prefer, you can simply download this repository to your computer. Usin
 
 ## Setting up a simulation
 
-In order to set up your simulation, all you have to do is to update the file ```src/parameters.h``` with your preferences. This file is used to define the behavior of NcorpiON. From there, you can decide
+In order to set up your simulation, all you have to do is to update the file ```src/parameters.h``` with your preferences. This file is used to define the behavior of NcorpiON. In here, you can decide
 
 - Which module you want to use for mutual interactions (collisions and mutual gravity)
 - How collisions should be resolved
