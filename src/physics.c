@@ -658,7 +658,6 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
 
       /******** Treats the fragmentation due to the collision between bodies a and b ********/
       
-      typ C1_3mu = pow(C1_parameter, 3.0*mu_parameter);
       typ stigma = (3.0*mu_parameter-1.0)/(3.0*mu_parameter);
       typ vx_a, vy_a, vz_a, vx_b, vy_b, vz_b;                  //Cartesian speeds of the bodies.
       typ xa, ya, za, xb, yb, zb;                              //Cartesian positions at the collision
@@ -670,19 +669,22 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       typ m_b = (moonlets + b) -> mass;
       typ M   = m_a + m_b;                                     //Sum of the masses
       typ m_1;                                                 //Mass of the impactor
-      typ rho_12_3nu1;                                         //Ratio between the density of the impactor and that of the target at the power 3*nu - 1
+      typ rho_12_3nu;                                          //Ratio between the density of the impactor and that of the target at the power 3*nu
       typ rho_a = 3.0*m_a/(4.0*M_PI*R_a*R_a*R_a);              //Density of body a
       typ rho_b = 3.0*m_b/(4.0*M_PI*R_b*R_b*R_b);              //Density of body b
       typ average_density = (m_a*rho_a + m_b*rho_b)/M;         //The average density of the moonlets, weighted by mass
+      typ rho_12;                                              //rho_1/rho_2
       
       /******** Defining the impactor and the target. ********/
       if (R_a > R_b){ // a is the target and b the impactor
-            m_1         = m_b;
-            rho_12_3nu1 = pow(rho_b/rho_a, 3.0*nu_parameter - 1.0);
+            m_1        = m_b;
+            rho_12     = rho_b/rho_a;
+            rho_12_3nu = pow(rho_12, 3.0*nu_parameter);
       }
       else { // a is the impactor and b the target
-            m_1         = m_a;
-            rho_12_3nu1 = pow(rho_a/rho_b, 3.0*nu_parameter - 1.0);
+            m_1        = m_a;
+            rho_12     = rho_a/rho_b;
+            rho_12_3nu = pow(rho_12, 3.0*nu_parameter);
       }            
       
       /******** Getting the speeds at the impact ********/
@@ -709,14 +711,16 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       dvy = vy_a - vy_b;
       dvz = vz_a - vz_b;
       
-      typ dr_dot_dv = dx*dvx + dy*dvy + dz*dvz;          //  (r_1-r_2).(v_1-v_2)
-      typ dv_norm   = sqrt(dvx*dvx + dvy*dvy + dvz*dvz); //  ||v_1-v_2||
-      typ costheta  = -dr_dot_dv/(R*dv_norm);            //Cosine of impact angle;
-      typ R_eq = pow(3.0*M/(4.0*M_PI*average_density),1.0/3.0);    //Hypothetical radius if the impactor were to merge on the target
-      typ vesc = sqrt(2.0*G*M/R_eq);                     //Escape velocity at the surface if the impactor were to merge on the target
-      typ m_check = 3.0*k_parameter*C1_3mu*m_1/(4.0*M_PI)*pow(dv_norm*costheta/vesc, 3.0*mu_parameter)*rho_12_3nu1; //Mass of the tail
-      typ m_tilde = M - m_check;                         //Mass of the largest fragment
-      typ m_tilde_2 = m_check / (typ) N_tilde;           //Mass of the tail's fragments
+      typ dr_dot_dv   = dx*dvx + dy*dvy + dz*dvz;                          //  (r_1 - r_2).(v_1 - v_2)
+      typ dv_norm     = sqrt(dvx*dvx + dvy*dvy + dvz*dvz);                 //  ||v_1 - v_2||
+      typ costheta    = -dr_dot_dv/(R*dv_norm);                            //Cosine of impact angle;
+      typ costheta3mu = pow(costheta, 3.0*mu_parameter);                   //Cosine of impact angle at the power 3*mu;
+      typ R_eq        = pow(3.0*M/(4.0*M_PI*average_density), 1.0/3.0);    //Hypothetical radius if the impactor were to merge on the target
+      typ vesc        = sqrt(2.0*G*M/R_eq);                                //Escape velocity at the surface if the impactor were to merge on the target
+      typ K           = 3.0*k_parameter*m_1/(4.0*M_PI)/rho_12*costheta3mu;
+      typ m_check     = K*(pow(C1_parameter*dv_norm/vesc, 3.0*mu_parameter)*rho_12_3nu - 1.0); //Mass of the tail : Ejected mass
+      typ m_tilde     = M - m_check;                                       //Mass of the largest fragment
+      typ m_tilde_2   = m_check / (typ) N_tilde;                           //Mass of the tail's fragments
       
       
       /******** Merger case. Bodies a and b merge together ********/
@@ -772,7 +776,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       if (m_check >= frag_threshold && m_tilde_2 < frag_threshold){
             typ r_k[3]; //Position of the tail with respect to the largest fragment
             typ v_k[3]; //Velocity of the tail with respect to the largest fragment
-            typ v_k_scalar = vesc/stigma; //Scalar velocity of the tail with respect to the largest fragment
+            typ v_k_scalar  = vesc/stigma*(m_check + K)/m_check*(1.0 - pow(K/(K + m_check), stigma)); //Scalar velocity of the tail with respect to the largest fragment
             typ in_front_of = v_k_scalar/R;
             if (R_a > R_b){
                   r_k[0] = -dx;  r_k[1] = -dy;  r_k[2] = -dz;
@@ -830,9 +834,11 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             /******** Determination of the r_k' and v_k' ********/ 
             typ r_k[3*N_tilde]; //Position of the fragments of the tail with respect to the largest fragment
             typ v_k[3*N_tilde]; //Velocity of the fragments of the tail with respect to the largest fragment
-            typ dr[3]; //r_1-r_2
-            typ dv[3]; //v_1-v_2
+            typ dr[3];          //r_1-r_2
+            typ dv[3];          //v_1-v_2
+            typ R_tilde   = pow(3.0*m_tilde  /(4.0*M_PI*average_density), 1.0/3.0); //Radius of the largest fragment
             typ R_tilde_2 = pow(3.0*m_tilde_2/(4.0*M_PI*average_density), 1.0/3.0); //Radius of the fragments of the tail
+            typ R_tilde12 = R_tilde + R_tilde_2;
             typ u[3]; //Vectors used to locate the fragments of the tail
             typ v[3];
             if (R_a > R_b){
@@ -843,6 +849,8 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
                   dr[0] = dx;   dr[1] = dy;   dr[2] = dz;
                   dv[0] = dvx;  dv[1] = dvy;  dv[2] = dvz;
             }
+            typ dr_norm = sqrt(dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2]);
+            dr[0] *= R_tilde12/dr_norm;  dr[1] *= R_tilde12/dr_norm;  dr[2] *= R_tilde12/dr_norm;
             typ dr_x_dv[3]; // dr x dv
             typ dr_x_dv_norm; // ||dr x dv||
             int pq[4] = pq_min_max; // {p_k_min, p_k_max, q_k_min, q_k_max}
@@ -878,19 +886,23 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             }
             typ v_x_dr[3]; // v x dr
             cross_product(v[0], v[1], v[2], dr[0], dr[1], dr[2], v_x_dr);
-            u[0] = v_x_dr[0]/R;  u[1] = v_x_dr[1]/R;  u[2] = v_x_dr[2]/R; //Defining the unit vector u
+            u[0] = v_x_dr[0]/R_tilde12;  u[1] = v_x_dr[1]/R_tilde12;  u[2] = v_x_dr[2]/R_tilde12; //Defining the unit vector u
             int n = 0;
-            typ v_k_scalar, two_p_R_tilde_2, two_q_R_tilde_2, in_front_of;
+            typ v_k_scalar, two_p_R_tilde_2, two_q_R_tilde_2, in_front_of, zk_stg, zk1_stg;
             for (p = pq[0]; p <= pq[1]; p ++){ //I travel along the rectangle of integer coordinate points to define the position and speeds of the fragments of the tail
                   for (q = pq[2]; q <= pq[3]; q ++){
                         two_p_R_tilde_2 = ((typ) (2*p))*R_tilde_2;  two_q_R_tilde_2 = ((typ) (2*q))*R_tilde_2;
-                        r_k[3*n]    = dr[0] + two_p_R_tilde_2*u[0] + two_q_R_tilde_2*v[0]; // x-coordinate of the position of the (n+1)^th fragment of the tail wrt the largest fragment
-                        r_k[3*n+1]  = dr[1] + two_p_R_tilde_2*u[1] + two_q_R_tilde_2*v[1]; // y-coordinate of the position of the (n+1)^th fragment of the tail wrt the largest fragment
-                        r_k[3*n+2]  = dr[2] + two_p_R_tilde_2*u[2] + two_q_R_tilde_2*v[2]; // z-coordinate of the position of the (n+1)^th fragment of the tail wrt the largest fragment
-                        v_k_scalar  = vesc * N_tilde/stigma *(pow(1.0-((typ) n)/N_tilde,stigma)-pow(1.0-((typ) (n+1))/N_tilde,stigma)); //Scalar velocity of the tail's (n+1)^th fragments
-                        in_front_of = v_k_scalar/sqrt(R*R+4.0*R_tilde_2*R_tilde_2*(p*p+q*q));
-                        v_k[3*n]    = in_front_of * r_k[3*n];  v_k[3*n + 1] = in_front_of * r_k[3*n + 1];  v_k[3*n + 2] = in_front_of * r_k[3*n + 2];
-                        n++;
+                        r_k[3*n]     = dr[0] + two_p_R_tilde_2*u[0] + two_q_R_tilde_2*v[0]; // x-coordinate of the position of the (n+1)^th fragment of the tail wrt the largest fragment
+                        r_k[3*n + 1] = dr[1] + two_p_R_tilde_2*u[1] + two_q_R_tilde_2*v[1]; // y-coordinate of the position of the (n+1)^th fragment of the tail wrt the largest fragment
+                        r_k[3*n + 2] = dr[2] + two_p_R_tilde_2*u[2] + two_q_R_tilde_2*v[2]; // z-coordinate of the position of the (n+1)^th fragment of the tail wrt the largest fragment
+                        zk_stg       = pow(1.0 - ((typ) n)    *m_tilde_2/(K + m_check), stigma);
+                        zk1_stg      = pow(1.0 - ((typ) n + 1)*m_tilde_2/(K + m_check), stigma);
+                        v_k_scalar   = vesc/stigma*(m_check + K)/m_tilde_2*(zk_stg - zk1_stg); //Scalar velocity of the tail's fragment
+                        in_front_of  = v_k_scalar/sqrt(1.0 + ((typ) p)*((typ) p) + ((typ) q)*((typ) q));
+                        v_k[3*n]     = in_front_of*(dr[0]/dr_norm + ((typ) p)*u[0] + ((typ) q)*v[0]);
+                        v_k[3*n + 1] = in_front_of*(dr[1]/dr_norm + ((typ) p)*u[1] + ((typ) q)*v[1]);
+                        v_k[3*n + 2] = in_front_of*(dr[2]/dr_norm + ((typ) p)*u[2] + ((typ) q)*v[2]);
+                        n ++;
                   }
             }
             
@@ -916,10 +928,10 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             id[0] = a;           //Putting the largest fragment there
             for (n = 1; n <= N_tilde; n ++){
                   if (mesh_bool && !force_naive_bool){ //By construction of the mesh algorithm, the fragments must be put at the end 
-                        id[n] = get_free_index(1); //Putting the remaining N_tilde fragments of the tail there
+                        id[n] = get_free_index(1);     //Putting the remaining N_tilde fragments of the tail there
                   }
-                  else{ //No need to put the fragments at the end
-                        id[n] = get_free_index(0); //Putting the remaining N_tilde fragments of the tail there
+                  else{                                //No need to put the fragments at the end
+                        id[n] = get_free_index(0);     //Putting the remaining N_tilde fragments of the tail there
                   }
             }
             if (mutual_bool && mesh_bool && !force_naive_bool){ //Adding the N_tilde*(N_tilde+1)/2 pairs to be taken into account for gravitational interactions
@@ -945,7 +957,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             (moonlets + id[0]) -> vy     = v_tilde[1];
             (moonlets + id[0]) -> vz     = v_tilde[2];
             (moonlets + id[0]) -> mass   = m_tilde;
-            (moonlets + id[0]) -> radius = pow(3.0*m_tilde/(4.0*M_PI*average_density),1.0/3.0);
+            (moonlets + id[0]) -> radius = R_tilde;
 
             /******** Actualizing the fragments of the tail ********/
             for (n = 0; n < N_tilde; n++){

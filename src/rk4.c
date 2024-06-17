@@ -242,8 +242,8 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       }
       
       /******** Reinitializing the array did_collide ********/
-      if (collision_bool && one_collision_only_bool){
-            for (j = 0; j <= largest_id; j++){
+      if (collision_bool && (one_collision_only_bool || fragmentation_bool)){
+            for (j = 0; j <= largest_id; j ++){
                   *(did_collide + j) = 0;
             }
       }
@@ -254,7 +254,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
             how_many_pairs = 0; //It is unnecessary to reinitialize the array pairs
             /******** Reinitializing the hash table ********/
             int p;
-            for (p = 0; p < how_many_modified; p++){
+            for (p = 0; p < how_many_modified; p ++){
                   index = *(modified_cells + p);
                   clear_chain(hash + index); //Reinitializing to NULL the index^th cell of the hash table
             }
@@ -302,7 +302,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
             typ quotient               = floor(time_since_last_spawn/time_between_spawn);
             time_since_last_spawn     -= quotient*time_between_spawn;
             int how_many_to_be_spawned = (int) quotient;
-            while (how_many_to_be_spawned){ //If the time elapsed since the last spawn if above the characteristic timescale of body spawning, I spawn a body
+            while (how_many_to_be_spawned && fluid_disk_Sigma != 0.){ //If the time elapsed since the last spawn if above the characteristic timescale of body spawning, I spawn a body
                   typ mf            = 16.0*fast_pow(M_PI,4)*f_tilde*f_tilde*fast_pow(fluid_disk_Sigma*Rroche*Rroche,3)/(M_unit*M_unit); //Mass of the spawned body
                   typ rad           = pow(3.0*mf/(4.0*M_PI*spawned_density), 1.0/3.0);
                   fluid_disk_Sigma -= mf/(M_PI*(Rroche*Rroche - R_unit*R_unit)); //New surface density of the inner fluid disk

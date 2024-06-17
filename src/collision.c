@@ -721,7 +721,7 @@ void collision_flattree(struct node * FlatTree, struct moonlet * moonlets){
       
       /******** It is hard to tell in advance how many pairs will be treated by the tree walk   ********/
       /******** I expect it will be at most factor * cell_id, but that might have to be changed ********/
-      int factor = (int) floor(250.0 * 0.5 / theta_min);
+      int factor = 350;
       struct pair * stack = (struct pair *)malloc(factor * cell_id * sizeof(struct pair)); //Stack of pairs of ids of nodes that have to be treated
       if (stack == NULL){
             fprintf(stderr, "Error : Cannot allocate memory for the stack in function collision_flattree.\n");

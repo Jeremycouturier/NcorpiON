@@ -33,13 +33,14 @@
 
 
 
-/**************************************************************************************************/
-/******** Defining the input/output path where data are output if write_to_files_bool is 1 ********/
-/******** and where initial conditions are read if random_initial_bool is 0                ********/
-/******** Put / at the end of the path. The path must exist and be absolute.               ********/
-/**************************************************************************************************/
+/***************************************************************************************************/
+/******** Defining the input/output path where data are output if write_to_files_bool is 1  ********/
+/******** and where initial conditions are read if random_initial_bool is 0. Put / at the   ********/
+/******** end of the path. The path must exist and be absolute. This is also where the file ********/
+/******** init.txt used to resume a simulation is written when resume_simulation_bool is 1  ********/
+/***************************************************************************************************/
 
-#define pth "/home/user/Documents/NcorpiON/"
+#define pth "/path/towards/input/output/location/"
 
 
 /**************************************************************************/
@@ -50,7 +51,7 @@
 #define write_to_files_bool      0   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
                                      //You can also set this boolean to 0 if you only want to 3D visualize the simulation in your browser.
 #define make_animation_bool      0   //Determines if animations of the simulation are produced. write_to_files_bool and write_elliptic_bool must both be set to 1
-#define write_cartesian_bool     1   //Determines if the cartesian elements x, y, z, vx, vy, vz   should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
+#define write_cartesian_bool     0   //Determines if the cartesian elements x, y, z, vx, vy, vz   should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
 #define write_elliptic_bool      0   //Determines if the elliptic  elements a, lambda, k, h, q, p should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
                                      //If write_to_files_bool is 1 but both write_cartesian_bool and write_elliptic_bool are 0, then only radius.txt, mass.txt and stat.txt are output
 #define central_mass_bool        1   //Determines if there is a central mass. If 0, none of the bodies in the simulation play any particular role. If 1, the central body is initially
@@ -78,10 +79,10 @@
                                      //been created by a previous simulation where resume_simulation_bool was set to 1.
 
 /******** Booleans relative to interactions with the central mass or a distant object. Set to 0 if central_mass_bool is 0 ********/
-#define J2_bool                  0   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
+#define J2_bool                  1   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
 #define Sun_bool                 0   //Determines if the perturbations from a distant object that the system orbits (or is orbited by) are taken into account in the simulation
-#define central_tides_bool       0   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
-#define inner_fluid_disk_bool    0   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which bodies spawn). See Salmon & Canup 2012
+#define central_tides_bool       1   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
+#define inner_fluid_disk_bool    1   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which bodies spawn). See Salmon & Canup 2012
                                      //If set to 1, its mass is added to that of the central body when computing gravitational interactions and when preserving the total momemtum
 
 /******** Booleans relative to mutual interactions between the bodies ********/
@@ -130,7 +131,7 @@
 #define star_semi_major 23481.066    //The semi-major axis of the orbit of the system around the distant object in simulation units.
 #define star_mass 332946.0434581987  //The mass of the distant object in simulation units.
 #define obliquity 0.0                //The angle between the simulation's reference plane and the orbit of the distant object.
-#define inner_mass 0.014             //Mass of the inner fluid disk at initial time.
+#define inner_mass 0.                //Mass of the inner fluid disk at initial time.
 #define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
 #define f_tilde 0.3                  //A parameter controlling the mass of bodies spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
 #define Rroche 2.9                   //The Roche radius where bodies spawn from the inner fluid disk (in simulation's units). The radius of tidal disruption is low_dumping_threshold
@@ -143,26 +144,26 @@
 /*******************************************************/
 
 /******** General parameters ********/
-#define N_max 20000                  //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
+#define N_max 10000                  //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
 #define N_0 2000                     //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
 #define t_init 0.                    //Time at the beginning of the simulation (in simulation's units)
-#define t_end 64.                    //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end-t_init)/time_step is not integer
+#define t_end 128.                   //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end-t_init)/time_step is not integer
 #define time_step 0.015625           //Timestep of the simulation (in simulation's units)
 #define output_step 1                //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
-#define low_dumping_threshold 2.0    //Threshold (in simulation's units) below  which bodies are dumped from the simulation. Unimportant if central_mass_bool is 0.
-#define high_dumping_threshold 128.0 //Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
+#define low_dumping_threshold 2.     //Threshold (in simulation's units) below  which bodies are dumped from the simulation. Unimportant if central_mass_bool is 0.
+#define high_dumping_threshold 128.  //Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
 
 /******** Specific parameters ********/
 #define max_ids_per_node 173         //The maximum number of ids in each node of the unrolled linked lists (chains). Choose such that sizeof(struct chain) be a multiple of the cache line
-#define softening_parameter 0.0      //The softening parameter for mutual gravitational interations, in units of the sum of the radii.
+#define softening_parameter 0.       //The softening parameter for mutual gravitational interations, in units of the sum of the radii.
 #define seed 129425373               //The seed used for random number generation. Unimportant if seed_bool is 0.
 #define switch_to_brute_force 256    //Threshold for N below which the program switches to the brute-force method for mutual interactions. Unimportant if brute_force_bool is 1
 
 /******** Bounds for initial conditions. Unimportant if random_initial_bool is 0. The initial conditions are drawn uniformly at random between these bounds ********/
 #define radius_min 0.004             //Minimal radius                   of a body at initial time
-#define radius_max 0.03              //Maximal radius                   of a body at initial time
-#define density_min 0.1448           //Minimal density                  of a body at initial time
-#define density_max 0.1448           //Maximal density                  of a body at initial time
+#define radius_max 0.05              //Maximal radius                   of a body at initial time
+#define density_min 0.1048           //Minimal density                  of a body at initial time
+#define density_max 0.1848           //Maximal density                  of a body at initial time
 #define eccentricity_min 0.0         //Minimal eccentricity             of a body at initial time
 #define eccentricity_max 0.2         //Maximal eccentricity             of a body at initial time
 #define sma_min 2.9                  //Minimal semi-major axis          of a body at initial time
@@ -284,7 +285,7 @@
 #define nu_parameter 0.4             //The exponent of the density         in the coupling parameter. See Table 3 of Housen & Holsapple (2011)
 #define C1_parameter 1.5             //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
 #define k_parameter 0.2              //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
-#define frag_threshold 0.00000002    //Ejected mass threshold below which the collision results in a merger. If the ejected mass is above that threshold but the mass of the second
+#define frag_threshold 1.0e-8        //Ejected mass threshold below which the collision results in a merger. If the ejected mass is above that threshold but the mass of the second
                                      //largest fragment is below, then the tail is reunited into a single body. If the mass of the second largest fragment is above that threshold
                                      //then the collision results in a full fragmentation. To be given in simulation's units
 #define pq_min_max {-1,3,-1,1}       //Extremal integer values for p_k and q_k to determine the position of the tail fragments with respect to the largest fragment.
