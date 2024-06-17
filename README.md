@@ -81,7 +81,7 @@ Depending on your needs, REBOUND could be more adapted to your N-body problem th
 
       ./ncorpion.sh
       
-from within the ```src``` directory. Note that the 3D visualization will make the simulation vastly slower.
+from within the ```src``` directory. Note that the 3D visualization will make the simulation vastly slower. Installing MPI is not needed if you don't use the 3D vizualisation.
 
 
 ## 2D animations
