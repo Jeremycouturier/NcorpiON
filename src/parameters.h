@@ -43,6 +43,7 @@
 #define pth "/path/towards/input/output/location/"
 
 
+
 /**************************************************************************/
 /******** Defining booleans to determine the behaviour of NcorpiON ********/
 /**************************************************************************/
@@ -51,9 +52,9 @@
 #define write_to_files_bool      0   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
                                      //You can also set this boolean to 0 if you only want to 3D visualize the simulation in your browser.
 #define make_animation_bool      0   //Determines if animations of the simulation are produced. write_to_files_bool and write_elliptic_bool must both be set to 1
-#define write_cartesian_bool     0   //Determines if the cartesian elements x, y, z, vx, vy, vz   should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
+#define write_cartesian_bool     1   //Determines if the cartesian elements x, y, z, vx, vy, vz   should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
 #define write_elliptic_bool      0   //Determines if the elliptic  elements a, lambda, k, h, q, p should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
-                                     //If write_to_files_bool is 1 but both write_cartesian_bool and write_elliptic_bool are 0, then only radius.txt, mass.txt and stat.txt are output
+#define write_collisions_bool    1   //Determines if statistics regarding the collisions are output. Unimportant if not both write_to_files_bool and collision_bool are 1
 #define central_mass_bool        1   //Determines if there is a central mass. If 0, none of the bodies in the simulation play any particular role. If 1, the central body is initially
                                      //at (x,y,z,vx,vy,vz) = {0.0} and treated independently. Should be set to 1 if one body is very massive and if brute_force_bool is 0, so gravity
                                      //with that body is computed directly and not from a tree or a mesh. If 1, some physical effects can be considered as well(see below).
@@ -121,10 +122,10 @@
                                      //M_unit stays the mass used for conversions cartesian <-> elliptic.
 
 /******** Physical constants relative to interactions with the central body (J2, inner disk, central tides) or a distant object. Unimportant if central_mass_bool is 0 ********/
-#define Tearth 3.4076                //Central body's sideral period in units of the surface orbital period. Must be > 1. Earth's current value is 17.038
+#define Tearth 2.845377447           //Central body's sideral period in units of the surface orbital period. Must be > 1. Earth's current value is 17.038
                                      //In case of tides, the sideral period changes and this is the value at initial time.
-#define J2_value 0.0                 //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body)
-                                     //where Omega is the sideral frequency and Omega_crit = sqrt(G*M_unit/R_unit^3)
+#define J2_value 0.0                 //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body) where Omega is the
+                                     //sideral frequency and Omega_crit = sqrt(G*M_unit/R_unit^3). In that case, J2 is variable throughout the simulation.
 #define k2 1.5                       //Second Love number of the central body. Here the value is for a fluid body (zero shear modulus). The constant timelag model is used
 #define Delta_t 0.0002428            //The timelag between stress and response. Here 10 minutes. In units of the orbital period at the surface of the central body.
 #define dimensionless_moi 0.3307     //The moment of inertia of the central body, in simulation units (in units of its mass times its radius squared).
@@ -134,9 +135,11 @@
 #define inner_mass 0.                //Mass of the inner fluid disk at initial time.
 #define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
 #define f_tilde 0.3                  //A parameter controlling the mass of bodies spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
-#define Rroche 2.9                   //The Roche radius where bodies spawn from the inner fluid disk (in simulation's units). The radius of tidal disruption is low_dumping_threshold
-                                     //defined below. Must be larger than both low_dumping_threshold and than R_unit.
-                                     
+#define Rroche 2.9                   //The Roche radius where bodies spawn from the inner fluid disk (in simulation's units). Must be larger than disruption_threshold and than R_unit.
+#define disruption_threshold 2.      //Threshold (in simulation's units) below which bodies are tidally disrupted by the central mass. If inner_fluid_disk_bool is 0, then the mass of
+                                     //the dumped body is added to the central body. Otherwise, the mass of the dumped body is added to the inner fluid disk if the body's periapsis is
+                                     //above the surface or if it will cross the xy plane before hitting the surface, and to the central mass else.                                    
+
 
 
 /*******************************************************/
@@ -144,14 +147,13 @@
 /*******************************************************/
 
 /******** General parameters ********/
-#define N_max 10000                  //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
-#define N_0 2000                     //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
+#define N_max 9000                   //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
+#define N_0 1000                     //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
 #define t_init 0.                    //Time at the beginning of the simulation (in simulation's units)
-#define t_end 128.                   //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end-t_init)/time_step is not integer
+#define t_end 64.                    //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
 #define time_step 0.015625           //Timestep of the simulation (in simulation's units)
-#define output_step 1                //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
-#define low_dumping_threshold 2.     //Threshold (in simulation's units) below  which bodies are dumped from the simulation. Unimportant if central_mass_bool is 0.
-#define high_dumping_threshold 128.  //Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
+#define output_step 8                //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
+#define high_dumping_threshold 235.  //Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
 
 /******** Specific parameters ********/
 #define max_ids_per_node 173         //The maximum number of ids in each node of the unrolled linked lists (chains). Choose such that sizeof(struct chain) be a multiple of the cache line
@@ -202,10 +204,10 @@
 /******** Orbit of the point-mass perturbator, in an inertial reference frame. ********/
 #define pert_sma -11690.1474151781531//The perturbator is on a Keplerian trajectory defined by the six elements (semi-major axis, eccentricity, inclination, true anomaly, argument of
 #define pert_ecc 4.2399307249518     //periapsis, longitude of ascending node), given by these six parameters (in radians and simulation's units). The gravitational parameter used to
-#define pert_inc 2.8418842771365     //convert these elliptic elements into cartesian coordinates is mu = G*(perturbing_mass + M_unit), which means that these 6 elliptic elements define
-#define pert_tra -0.0000000092695    //the trajectory of the vector pointing from the viscoelastic body to the perturbing body. The Keplerian orbit can be hyperbolic (perturbing_ecc can
-#define pert_aop -2.5680969201791    //exceed 1), but then, the semi-major axis perturbing_sma must be negative and the true anomaly must verify |tra| < acos(-1/e). pert_ecc cannot be 1.
-#define pert_lan 2.6575357407213     //The true anomaly is given at the time t = 0, not at the initial time t_init.
+#define pert_inc 2.8418842771365     //convert these elliptic elements into cartesian coordinates is mu = G*(pert_mass + M_unit). The Keplerian orbit can be hyperbolic
+#define pert_tra -0.0000000092695    //(pert_ecc can exceed 1), but then, the semi-major axis pert_sma must be negative and the true anomaly must verify |tra| < acos(-1/e).
+#define pert_aop -2.5680969201791    //The eccentricity pert_ecc cannot be exactly equal to 1. The true anomaly is given at the time t = 0, not at the initial time t_init. This means
+#define pert_lan 2.6575357407213     //that if you set pert_tra to 0., then the periapsis happens at time t = 0.
 #define pert_mass 0.//97904401542201.//Mass of the perturbator (in simulation's units). First set to 0.0 in order to remove tides on the viscoelastic body and let it rest
 #define pert_radius 6371.0           //Radius of the perturbator (for visualization purposes only. Does not matter if openGL_bool is 0)
 
@@ -232,7 +234,7 @@
                                      //The precision (and computational time) of the mutual gravity computed by Ncorpion increases with increasing p and decreasing theta_min.
 #define subdivision_threshold 23     //A cubic cell is not divided as long as it contains at most that many bodies. Called s in Dehnen (2002). Must be > 0. The precision does not depend
                                      //on this threshold, but the computational time does. Suggested values are 5 < s < 200 but must be tweaked by the user to obtain the best performances
-#define root_sidelength 128.0        //Sidelength of the root cell (in simulation's units). Should be machine representable. Particles outside of the root cell don't feel others.
+#define root_sidelength 192.0        //Sidelength of the root cell (in simulation's units). Should be machine representable. Particles outside of the root cell don't feel others.
 #define level_max 25                 //The maximum allowed number of levels in the tree. Root is at level 0 and a cell at level level_max - 1 is never divided.
 #define child_multipole_threshold 1  //If number of bodies/number of children is at most this threshold then the multipole moments of a cell are computed directly from the bodies.
                                      //Otherwise, they are computed from that of the children. Choose 1 for p < 5, and a small integer otherwise.

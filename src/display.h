@@ -33,6 +33,20 @@
 #include "parameters.h"
 
 
+/******** Defining a structure holding the data of a collision. Used by function display to output collision data to files ********/
+struct collisionData{
+      typ time;         //Simulation time when the collision occured
+      typ m1;           //Mass   of the impactor
+      typ m2;           //Mass   of the target
+      typ R1;           //Radius of the impactor
+      typ R2;           //Radius of the target
+      typ DeltaV;       //Relative velocity
+      typ impact_angle; //Impact angle
+      typ m_tilde;      //Mass of the largest remnant
+};
+extern struct collisionData * collisionDatas; //Array containing the datas of the collisions
+extern int indexCollision;                    //Index in the array
+
 
 FILE ** file_opening();
 

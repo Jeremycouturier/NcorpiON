@@ -59,5 +59,6 @@ void collision_treatment(struct moonlet * moonlets, int a, int b, int type_of_co
 void get_neighbours_mesh(struct moonlet * moonlets);
 
 
+int willMergeWithDisk(struct moonlet * bodies, int id);
 
 #endif

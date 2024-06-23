@@ -90,12 +90,12 @@ int merger_count;
 int collision_count;
 typ time_since_last_spawn;
 typ time_between_spawn;
+typ dotMinner;
 typ fluid_disk_Sigma;
 typ SideralOmega;
 typ star_mean_motion;
 typ evection_resonance;
 int need_to_reduce_COM_bool;
-int n_output;
 
 
 void ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ mu, typ * cart){
@@ -174,9 +174,15 @@ void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp){
       vX = (moonlets + id) -> vx;
       vY = (moonlets + id) -> vy;
       vZ = (moonlets + id) -> vz;
+      X  -= central_mass_bool ? CM.x  : 0.;
+      Y  -= central_mass_bool ? CM.y  : 0.;
+      Z  -= central_mass_bool ? CM.z  : 0.;
+      vX -= central_mass_bool ? CM.vx : 0.;
+      vY -= central_mass_bool ? CM.vy : 0.;
+      vZ -= central_mass_bool ? CM.vz : 0.;
 
       /******** Computing the semi-major axis ********/
-      CMU = G*M_unit;
+      CMU = central_mass_bool ? G*CM.mass : G*M_unit;
       R   = sqrt(X*X + Y*Y + Z*Z);
       V2  = vX*vX + vY*vY + vZ*vZ;
       AA  = R*CMU/(2.0*CMU - R*V2); //Division by zero if the trajectory is perfectly parabolic.
@@ -292,11 +298,11 @@ void cart2aei(struct moonlet * moonlets, int id, typ * aei){
       }
       
       /******** Getting the eccentricity from the momentum ********/
-      r_cross_v_1 = Y*vZ-vY*Z;
-      r_cross_v_2 = vX*Z-X*vZ;
-      r_cross_v_3 = X*vY-vX*Y;
+      r_cross_v_1 = Y*vZ - vY*Z;
+      r_cross_v_2 = vX*Z - X*vZ;
+      r_cross_v_3 = X*vY - vX*Y;
       r_cross_v_square = r_cross_v_1*r_cross_v_1 + r_cross_v_2*r_cross_v_2 + r_cross_v_3*r_cross_v_3;
-      e = sqrt(1.0-r_cross_v_square/(mu*a));
+      e = sqrt(1.0 - r_cross_v_square/(mu*a));
       
       /******** Getting the inclination from the third component of the angular momentum ********/
       r_cross_v = sqrt(r_cross_v_square);
@@ -418,11 +424,11 @@ struct moonlet * populate(){
                               *(exists + k) = 0;
                         }
                   }
-                  if (fabs(*(IC + 8*k + 6)) < 1.0e-14){
+                  if (*(IC + 8*k + 6) == 0.){
                         printf("Warning : NcorpiON does not support bodies with zero mass at the moment. Discarding the body.\n");
                         *(exists + k) = 0;
                   }
-                  if (*(IC + 8*k + 6) < -1.0e-14){
+                  if (*(IC + 8*k + 6) < 0.){
                         printf("Warning : A body with negative mass was given in the initial conditions.\n");
                   }
                   if (*(IC + 8*k + 7) < 0.){
@@ -483,13 +489,13 @@ void variable_initialization(){
       how_many_moonlets       = N_0;
       how_many_cells          = 0;
       cell_id                 = 0;
-      force_naive_bool        = 0;
+      force_naive_bool        = N_0 < switch_to_brute_force ? 1 : 0;
       IndexPeanoHilbertOrder  = N_0;
       SideralOmega            = 2.0*M_PI/Tearth;
       star_mean_motion        = sqrt(G*(M_unit + star_mass)/(star_semi_major*star_semi_major*star_semi_major));
       evection_resonance      = pow(1.5*sqrt(M_unit/star_mass)*J2, 2.0/7.0)*pow(star_semi_major/R_unit, 3.0/7.0)*R_unit;
       need_to_reduce_COM_bool = 0;
-      n_output                = 0;
+      indexCollision          = 0;
       if(!brute_force_bool){
             typ sinsigma = sin(inclination_max);
             gam = pow(sma_max*sma_max*sma_max-sma_min*sma_min*sma_min,1.0/3.0)*pow(4.0*M_PI*how_many_neighbours*sinsigma/(((typ) N_0)*81.0),1.0/3.0); //The mesh-size for the O(N) 
@@ -522,8 +528,10 @@ void variable_initialization(){
             typ x2                = x*x - 1.0;
             typ gx                = (4.0*x*x52-5.0*x2*x32)/(4.0*x52-5.0*x2);
             typ Rroche3           = Rroche*Rroche*Rroche;
-            typ Omega             = sqrt(G*M_unit/Rroche3);
-            time_between_spawn    = 16.0*M_PI*f_tilde*f_tilde*Rroche3*Rroche3*Omega*Omega*Omega*gx*(1.0-x)*(1.0-gx)/(M_unit*M_unit*x*G*G); //From Salmon & Canup 2012
+            typ Omega_out         = sqrt(G*M_unit/Rroche3);
+            typ Omega_in          = sqrt(G*M_unit/(R_unit*R_unit*R_unit));
+            time_between_spawn    = 16.0*M_PI*f_tilde*f_tilde*Rroche3*Rroche3*Omega_out*Omega_out*Omega_out*gx*(1. - x)*(1. - gx)/(M_unit*M_unit*x*G*G); //From Salmon & Canup 2012
+            dotMinner             = M_PI*M_PI*M_PI*G*G/(Omega_in*Omega_in*Omega_in*(x - 1.)*(1. - gx));                                                  //From Salmon & Canup 2012
             printf("Characteristic timescale between spawn = %.8lf\n", time_between_spawn);
       }
 }
@@ -531,8 +539,7 @@ void variable_initialization(){
 
 void array_initialization(){
 
-      /******** Defines and initializes external arrays ********/
-      
+      /******** Defines and initializes external arrays ********/     
       
       
       /******** Array of bodies used as buffer ********/
@@ -540,7 +547,6 @@ void array_initialization(){
 
       /******** The kth cell of this array contains 1 if the kth cell of the array moonlets contains a body ********/
       exists = (int *)malloc(sizeof(int)*N_max);
-
 
       int p;
 
@@ -623,6 +629,13 @@ void array_initialization(){
             ell2cart(pert_sma, pert_ecc, pert_inc, nu, pert_aop, pert_lan, G*(pert_mass + M_unit), cart);
             CM.x = cart[0];  CM.y = cart[1];  CM.z = cart[2];  CM.vx = cart[3];  CM.vy = cart[4];  CM.vz = cart[5];  CM.radius = pert_radius;
       }
+      if (collision_bool && write_to_files_bool && write_collisions_bool){
+            collisionDatas = (struct collisionData *)malloc(2*output_step*N_max*sizeof(struct collisionData));
+            if (collisionDatas == NULL){
+                  fprintf(stderr, "Error: Cannot allocate array collisionDatas in function array_initialization.\n");
+                  abort();
+            }
+      }
 }
 
 
@@ -680,6 +693,10 @@ void deallocation(){
       if (viscoelastic_bool){
             free(connections);
             connections = NULL;
+      }
+      if (collision_bool && write_to_files_bool && write_collisions_bool){
+            free(collisionDatas);
+            collisionDatas = NULL;
       }
 }
 
@@ -1300,9 +1317,9 @@ void verify(){
       if(!type_check(typeof(spawned_density),           typ)){fprintf(stderr, "Error : spawned_density must be given as a floating-point number.\n");       abort();}
       if(!type_check(typeof(f_tilde),                   typ)){fprintf(stderr, "Error : f_tilde must be given as a floating-point number.\n");               abort();}
       if(!type_check(typeof(Rroche),                    typ)){fprintf(stderr, "Error : Rroche must be given as a floating-point number.\n");                abort();}
+      if(!type_check(typeof(disruption_threshold),      typ)){fprintf(stderr, "Error : disruption_threshold must be given as a floating-point number.\n");  abort();}
       if(!type_check(typeof(t_end),                     typ)){fprintf(stderr, "Error : t_end must be given as a floating-point number.\n");                 abort();}
       if(!type_check(typeof(time_step),                 typ)){fprintf(stderr, "Error : time_step must be given as a floating-point number.\n");             abort();}
-      if(!type_check(typeof(low_dumping_threshold),     typ)){fprintf(stderr, "Error : low_dumping_threshold must be given as a floating-point number.\n"); abort();}
       if(!type_check(typeof(high_dumping_threshold),    typ)){fprintf(stderr, "Error : high_dumping_threshold must be given as a floating-point number.\n");abort();}
       if(!type_check(typeof(softening_parameter),       typ)){fprintf(stderr, "Error : softening_parameter must be given as a floating-point number.\n");   abort();}
       if(!type_check(typeof(radius_min),                typ)){fprintf(stderr, "Error : radius_min must be given as a floating-point number.\n");            abort();}
@@ -1412,10 +1429,38 @@ void verify(){
             abort();
       }
       if (viscoelastic_bool && collision_bool && (instant_merger_bool || fragmentation_bool)){
-            fprintf(stderr, "Error : Collision can only be resolved elastically and inelastically when NcorpiON is used to simulate a viscoelastic body.\n");
+            fprintf(stderr, "Error : Collisions can only be resolved elastically and inelastically when NcorpiON is used to simulate a viscoelastic body.\n");
             abort();
       }
       if (viscoelastic_bool && !reduce_to_COM_bool){
             printf("Warning : The boolean reduce_to_COM_bool should be set to 1 so the viscoelastic body can be properly rotated.\n");
+      }
+}
+
+
+void Lyapunov(struct moonlet * moonlets){
+
+      /******** To be removed ********/
+      
+      time_t t;
+      time(&t);
+      srand((unsigned) t);
+      typ D = 1.0e-11;
+      int j;
+      typ dx, dy, dz, dvx, dvy, dvz;
+      
+      for (j = 0; j < N_0; j ++){
+            dx  = rdm(-D, D);
+            dy  = rdm(-D, D);
+            dz  = rdm(-D, D);
+            dvx = rdm(-D, D);
+            dvy = rdm(-D, D);
+            dvz = rdm(-D, D);
+            (moonlets + j) -> x  += dx;
+            (moonlets + j) -> y  += dy;
+            (moonlets + j) -> z  += dz;
+            (moonlets + j) -> vx += dvx;
+            (moonlets + j) -> vy += dvy;
+            (moonlets + j) -> vz += dvz;
       }
 }

@@ -459,7 +459,7 @@ void KelvinVoigtDamping(struct moonlet * X){
                   dX   =  xk -  xp;  dY  =  yk -  yp;  dZ  =  zk -  zp;
                   dvX  = vxk - vxp;  dvY = vyk - vyp;  dvZ = vzk - vzp;
                   drdv = dX*dvX + dY*dvY + dZ*dvZ;
-                  dr   = sqrt(dX*dX   + dY*dY   + dZ*dZ);
+                  dr   = sqrt(dX*dX + dY*dY + dZ*dZ);
                   K    = damping_coefficient*L*drdv/(dr*dr);
                   /******** Updating the accelerations ********/
                   (xx + k) -> vx -= K*dX/mk;
@@ -489,9 +489,9 @@ void tides(struct moonlet * bodies){
       
       for (j = 0; j <= largest_id; j ++){ //Looping over all bodies
             if (*(exists + j)){
-                  X       = (bodies + j) -> x - CM.x;
-                  Y       = (bodies + j) -> y - CM.y;
-                  Z       = (bodies + j) -> z - CM.z;
+                  X       = (bodies + j) -> x  - CM.x;
+                  Y       = (bodies + j) -> y  - CM.y;
+                  Z       = (bodies + j) -> z  - CM.z;
                   vX      = (bodies + j) -> vx - CM.vx + 0.5*timestep*((xx + j) -> vx - CM_acc[0]);
                   vY      = (bodies + j) -> vy - CM.vy + 0.5*timestep*((xx + j) -> vy - CM_acc[1]);
                   vZ      = (bodies + j) -> vz - CM.vz + 0.5*timestep*((xx + j) -> vz - CM_acc[2]);
@@ -533,8 +533,7 @@ void collision(struct moonlet * moonlets, int a, int b, typ f){
       typ R_b = (moonlets + b) -> radius;
       typ R   = R_a + R_b;                        //Sum of the radii;
       typ m_a = (moonlets + a) -> mass;           //The bodies's masses
-      typ m_b = (moonlets + b) -> mass;              
-      
+      typ m_b = (moonlets + b) -> mass;                    
       
       /******** Getting the speeds ********/
       vx_a = (moonlets + a) -> vx;
@@ -542,8 +541,7 @@ void collision(struct moonlet * moonlets, int a, int b, typ f){
       vz_a = (moonlets + a) -> vz;
       vx_b = (moonlets + b) -> vx;
       vy_b = (moonlets + b) -> vy;
-      vz_b = (moonlets + b) -> vz;
-      
+      vz_b = (moonlets + b) -> vz;      
       
       /******** Getting the positions ********/
       xa = *(approach);
@@ -551,25 +549,22 @@ void collision(struct moonlet * moonlets, int a, int b, typ f){
       za = *(approach + 2);
       xb = *(approach + 3);
       yb = *(approach + 4);
-      zb = *(approach + 5);
-      
+      zb = *(approach + 5);     
       
       /******** Calculating the new speeds after impact ********/
       typ dr_dot_dv = (xa - xb)*(vx_a - vx_b) + (ya - yb)*(vy_a - vy_b) + (za - zb)*(vz_a - vz_b); //Dot product dv.dr where dr=r_b-r_a and dv=v_b-v_a are the relative position and speed
       typ alpha     = f*m_a*m_b/((m_a + m_b)*R*R);                                                 //Factor such that J=alpha*(dv.dr)*dr
       typ Jx        = alpha*dr_dot_dv*(xb - xa);                                                   //Vector J
       typ Jy        = alpha*dr_dot_dv*(yb - ya);
-      typ Jz        = alpha*dr_dot_dv*(zb - za);
-      
+      typ Jz        = alpha*dr_dot_dv*(zb - za);     
       
       /******** Calculating the speeds after impact ********/
-      vx_a += Jx/m_a;  //v_a=v_a+J/m_a
+      vx_a += Jx/m_a;  //v_a = v_a + J/m_a
       vy_a += Jy/m_a;
       vz_a += Jz/m_a;
-      vx_b -= Jx/m_b;  //v_b=v_b-J/m_b
+      vx_b -= Jx/m_b;  //v_b = v_b - J/m_b
       vy_b -= Jy/m_b;
-      vz_b -= Jz/m_b;
-      
+      vz_b -= Jz/m_b;   
       
       /******** Actualizing the speeds and positions in the array moonlets                 ********/
       /******** Bodies are put back where they were at the beginning of the timestep, but  ********/
@@ -587,7 +582,24 @@ void collision(struct moonlet * moonlets, int a, int b, typ f){
       (moonlets + b) -> vy = vy_b;
       (moonlets + b) -> vz = vz_b;
       
-
+      #if write_collisions_bool //Writing collision's data
+      typ DeltaV = sqrt((vx_a - vx_b)*(vx_a - vx_b) + (vy_a - vy_b)*(vy_a - vy_b) + (vz_a - vz_b)*(vz_a - vz_b));
+      if (write_to_files_bool){
+            (collisionDatas + indexCollision) -> time         = t_init + time_elapsed + time_until_collision;
+            (collisionDatas + indexCollision) -> m1           = m_b;
+            (collisionDatas + indexCollision) -> m2           = m_a;
+            (collisionDatas + indexCollision) -> R1           = R_b;
+            (collisionDatas + indexCollision) -> R2           = R_a;
+            (collisionDatas + indexCollision) -> DeltaV       = DeltaV;
+            (collisionDatas + indexCollision) -> impact_angle = acos(-dr_dot_dv/(R*DeltaV));
+            (collisionDatas + indexCollision) -> m_tilde      = m_a;
+            indexCollision ++;
+            if (indexCollision == 2*output_step*N_max){
+                  fprintf(stderr, "Error: The array collisionDatas is not large enough.\n");
+                  abort();
+            }
+      }
+      #endif
 }
 
 
@@ -652,6 +664,25 @@ void merger(struct moonlet * moonlets, int a, int b){
       /******** Body b does not exist anymore and I disallow body a to collide again for that timestep ********/        
       lose_moonlet(b);
       *(did_collide + a) = one_collision_only_bool;
+      
+      #if write_collisions_bool //Writing collision's data
+      typ DeltaV = sqrt((vx_a - vx_b)*(vx_a - vx_b) + (vy_a - vy_b)*(vy_a - vy_b) + (vz_a - vz_b)*(vz_a - vz_b));
+      if (write_to_files_bool){
+            (collisionDatas + indexCollision) -> time         = t_init + time_elapsed + time_until_collision;
+            (collisionDatas + indexCollision) -> m1           = m_b;
+            (collisionDatas + indexCollision) -> m2           = m_a;
+            (collisionDatas + indexCollision) -> R1           = R_b;
+            (collisionDatas + indexCollision) -> R2           = R_a;
+            (collisionDatas + indexCollision) -> DeltaV       = DeltaV;
+            (collisionDatas + indexCollision) -> impact_angle = acos(-((xa - xb)*(vx_a - vx_b) + (ya - yb)*(vy_a - vy_b) + (za - zb)*(vz_a - vz_b))/((R_a + R_b)*DeltaV));
+            (collisionDatas + indexCollision) -> m_tilde      = m; 
+            indexCollision ++;
+            if (indexCollision == 2*output_step*N_max){
+                  fprintf(stderr, "Error: The array collisionDatas is not large enough.\n");
+                  abort();
+            }
+      }
+      #endif
 }
 
 void fragmentation(struct moonlet * moonlets, int a, int b){
@@ -662,30 +693,17 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       typ vx_a, vy_a, vz_a, vx_b, vy_b, vz_b;                  //Cartesian speeds of the bodies.
       typ xa, ya, za, xb, yb, zb;                              //Cartesian positions at the collision
       typ dx, dy, dz, dvx, dvy, dvz;                           //dx is xa-xb, and so on.
-      typ R_a = (moonlets + a) -> radius;                      //The bodies' radii
-      typ R_b = (moonlets + b) -> radius;
-      typ R   = R_a + R_b;                                     //Sum of the radii;
-      typ m_a = (moonlets + a) -> mass;                        //The bodies's masses
-      typ m_b = (moonlets + b) -> mass;
-      typ M   = m_a + m_b;                                     //Sum of the masses
-      typ m_1;                                                 //Mass of the impactor
-      typ rho_12_3nu;                                          //Ratio between the density of the impactor and that of the target at the power 3*nu
-      typ rho_a = 3.0*m_a/(4.0*M_PI*R_a*R_a*R_a);              //Density of body a
-      typ rho_b = 3.0*m_b/(4.0*M_PI*R_b*R_b*R_b);              //Density of body b
-      typ average_density = (m_a*rho_a + m_b*rho_b)/M;         //The average density of the moonlets, weighted by mass
-      typ rho_12;                                              //rho_1/rho_2
-      
-      /******** Defining the impactor and the target. ********/
-      if (R_a > R_b){ // a is the target and b the impactor
-            m_1        = m_b;
-            rho_12     = rho_b/rho_a;
-            rho_12_3nu = pow(rho_12, 3.0*nu_parameter);
-      }
-      else { // a is the impactor and b the target
-            m_1        = m_a;
-            rho_12     = rho_a/rho_b;
-            rho_12_3nu = pow(rho_12, 3.0*nu_parameter);
-      }            
+      typ R_2 = (moonlets + a) -> radius;                      //The bodies' radii
+      typ R_1 = (moonlets + b) -> radius;
+      typ R   = R_1 + R_2;                                     //Sum of the radii;
+      typ m_2 = (moonlets + a) -> mass;                        //The bodies's masses
+      typ m_1 = (moonlets + b) -> mass;
+      typ M   = m_1 + m_2;                                     //Sum of the masses
+      typ rho_1 = 3.0*m_1/(4.0*M_PI*R_1*R_1*R_1);              //Densities
+      typ rho_2 = 3.0*m_2/(4.0*M_PI*R_2*R_2*R_2);
+      typ average_density = (m_1*rho_1 + m_2*rho_2)/M;         //The average density of the moonlets, weighted by mass
+      typ rho_12 = rho_1/rho_2;
+      typ rho_12_3nu = pow(rho_12, 3.0*nu_parameter);;         //Ratio between the density of the impactor and that of the target at the power 3*nu           
       
       /******** Getting the speeds at the impact ********/
       vx_a = (moonlets + a) -> vx;
@@ -721,30 +739,46 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       typ m_check     = K*(pow(C1_parameter*dv_norm/vesc, 3.0*mu_parameter)*rho_12_3nu - 1.0); //Mass of the tail : Ejected mass
       typ m_tilde     = M - m_check;                                       //Mass of the largest fragment
       typ m_tilde_2   = m_check / (typ) N_tilde;                           //Mass of the tail's fragments
+           
+      /******** Some data used for the fragmentation case ********/
+      typ v_cm[3], r_cm[3]; //Velocity and position of the center of mass before impact
+      typ r_tilde[3];       //Position of the largest fragment
+      typ v_tilde[3];       //Speed of the largest fragment
+      v_cm[0] = (m_2*vx_a + m_1*vx_b)/M;  v_cm[1] = (m_2*vy_a + m_1*vy_b)/M;  v_cm[2] = (m_2*vz_a + m_1*vz_b)/M;
+      r_cm[0] = (m_2*xa   + m_1*  xb)/M;  r_cm[1] = (m_2*ya   + m_1*  yb)/M;  r_cm[2] = (m_2*za   + m_1*  zb)/M;
       
+      #if write_collisions_bool //Writing collision's data
+      if (write_to_files_bool){
+            (collisionDatas + indexCollision) -> time         = t_init + time_elapsed + time_until_collision;
+            (collisionDatas + indexCollision) -> m1           = m_1;
+            (collisionDatas + indexCollision) -> m2           = m_2;
+            (collisionDatas + indexCollision) -> R1           = R_1;
+            (collisionDatas + indexCollision) -> R2           = R_2;
+            (collisionDatas + indexCollision) -> DeltaV       = dv_norm;
+            (collisionDatas + indexCollision) -> impact_angle = acos(costheta);
+            (collisionDatas + indexCollision) -> m_tilde      = m_tilde;
+            indexCollision ++;
+            if (indexCollision == 2*output_step*N_max){
+                  fprintf(stderr, "Error: The array collisionDatas is not large enough.\n");
+                  abort();
+            }
+      }
+      #endif
       
-      /******** Merger case. Bodies a and b merge together ********/
+      /******** Merger case. If there is no ejecta (v_max <= vesc) then bodies a and b merge together ********/
  
-      if (m_check < frag_threshold && m_tilde >= 0.1 * M){
-            merger(moonlets, a ,b);
+      if (m_check <= 0.){ //No ejecta
+            merger(moonlets, a, b);
             merger_count ++;
             return;
       }
-      
-      
-      /******** Some data used for the fragmentation case ********/
-      typ v_cm[3], r_cm[3]; //Velocity and position of the center of mass before impact
-      typ r_tilde[3]; //Position of the largest fragment
-      typ v_tilde[3]; //Speed of the largest fragment
-      v_cm[0] = (m_a*vx_a + m_b*vx_b)/M;  v_cm[1] = (m_a*vy_a + m_b*vy_b)/M;  v_cm[2] = (m_a*vz_a + m_b*vz_b)/M;
-      r_cm[0] = (m_a*xa   + m_b*  xb)/M;  r_cm[1] = (m_a*ya   + m_b*  yb)/M;  r_cm[2] = (m_a*za   + m_b*  zb)/M;
       
       
       /******** Super-catastrophic fragmentation. The mass of the largest fragment is less than 10 % of the total mass. The ejecta is discarded ********/
       
       if (m_tilde < 0.1*M){ //m_tilde is not proportionnal to Qr/Qr* in this regime
       
-            m_tilde = 0.1*M*pow(2.0/1.8*m_check/M, -1.5); //Eq. (44) of Leinhardt and Stewart (2012)
+            m_tilde = 0.1*M*pow(1.0/0.9*m_check/M, -1.5); //Eq. (44) of Leinhardt and Stewart (2012)
             
             /******** Only the largest fragment remains in the super-catastrophic regime ********/
             /******** Actualizing its speed ********/
@@ -760,31 +794,50 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             (moonlets + a) -> radius = pow(3.0*m_tilde/(4.0*M_PI*average_density), 1.0/3.0);
             /******** Reducing the center of mass to compensate for the lost momentum ********/
             need_to_reduce_COM_bool = 1;
-            /******** Body b does not exist anymore and I disallow body a to collide again for that timestep ********/
             lose_moonlet(b);
             *(did_collide + a) = one_collision_only_bool;
             super_catastrophic_count ++;
+            /******** The discarded mass is put in the inner fluid disk to prevent mass from just vanishing, or in the central body ********/
+            typ discarded_mass = M - m_tilde;
             if (m_tilde < frag_threshold/4.0){ //Body a is discarded as well
                   lose_moonlet(a);
+                  discarded_mass = M;
             }
+            if (inner_fluid_disk_bool){
+                  fluid_disk_Sigma += discarded_mass/(M_PI*(Rroche*Rroche - R_unit*R_unit));
+            }
+            else if (central_mass_bool){
+                  CM.mass += discarded_mass;
+            }
+            
+            #if write_collisions_bool //Writing collision's data
+            if (write_to_files_bool){
+                  (collisionDatas + indexCollision - 1) -> m_tilde = m_tilde;
+            }
+            #endif
+            
             return;
       }
       
       
       /******** Partial fragmentation. The tail is reunited into a single body. ********/
       
-      if (m_check >= frag_threshold && m_tilde_2 < frag_threshold){
+      if (m_tilde_2 < frag_threshold){
             typ r_k[3]; //Position of the tail with respect to the largest fragment
             typ v_k[3]; //Velocity of the tail with respect to the largest fragment
-            typ v_k_scalar  = vesc/stigma*(m_check + K)/m_check*(1.0 - pow(K/(K + m_check), stigma)); //Scalar velocity of the tail with respect to the largest fragment
+            typ v_k_scalar = vesc/stigma*(m_check + K)/m_check*(1.0 - pow(K/(K + m_check), stigma)); //Scalar velocity of the tail with respect to the largest fragment
+            if (v_k_scalar < vesc){
+                  fprintf(stderr, "Error: In function fragmentation, the ejection velocity cannot be less than the escape velocity.\n");
+                  abort();
+            }
             typ in_front_of = v_k_scalar/R;
-            if (R_a > R_b){
-                  r_k[0] = -dx;  r_k[1] = -dy;  r_k[2] = -dz;
-            }
-            else {
-                  r_k[0] = dx;  r_k[1] = dy;  r_k[2] = dz;
-            }
-            v_k[0] = in_front_of * r_k[0];  v_k[1] = in_front_of * r_k[1];  v_k[2] = in_front_of * r_k[2];           
+            r_k[0] = -dx;  r_k[1] = -dy;  r_k[2] = -dz;
+            v_k[0] = in_front_of*r_k[0];  v_k[1] = in_front_of*r_k[1];  v_k[2] = in_front_of*r_k[2];
+            typ R_tilde   = pow(3.0*m_tilde  /(4.0*M_PI*average_density), 1.0/3.0); //Radius of the largest fragment
+            typ R_tilde_2 = pow(3.0*m_tilde_2/(4.0*M_PI*average_density), 1.0/3.0); //Radius of the fragments of the tail
+            typ R_tilde12 = R_tilde + R_tilde_2;
+            typ dr_norm = sqrt(r_k[0]*r_k[0] + r_k[1]*r_k[1] + r_k[2]*r_k[2]);
+            r_k[0] *= R_tilde12/dr_norm;  r_k[1] *= R_tilde12/dr_norm;  r_k[2] *= R_tilde12/dr_norm;
 
             /******** Total momentum is conserved ********/
             r_tilde[0] = r_cm[0] - m_check/M*r_k[0];
@@ -795,8 +848,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             v_tilde[2] = v_cm[2] - m_check/M*v_k[2];  
             
             /******** Actualizing the bodies ********/
-            typ R_tilde = pow(3.0*m_tilde/(4.0*M_PI*average_density),1.0/3.0); //Radius of the largest fragment
-            typ R_check = pow(3.0*m_check/(4.0*M_PI*average_density),1.0/3.0); //Radius of the tail fragment
+            typ R_check = pow(3.0*m_check/(4.0*M_PI*average_density), 1.0/3.0); //Radius of the tail fragment
             (moonlets + a) -> x      = r_tilde[0] - time_until_collision*v_tilde[0];
             (moonlets + a) -> y      = r_tilde[1] - time_until_collision*v_tilde[1];
             (moonlets + a) -> z      = r_tilde[2] - time_until_collision*v_tilde[2];
@@ -824,13 +876,12 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             *(did_collide + a) = one_collision_only_bool;
             *(did_collide + b) = one_collision_only_bool;
             half_fragmentation_count ++;
-            return;
       }
       
       
       /******** Full fragmentation. The tail is made up of N_tilde bodies ********/
 
-      if (m_tilde_2 >= frag_threshold){
+      else{
             /******** Determination of the r_k' and v_k' ********/ 
             typ r_k[3*N_tilde]; //Position of the fragments of the tail with respect to the largest fragment
             typ v_k[3*N_tilde]; //Velocity of the fragments of the tail with respect to the largest fragment
@@ -841,20 +892,14 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             typ R_tilde12 = R_tilde + R_tilde_2;
             typ u[3]; //Vectors used to locate the fragments of the tail
             typ v[3];
-            if (R_a > R_b){
-                  dr[0] = -dx;   dr[1] = -dy;   dr[2] = -dz;
-                  dv[0] = -dvx;  dv[1] = -dvy;  dv[2] = -dvz;
-            }
-            else {
-                  dr[0] = dx;   dr[1] = dy;   dr[2] = dz;
-                  dv[0] = dvx;  dv[1] = dvy;  dv[2] = dvz;
-            }
+            dr[0] = -dx;   dr[1] = -dy;   dr[2] = -dz;
+            dv[0] = -dvx;  dv[1] = -dvy;  dv[2] = -dvz;
             typ dr_norm = sqrt(dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2]);
             dr[0] *= R_tilde12/dr_norm;  dr[1] *= R_tilde12/dr_norm;  dr[2] *= R_tilde12/dr_norm;
             typ dr_x_dv[3]; // dr x dv
             typ dr_x_dv_norm; // ||dr x dv||
             int pq[4] = pq_min_max; // {p_k_min, p_k_max, q_k_min, q_k_max}
-            int p,q;
+            int p, q;
             cross_product(dr[0], dr[1], dr[2], dv[0], dv[1], dv[2], dr_x_dv);
             dr_x_dv_norm = sqrt(dr_x_dv[0]*dr_x_dv[0] + dr_x_dv[1]*dr_x_dv[1] + dr_x_dv[2]*dr_x_dv[2]);
             if (dr_x_dv_norm > 1.0e-5){ //Oblique collision
@@ -895,9 +940,13 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
                         r_k[3*n]     = dr[0] + two_p_R_tilde_2*u[0] + two_q_R_tilde_2*v[0]; // x-coordinate of the position of the (n+1)^th fragment of the tail wrt the largest fragment
                         r_k[3*n + 1] = dr[1] + two_p_R_tilde_2*u[1] + two_q_R_tilde_2*v[1]; // y-coordinate of the position of the (n+1)^th fragment of the tail wrt the largest fragment
                         r_k[3*n + 2] = dr[2] + two_p_R_tilde_2*u[2] + two_q_R_tilde_2*v[2]; // z-coordinate of the position of the (n+1)^th fragment of the tail wrt the largest fragment
-                        zk_stg       = pow(1.0 - ((typ) n)    *m_tilde_2/(K + m_check), stigma);
-                        zk1_stg      = pow(1.0 - ((typ) n + 1)*m_tilde_2/(K + m_check), stigma);
+                        zk_stg       = pow(1.0 - ((typ) n)     *m_tilde_2/(K + m_check), stigma);
+                        zk1_stg      = pow(1.0 - ((typ) n + 1.)*m_tilde_2/(K + m_check), stigma);
                         v_k_scalar   = vesc/stigma*(m_check + K)/m_tilde_2*(zk_stg - zk1_stg); //Scalar velocity of the tail's fragment
+                        if (v_k_scalar < vesc){
+                              fprintf(stderr, "Error: In function fragmentation, the velocity of a fragment cannot be less than the escape velocity.\n");
+                              abort();
+                        }
                         in_front_of  = v_k_scalar/sqrt(1.0 + ((typ) p)*((typ) p) + ((typ) q)*((typ) q));
                         v_k[3*n]     = in_front_of*(dr[0]/dr_norm + ((typ) p)*u[0] + ((typ) q)*v[0]);
                         v_k[3*n + 1] = in_front_of*(dr[1]/dr_norm + ((typ) p)*u[1] + ((typ) q)*v[1]);
@@ -971,7 +1020,6 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
                   (moonlets + id[n + 1]) -> radius = R_tilde_2;
             }
             full_fragmentation_count ++;
-            return;
       }
 }
 
@@ -1051,4 +1099,45 @@ void get_neighbours_mesh(struct moonlet * moonlets){
                   }
             }
       }
+}
+
+
+int willMergeWithDisk(struct moonlet * bodies, int id){
+
+      /******** This function is called if body n° id goes below the disruption_threshold.                ********/
+      /******** It determines if it will collide with the central body or merge with the inner fluid disk.********/
+      /******** If the periapsis is above the surface or if the body will cross the xy plane before       ********/
+      /******** hitting the surface, then 1 is returned. Otherwise, 0 is returned.                        ********/
+      
+      typ alkhqp[6];
+      typ cart[6];
+      typ a, k, h, q, p, e, i, nu, omega, Omega, mu, Z, z;
+      
+      /******** Retrieving the orbital elements of the bodies ********/
+      cart2ell(bodies, id, alkhqp);
+      a     = *alkhqp;
+      k     = alkhqp[2];
+      h     = alkhqp[3];
+      e     = sqrt(k*k + h*h);
+      if (a*(1.0 - e) > R_unit){ //The periapsis is above the surface
+            return 1;
+      }
+      q     = alkhqp[4];
+      p     = alkhqp[5];
+      i     = 2.0*asin(sqrt(q*q + p*p));
+      Omega = atan2(p, q);
+      omega = atan2(h, k) - Omega;
+      
+      /******** Getting the true anomaly of the intersection of the orbit with the surface ********/
+      nu = -acos((a*(1 - e*e) - R_unit)/(e*R_unit));
+
+      /******** Getting the cartesian coordinates of the intersection of the orbit with the surface ********/
+      mu = G*CM.mass;
+      ell2cart(a, e, i, nu, omega, Omega, mu, cart);
+
+      /******** The body will cross the xy plane before hitting the surface if, and only if, its Z coordinate ********/
+      /******** has a different sign than the z coordinate of the intersection of the orbit with the surface  ********/
+      Z = (bodies + id) -> z - CM.z;
+      z = cart[2];
+      return z*Z < 0. ? 1 : 0;
 }

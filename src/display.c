@@ -47,16 +47,19 @@
       #include <mpi.h>
 #endif
 
+struct collisionData * collisionDatas;
+int indexCollision;
+
 
 FILE ** file_opening(){
 
-      /******** Opens the files given as arguments to the function display ********/      
+      /******** Opens the output files used by the function display ********/      
       
       
       /******** Initializing the paths towards the files ********/
-      char filex_path[800]; char filey_path[800]; char filez_path[800]; char filevx_path[800]; char filevy_path[800]; char filevz_path[800];
-      char filea_path[800]; char filel_path[800]; char filek_path[800]; char fileh_path [800]; char fileq_path [800]; char filep_path [800];
-      char filer_path[800]; char filem_path[800]; char filestat_path[800];
+      char filex_path[800]; char filey_path[800]; char filez_path   [800]; char filevx_path [800]; char filevy_path[800]; char filevz_path[800];
+      char filea_path[800]; char filel_path[800]; char filek_path   [800]; char fileh_path  [800]; char fileq_path [800]; char filep_path [800];
+      char filer_path[800]; char filem_path[800]; char filestat_path[800]; char filecol_path[800];
       
       strcpy(filex_path,   pth); //The string "pth" is defined in structure.h
       strcpy(filey_path,   pth);
@@ -73,30 +76,37 @@ FILE ** file_opening(){
       strcpy(fileq_path,   pth);
       strcpy(filep_path,   pth);
       strcpy(filestat_path,pth);
+      strcpy(filecol_path, pth);
       
-      strcat(filex_path,       "x.txt");
-      strcat(filey_path,       "y.txt");
-      strcat(filez_path,       "z.txt");
-      strcat(filevx_path,     "vx.txt");
-      strcat(filevy_path,     "vy.txt");
-      strcat(filevz_path,     "vz.txt");
-      strcat(filer_path,  "radius.txt");
-      strcat(filem_path,    "mass.txt");
-      strcat(filea_path,       "a.txt");
-      strcat(filel_path,  "lambda.txt");
-      strcat(filek_path,       "k.txt");
-      strcat(fileh_path,       "h.txt");
-      strcat(fileq_path,       "q.txt");
-      strcat(filep_path,       "p.txt");
-      strcat(filestat_path, "stat.txt");
+      strcat(filex_path,           "x.txt");
+      strcat(filey_path,           "y.txt");
+      strcat(filez_path,           "z.txt");
+      strcat(filevx_path,         "vx.txt");
+      strcat(filevy_path,         "vy.txt");
+      strcat(filevz_path,         "vz.txt");
+      strcat(filer_path,      "radius.txt");
+      strcat(filem_path,        "mass.txt");
+      strcat(filea_path,           "a.txt");
+      strcat(filel_path,      "lambda.txt");
+      strcat(filek_path,           "k.txt");
+      strcat(fileh_path,           "h.txt");
+      strcat(fileq_path,           "q.txt");
+      strcat(filep_path,           "p.txt");
+      strcat(filestat_path,     "stat.txt");
+      strcat(filecol_path, "collision.txt");
       
       /******** Creating and opening the files ********/
-      FILE * filex;  FILE * filey;  FILE * filez;  FILE * filevx;  FILE * filevy;  FILE * filevz;  FILE * filer;  FILE * filem;
-      FILE * filea;  FILE * filel;  FILE * filek;  FILE * fileh;   FILE * fileq;   FILE * filep;   FILE * filestat;
+      FILE * filex;  FILE * filey;  FILE * filez;  FILE * filevx;  FILE * filevy;  FILE * filevz;  FILE * filer;     FILE * filem;
+      FILE * filea;  FILE * filel;  FILE * filek;  FILE * fileh;   FILE * fileq;   FILE * filep;   FILE * filestat;  FILE * filecol;
       
-      filer    = fopen(filer_path,    "w");
-      filem    = fopen(filem_path,    "w");
       filestat = fopen(filestat_path, "w");
+      if (write_cartesian_bool || write_elliptic_bool){
+            filer = fopen(filer_path, "w");
+            filem = fopen(filem_path, "w");
+      }
+      if (collision_bool && write_collisions_bool){
+            filecol = fopen(filecol_path, "w");
+      }
       if (write_cartesian_bool){
             filex  = fopen(filex_path,  "w");
             filey  = fopen(filey_path,  "w");
@@ -114,52 +124,63 @@ FILE ** file_opening(){
             filep = fopen(filep_path, "w");
       }
       
-      if (filer == NULL || filem == NULL || filestat == NULL){
+      if (filestat == NULL){
             fprintf(stderr, "Error : Cannot create or open output files. Did you specify the path 'pth' in the parameter file ?\n");
             abort();
       }
-      if (write_cartesian_bool && (filex == NULL || filey == NULL || filez == NULL || filevx == NULL || filevy == NULL || filevz == NULL)){
+      if (write_cartesian_bool && (filex == NULL || filey == NULL || filez == NULL || filevx == NULL || filevy == NULL || filevz == NULL || filer == NULL || filem == NULL)){
             fprintf(stderr, "Error : Cannot create or open output files. Did you specify the path 'pth' in the parameter file ?\n");
             abort();
       }
-      if (write_elliptic_bool && (filea == NULL || filel == NULL || filek == NULL || fileh == NULL || fileq == NULL || filep == NULL)){
+      if (write_elliptic_bool && (filea == NULL || filel == NULL || filek == NULL || fileh == NULL || fileq == NULL || filep == NULL || filer == NULL || filem == NULL)){
+            fprintf(stderr, "Error : Cannot create or open output files. Did you specify the path 'pth' in the parameter file ?\n");
+            abort();
+      }
+      if (collision_bool && write_collisions_bool && filecol == NULL){
             fprintf(stderr, "Error : Cannot create or open output files. Did you specify the path 'pth' in the parameter file ?\n");
             abort();
       }
       
       /******** Defining and initializing the array of files ********/
-      int nfiles = 3 + 6*(write_cartesian_bool + write_elliptic_bool);
+      int collision = collision_bool && write_collisions_bool ? 1 : 0;
+      int coordinates = write_cartesian_bool || write_elliptic_bool ? 1 : 0;
+      int nfiles = 1 + collision + 6*(write_cartesian_bool + write_elliptic_bool) + 2*coordinates;
       files = (FILE **)malloc(nfiles*sizeof(FILE *));
       if (files == NULL){
-            fprintf(stderr, "Error : Cannot allocate file array.\n");
+            fprintf(stderr, "Error : Cannot allocate file array in function file_opening.\n");
             abort();
       }
-      * files       = filestat;
-      *(files + 1)  = filer;
-      *(files + 2)  = filem;
+      * files = filestat;
+      if (collision){
+            *(files + 1) = filecol;
+      }
       if (write_cartesian_bool){
-            *(files + 3) = filex;
-            *(files + 4) = filey;
-            *(files + 5) = filez;
-            *(files + 6) = filevx;
-            *(files + 7) = filevy;
-            *(files + 8) = filevz;
+            *(files + 1 + collision) = filem;
+            *(files + 2 + collision) = filer;
+            *(files + 3 + collision) = filex;
+            *(files + 4 + collision) = filey;
+            *(files + 5 + collision) = filez;
+            *(files + 6 + collision) = filevx;
+            *(files + 7 + collision) = filevy;
+            *(files + 8 + collision) = filevz;
             if (write_elliptic_bool){
-                  *(files + 9)  = filea;
-                  *(files + 10) = filel;
-                  *(files + 11) = filek;
-                  *(files + 12) = fileh;
-                  *(files + 13) = fileq;
-                  *(files + 14) = filep;
+                  *(files + 9  + collision) = filea;
+                  *(files + 10 + collision) = filel;
+                  *(files + 11 + collision) = filek;
+                  *(files + 12 + collision) = fileh;
+                  *(files + 13 + collision) = fileq;
+                  *(files + 14 + collision) = filep;
             }
       }
       else if (write_elliptic_bool){
-            *(files + 3) = filea;
-            *(files + 4) = filel;
-            *(files + 5) = filek;
-            *(files + 6) = fileh;
-            *(files + 7) = fileq;
-            *(files + 8) = filep;
+            *(files + 1 + collision) = filem;
+            *(files + 2 + collision) = filer;
+            *(files + 3 + collision) = filea;
+            *(files + 4 + collision) = filel;
+            *(files + 5 + collision) = filek;
+            *(files + 6 + collision) = fileh;
+            *(files + 7 + collision) = fileq;
+            *(files + 8 + collision) = filep;
       }
       return files;
 }
@@ -169,25 +190,28 @@ void file_closing(){
 
       /******** Closes the output files ********/
 
-
+      int collision = collision_bool && write_collisions_bool ? 1 : 0;
       /******** Closing the files ********/
       fclose(* files);
-      fclose(*(files + 1));
-      fclose(*(files + 2));
+      if (collision){
+            fclose(*(files + 1));
+      }
       if (write_cartesian_bool || write_elliptic_bool){
-            fclose(*(files + 3));
-            fclose(*(files + 4));
-            fclose(*(files + 5));
-            fclose(*(files + 6));
-            fclose(*(files + 7));
-            fclose(*(files + 8));
+            fclose(*(files + 1 + collision));
+            fclose(*(files + 2 + collision));
+            fclose(*(files + 3 + collision));
+            fclose(*(files + 4 + collision));
+            fclose(*(files + 5 + collision));
+            fclose(*(files + 6 + collision));
+            fclose(*(files + 7 + collision));
+            fclose(*(files + 8 + collision));
             if (write_cartesian_bool && write_elliptic_bool){
-                  fclose(*(files + 9));
-                  fclose(*(files + 10));
-                  fclose(*(files + 11));
-                  fclose(*(files + 12));
-                  fclose(*(files + 13));
-                  fclose(*(files + 14));
+                  fclose(*(files + 9  + collision));
+                  fclose(*(files + 10 + collision));
+                  fclose(*(files + 11 + collision));
+                  fclose(*(files + 12 + collision));
+                  fclose(*(files + 13 + collision));
+                  fclose(*(files + 14 + collision));
             }
       }
       free(files);
@@ -212,38 +236,43 @@ void display(struct moonlet * moonlets){
       /******** If central_mass_bool is 1, then the central mass is output first in each file.                                 ********/
       
       
-      FILE * filex, * filey, * filez, * filevx, * filevy, * filevz, * filer, * filem, * filea, * filel, * filek, * fileh, * fileq, * filep, * filestat;
+      FILE * filex, * filey, * filez, * filevx, * filevy, * filevz, * filer, * filem, * filea, * filel, * filek, * fileh, * fileq, * filep, * filestat, * filecol;
       typ * alkhqp;
       alkhqp = (typ *)malloc(6*sizeof(typ));
-  
+      int collision = collision_bool && write_collisions_bool ? 1 : 0;
       
       /******** Defining the files ********/
       filestat = * files;
-      filer    = *(files + 1);
-      filem    = *(files + 2);
+      if (collision){
+            filecol = *(files + 1);
+      }
       if (write_cartesian_bool){
-            filex  = *(files + 3);
-            filey  = *(files + 4);
-            filez  = *(files + 5);
-            filevx = *(files + 6);
-            filevy = *(files + 7);
-            filevz = *(files + 8);
+            filem  = *(files + 1 + collision);
+            filer  = *(files + 2 + collision);
+            filex  = *(files + 3 + collision);
+            filey  = *(files + 4 + collision);
+            filez  = *(files + 5 + collision);
+            filevx = *(files + 6 + collision);
+            filevy = *(files + 7 + collision);
+            filevz = *(files + 8 + collision);
             if (write_elliptic_bool){
-                  filea = *(files + 9);
-                  filel = *(files + 10);
-                  filek = *(files + 11);
-                  fileh = *(files + 12);
-                  fileq = *(files + 13);
-                  filep = *(files + 14);
+                  filea = *(files + 9  + collision);
+                  filel = *(files + 10 + collision);
+                  filek = *(files + 11 + collision);
+                  fileh = *(files + 12 + collision);
+                  fileq = *(files + 13 + collision);
+                  filep = *(files + 14 + collision);
             }
       }
       else if (write_elliptic_bool){
-            filea = *(files + 3);
-            filel = *(files + 4);
-            filek = *(files + 5);
-            fileh = *(files + 6);
-            fileq = *(files + 7);
-            filep = *(files + 8);
+            filem = *(files + 1 + collision);
+            filer = *(files + 2 + collision);
+            filea = *(files + 3 + collision);
+            filel = *(files + 4 + collision);
+            filek = *(files + 5 + collision);
+            fileh = *(files + 6 + collision);
+            fileq = *(files + 7 + collision);
+            filep = *(files + 8 + collision);
       }
       
       /******** Writing to the files ********/
@@ -252,6 +281,7 @@ void display(struct moonlet * moonlets){
       typ total_mass = 0.0;
       typ inner_fluid_disk_mass;
       typ maxR = 0.0;
+      typ maxM = 0.0;
       
       if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
             if (write_cartesian_bool){
@@ -261,26 +291,28 @@ void display(struct moonlet * moonlets){
                   vX = CM_buffer.vx;
                   vY = CM_buffer.vy;
                   vZ = CM_buffer.vz;
-                  fprintf(filex,  "%.13lf ",  X);
-                  fprintf(filey,  "%.13lf ",  Y);
-                  fprintf(filez,  "%.13lf ",  Z);
-                  fprintf(filevx, "%.13lf ", vX);
-                  fprintf(filevy, "%.13lf ", vY);
-                  fprintf(filevz, "%.13lf ", vZ);
+                  fprintf(filex,  "%.14lf ",  X);
+                  fprintf(filey,  "%.14lf ",  Y);
+                  fprintf(filez,  "%.14lf ",  Z);
+                  fprintf(filevx, "%.14lf ", vX);
+                  fprintf(filevy, "%.14lf ", vY);
+                  fprintf(filevz, "%.14lf ", vZ);
             }
-            m  = CM_buffer.mass;
-            R  = CM_buffer.radius;
             if (write_elliptic_bool){
                   cart2ell(&CM_buffer, 0, alkhqp); //Computing the elliptic elements of the central body.
-                  fprintf(filea,   "%.13lf ", alkhqp[0]);
-                  fprintf(filel,   "%.13lf ", alkhqp[1]);
-                  fprintf(filek,   "%.13lf ", alkhqp[2]);
-                  fprintf(fileh,   "%.13lf ", alkhqp[3]);
-                  fprintf(fileq,   "%.13lf ", alkhqp[4]);
-                  fprintf(filep,   "%.13lf ", alkhqp[5]);
+                  fprintf(filea, "%.14lf ", alkhqp[0]);
+                  fprintf(filel, "%.14lf ", alkhqp[1]);
+                  fprintf(filek, "%.14lf ", alkhqp[2]);
+                  fprintf(fileh, "%.14lf ", alkhqp[3]);
+                  fprintf(fileq, "%.14lf ", alkhqp[4]);
+                  fprintf(filep, "%.14lf ", alkhqp[5]);
             }
-            fprintf(filer, "%.13lf ", R);
-            fprintf(filem, "%.13lf ", m);
+            if (write_cartesian_bool || write_elliptic_bool){
+                  m = CM_buffer.mass;
+                  R = CM_buffer.radius;
+                  fprintf(filer, "%.14lf ", R);
+                  fprintf(filem, "%.14lf ", m);
+            }
       }
       for (p = 0; p <= largest_id; p ++){
             if(*(exists + p)){
@@ -291,38 +323,43 @@ void display(struct moonlet * moonlets){
                         vX = (moonlets + p) -> vx;
                         vY = (moonlets + p) -> vy;
                         vZ = (moonlets + p) -> vz;
-                        fprintf(filex,  "%.13lf ",  X);
-                        fprintf(filey,  "%.13lf ",  Y);
-                        fprintf(filez,  "%.13lf ",  Z);
-                        fprintf(filevx, "%.13lf ", vX);
-                        fprintf(filevy, "%.13lf ", vY);
-                        fprintf(filevz, "%.13lf ", vZ);
+                        fprintf(filex,  "%.14lf ",  X);
+                        fprintf(filey,  "%.14lf ",  Y);
+                        fprintf(filez,  "%.14lf ",  Z);
+                        fprintf(filevx, "%.14lf ", vX);
+                        fprintf(filevy, "%.14lf ", vY);
+                        fprintf(filevz, "%.14lf ", vZ);
+                  }
+                  if (write_elliptic_bool){
+                        cart2ell(moonlets, p, alkhqp); //Computing the elliptic elements of body p
+                        fprintf(filea,   "%.14lf ", alkhqp[0]);
+                        fprintf(filel,   "%.14lf ", alkhqp[1]);
+                        fprintf(filek,   "%.14lf ", alkhqp[2]);
+                        fprintf(fileh,   "%.14lf ", alkhqp[3]);
+                        fprintf(fileq,   "%.14lf ", alkhqp[4]);
+                        fprintf(filep,   "%.14lf ", alkhqp[5]);
                   }
                   m  = (moonlets + p) ->   mass;
                   R  = (moonlets + p) -> radius;
-                  if (write_elliptic_bool){
-                        cart2ell(moonlets, p, alkhqp); //Computing the elliptic elements of body p
-                        fprintf(filea,   "%.13lf ", alkhqp[0]);
-                        fprintf(filel,   "%.13lf ", alkhqp[1]);
-                        fprintf(filek,   "%.13lf ", alkhqp[2]);
-                        fprintf(fileh,   "%.13lf ", alkhqp[3]);
-                        fprintf(fileq,   "%.13lf ", alkhqp[4]);
-                        fprintf(filep,   "%.13lf ", alkhqp[5]);
+                  if (write_cartesian_bool || write_elliptic_bool){
+                        fprintf(filer, "%.14lf ", R);
+                        fprintf(filem, "%.14lf ", m);
                   }
-                  fprintf(filer, "%.13lf ", R);
-                  fprintf(filem, "%.13lf ", m);
                   total_mass += m;
                   if (R > maxR){
                         maxR = R;
+                  }
+                  if (m > maxM){
+                        maxM = m;
                   }
             }
       }
 
       /******** Writing statistics ********/
-      fprintf(filestat, "%.13lf %d %d %.13lf %.13lf %.13lf", time_elapsed + t_init, how_many_moonlets, collision_count, maxR, total_mass, CM.mass);
+      fprintf(filestat, "%.14lf %d %d %.14lf %.14lf %.14lf %.14lf", time_elapsed + t_init, how_many_moonlets, collision_count, maxR, maxM, total_mass, CM.mass);
       if (inner_fluid_disk_bool && central_mass_bool){
             inner_fluid_disk_mass = fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit);
-            fprintf(filestat, " %.13lf", inner_fluid_disk_mass);
+            fprintf(filestat, " %.14lf", inner_fluid_disk_mass);
       }
       else{
             fprintf(filestat, " %.1lf", 0.0);
@@ -334,27 +371,25 @@ void display(struct moonlet * moonlets){
             fprintf(filestat, " %d %d %d %d", 0, 0, 0, 0);
       }
       if ((central_tides_bool || J2_bool) && central_mass_bool){
-            fprintf(filestat, " %.13lf", 2.0*M_PI/SideralOmega);
+            fprintf(filestat, " %.14lf", 2.0*M_PI/SideralOmega);
       }
       else{
             fprintf(filestat, " %.1lf", 999999999.9);
       }
       if (J2_bool && central_mass_bool){
-            fprintf(filestat, " %.13lf", J2);
+            fprintf(filestat, " %.14lf", J2);
       }
       else{
             fprintf(filestat, " %.1lf", 0.0);
       }
       if (Sun_bool && J2_bool && central_mass_bool){
-            fprintf(filestat, " %.13lf", evection_resonance);
+            fprintf(filestat, " %.14lf", evection_resonance);
       }
       else{
             fprintf(filestat, " %.1lf", 0.0);
       }
 
       /******** Terminating the lines ********/
-      fprintf(filer,    "\n");
-      fprintf(filem,    "\n");
       fprintf(filestat, "\n");
       if (write_cartesian_bool){
             fprintf(filex,  "\n");
@@ -372,9 +407,29 @@ void display(struct moonlet * moonlets){
             fprintf(fileq,  "\n");
             fprintf(filep,  "\n");
       }
-      free(alkhqp);
-      alkhqp = NULL;
-      n_output ++;
+      if (write_cartesian_bool || write_elliptic_bool){
+            fprintf(filer,  "\n");
+            fprintf(filem,  "\n");
+      }
+      
+      /******** Outputting datas relative to collisions ********/
+      if (collision){
+            typ t, m1, m2, R1, R2, DeltaV, impact_angle, m_tilde;
+            for (p = 0; p < indexCollision; p ++){
+                  t            = (collisionDatas + p) -> time;
+                  m1           = (collisionDatas + p) -> m1;
+                  m2           = (collisionDatas + p) -> m2;
+                  R1           = (collisionDatas + p) -> R1;
+                  R2           = (collisionDatas + p) -> R2;
+                  DeltaV       = (collisionDatas + p) -> DeltaV;
+                  impact_angle = (collisionDatas + p) -> impact_angle;
+                  m_tilde      = (collisionDatas + p) -> m_tilde;
+                  fprintf(filecol, "%.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf\n", t, m1, m2, R1, R2, DeltaV, impact_angle, m_tilde);
+            }
+            indexCollision = 0;
+      }
+      
+      free(alkhqp);  alkhqp = NULL;
 }
 
 
@@ -395,6 +450,7 @@ void readme(){
       }
       
       fprintf(file, "Depending on the value that you chose for write_cartesian_bool and write_elliptic_bool in the parameter file, you should find a variable number of files here.\n");
+      fprintf(file, "The two files named mass.txt and radius.txt contain the masses and radii of the bodies\n");
       fprintf(file, "Files x.txt, y.txt, z.txt, vx.txt, vy.txt, vz.txt contain the cartesians coordinates of the bodies.\n");
       fprintf(file, "Files a.txt, lambda.txt, k.txt, h.txt, q.txt, p.txt contain the elliptic coordinates of the bodies, where a is the semi-major axis and lambda the mean longitude.\n");
       fprintf(file, "The elements k, h, q and p are defined as (see Laskar & Robutel, 1995) k + ih = e*exp(i*varpi) and q + ip = sin(I/2)*exp(i*Omega),\n");
@@ -407,31 +463,42 @@ void readme(){
       fprintf(file, "body of the simulation when the n^th output occured. The number of columns can therefore be variable if the number of bodies was variable throughout your\n");
       fprintf(file, "simulation, for example if you used the fragmentation model to resolve collisions, or simply if you lost bodies along the way.\n");
       fprintf(file, "The number of lines of these files depends on the length of the simulation (set with t_end in the parameter file), the timestep (set with time_step)\n");
-      fprintf(file, "and the frequency of outputs (set with output_step). For example, if you set output_step to 5, then you have one line every five timesteps.\n");
+      fprintf(file, "and the frequency of outputs (set with output_step). For example, if you set output_step to 5, then you have one line for every five timesteps.\n");
+      fprintf(file, "If you set central_mass_bool to 1 in the parameter file, then the central body of your simulation is always displayed in the first column.\n");
+      fprintf(file, "If you set viscoelastic_bool to 1 in the parameter file, then the perturbing body of your simulation is always displayed in the first column.\n");
       fprintf(file, "\n");
       fprintf(file, "These files are given in the simulation's units, which you defined when you set the values of G, M_unit and R_unit in the parameter file. If you set\n");
       fprintf(file, "random_initial_bool to 0, then your simulation used initial conditions from the file init.txt that you put here, and you should make sure that the units you\n");
-      fprintf(file, "used for this file are consistent with your choice of G, M_unit and R_unit. Similarly, if you set random_initial_bool to 1, then make sure that the bounds you\n");
+      fprintf(file, "used for this file are consistent with your choice of G, M_unit and R_unit. Similarly, if you set random_initial_bool to 1, make sure that the bounds you\n");
       fprintf(file, "set in the parameter file to draw the initial conditions at given in the right units.\n");
       fprintf(file, "\n");
-      fprintf(file, "You should also find here two files named mass.txt and radius.txt for the masses and radii, with the same convention as for the other files.\n");
-      fprintf(file, "If you set central_mass_bool to 1 in the parameter file, then the central body of your simulation is always displayed in the first column.\n");
-      fprintf(file, "If you set viscoelastic_bool to 1 in the parameter file, then the perturbing body of your simulation is always displayed in the first column.\n");
-      fprintf(file, "Finally, you will also find a file stat.txt containing some statistics about the simulation. Like the other files, it contains one line per output,\n");
+      fprintf(file, "If you set the boolean resume_simulation_bool to 1, then you will find a file init.txt, or the one that was already here has been modified.\n");
+      fprintf(file, "You can use it to restart the simulation where it stopped. Just set random_initial_bool to 0 and initial_cartesian_bool to 1. You will also need to\n");
+      fprintf(file, "update some parameters like N_0, to restart the simulation exactly like it was left.\n");
+      fprintf(file, "\n");
+      fprintf(file, "If you set viscoelastic_bool to 1 and resume_simulation_bool to 1, then you will have two files named init.txt and connections.txt that you can use to restart\n");
+      fprintf(file, "your simulation. This way, you can run a first simulation with pert_mass to 0.0 and random_initial_bool to 1 to generate a viscoelastic body and let it rest,\n");
+      fprintf(file, "and then a second simulation with random_initial_bool to 0 and a non-zero value to pert_mass to simulate the same viscoelastic body being perturbed by the tides\n");
+      fprintf(file, "raised by a perturbing body, whose orbit you define in the parameter file.\n");
+      fprintf(file, "\n");
+      fprintf(file, "You will also find a file stat.txt containing some statistics about the simulation. Like the other files, it contains one line per output,\n");
       fprintf(file, "but unlike the other files, it has a constant number of columns. Its columns are :\n");
-      fprintf(file, "Time, N, number of collisions, largest radius, total body mass, central mass, inner fluid disk mass, number of mergers, super-catastrophic collisions,\n");
-      fprintf(file, "half-fragmentations, full-fragmentations, length of day, J2, evection resonance.\n");
+      fprintf(file, "Time, N, number of collisions, largest radius, largest mass, total body mass, central mass, inner fluid disk mass, number of mergers, super-catastrophic\n");
+      fprintf(file, "collisions, half-fragmentations, full-fragmentations, length of day, J2, evection resonance.\n");
       fprintf(file, "Many of these columns can be 0, depending of the booleans values that you set in the parameter file. The central radius stays at R_unit throughout the simulation\n");
-      fprintf(file, "The largest radius and the total body mass exclude the central body, if any. The number of bodies also excludes the central body.");
-      
+      fprintf(file, "The largest radius and the total body mass exclude the central body, if any. The number of bodies also excludes the central body.\n");
+      fprintf(file, "\n");
+      fprintf(file, "Finally, the file collisions.txt, that you will find if collision_bool is set to 1, contains statistics about the collisions.\n");
+      fprintf(file, "It contains one line per collision, and its columns are (in simulation's units and radians):\n");
+      fprintf(file, "Time, impactor mass, target mass, impactor radius, target radius, Delta V, impact angle, mass of the largest remnant.");
       fclose(file);
 }
 
 
 void rebound(struct moonlet * moonlets){
 
-      /******** Communicates with REBOUND for the real-time visualization ********/
-      /******** of the simulation on port 1234 of the user's web browser  ********/
+      /******** Communicates with REBOUND for the real-time visualization of  ********/
+      /******** the simulation on port browser_port of the user's web browser ********/
 
       int j;
       int N = central_mass_bool || (viscoelastic_bool && pert_mass > 0.);
@@ -510,7 +577,7 @@ void resume(struct moonlet * moonlets){
                   vZ = (moonlets + j) -> vz - vZZ;
                   m  = (moonlets + j) -> mass;
                   R  = (moonlets + j) -> radius;                  
-                  fprintf(init_file, "%.13lf %.13lf %.13lf %.13lf %.13lf %.13lf %.13lf %.13lf\n", X, Y, Z, vX, vY, vZ, m, R);
+                  fprintf(init_file, "%.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf\n", X, Y, Z, vX, vY, vZ, m, R);
             }
       }     
       fclose(init_file);
@@ -531,7 +598,7 @@ void resume(struct moonlet * moonlets){
                   rest_length = (connections + j) -> rest_length;
                   a           = (connections + j) -> Pair.fst;
                   b           = (connections + j) -> Pair.snd;
-                  fprintf(connection_file, "%.1lf %.1lf %.13lf\n", (typ) a, (typ) b, rest_length);
+                  fprintf(connection_file, "%.1lf %.1lf %.14lf\n", (typ) a, (typ) b, rest_length);
             }
             fclose(connection_file);
       #endif

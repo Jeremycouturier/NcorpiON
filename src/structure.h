@@ -45,12 +45,12 @@ extern int force_naive_bool;         //If 1, then forces the program to use the 
 extern typ time_until_collision;     //Time until collision
 extern typ time_since_last_spawn;    //The time elapsed since a body last spawned from the inner fluid disk
 extern typ time_between_spawn;       //The characteristic timescale between body spawning
+extern typ dotMinner;                //The rate of mass loss on the inner edge of the inner fluid disk divided by fluid_disk_Sigma^3
 extern typ fluid_disk_Sigma;         //The mass of the inner fluid disk per unit area
 extern typ SideralOmega;             //The sideral rotation frequency of the central body
 extern typ star_mean_motion;         //The mean motion of the central body around its star or companion star
 extern typ evection_resonance;       //The position of the evection resonance. To be fed to python for image production
 extern int need_to_reduce_COM_bool;  //A boolean value to indicate if the center of mass needs to be reduced (e.g. after a super-catastrophic disruption or a dumping from the simulation)
-extern int n_output;                 //Number of outputs so far
 
 
 /******** Defining the body structure. This is the structure holding the data of body ********/
@@ -128,16 +128,16 @@ extern int * three_largest_indexes;     //The indexes of the three largest bodie
 
 
 /******** Datas for fragmentation ********/
-extern int super_catastrophic_count;      //Number of collisions having resulted in a super-catastrophic event so far
-extern int half_fragmentation_count;      //Number of collisions such that ejected mass > frag_threshold > ejected mass / N_tilde
-extern int full_fragmentation_count;      //Number of collisions such that ejected mass / N_tilde > frag_threshold
-extern int merger_count;                  //Number of collisions having resulted in a merger, that is, such that ejected mass < frag_threshold
-extern int collision_count;               //Number of collisions so far
-extern int * did_collide;                 //The k^th cell contains 1 if body k did collide during that timestep, and 0 otherwise
+extern int super_catastrophic_count;    //Number of collisions having resulted in a super-catastrophic event so far
+extern int half_fragmentation_count;    //Number of collisions such that ejected mass > frag_threshold > ejected mass / N_tilde
+extern int full_fragmentation_count;    //Number of collisions such that ejected mass / N_tilde > frag_threshold
+extern int merger_count;                //Number of collisions having resulted in a merger, that is, such that ejected mass < frag_threshold
+extern int collision_count;             //Number of collisions so far
+extern int * did_collide;               //The k^th cell contains 1 if body k did collide during that timestep, and 0 otherwise
 
 
 /******** array relative to pertubations from the star or companion star ********/
-extern typ * sun_vector;                  //The position of the star in the geocentric reference frame. Unused if Sun_bool is 0
+extern typ * sun_vector;                //The position of the star in the geocentric reference frame. Unused if Sun_bool is 0
 
 
 /******** Global array of output files ********/
@@ -225,5 +225,8 @@ void total_momentum(struct moonlet * moonlets, typ * momentum);
 
 
 void verify();
+
+
+void Lyapunov(struct moonlet * moonlets);
 
 #endif

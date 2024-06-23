@@ -35,8 +35,8 @@
 
 /******** Defining the connection structure between two particles (Kelvin-Voigt model) ********/
 struct connection {
-      struct pair Pair;       //The pair of particles linked by the connection
-      typ rest_length;        //The rest length of the spring
+      struct pair Pair; //The pair of particles linked by the connection
+      typ rest_length;  //The rest length of the spring
 };
 
 

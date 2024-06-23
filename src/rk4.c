@@ -127,13 +127,15 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       first_passage = 1;
 
       /******** Removing from the simulation the bodies that need to be removed ********/
-      how_many_moonlets = 0;
-      typ total_mass    = 0.0;
-      typ maxR          = 0.0;
-      XX                = (central_mass_bool ? CM.x : 0.);
-      YY                = (central_mass_bool ? CM.y : 0.);
-      ZZ                = (central_mass_bool ? CM.z : 0.);
-      for (j = 0; j <= largest_id; j++){
+      how_many_moonlets   = 0;
+      typ total_mass      = 0.0;
+      typ maxR            = 0.0;
+      typ maxM            = 0.0;
+      int losing_that_one = 0;
+      XX                  = (central_mass_bool ? CM.x : 0.);
+      YY                  = (central_mass_bool ? CM.y : 0.);
+      ZZ                  = (central_mass_bool ? CM.z : 0.);
+      for (j = 0; j <= largest_id; j ++){
             if (*(exists + j)){
                   X  = (moonlets + j) -> x;
                   Y  = (moonlets + j) -> y;
@@ -141,7 +143,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   R  = (moonlets + j) -> radius;
                   m  = (moonlets + j) -> mass;
                   DX = X - XX;  DY = Y - YY;  DZ = Z - ZZ;
-                  if (DX*DX + DY*DY + DZ*DZ < low_dumping_threshold*low_dumping_threshold && central_mass_bool){ //Merging the body with the central body or the inner fluid disk
+                  if (DX*DX + DY*DY + DZ*DZ < disruption_threshold*disruption_threshold && central_mass_bool){ //Merging the body with the central body or the inner fluid disk
                         vX       = (moonlets + j) -> vx;
                         vY       = (moonlets + j) -> vy;
                         vZ       = (moonlets + j) -> vz;
@@ -149,27 +151,34 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                         M        = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit) : CM.mass);
                         CM.x    *= (M - m)/M;  CM.y *= (M - m)/M;  CM.z *= (M - m)/M;  CM.vx *= (M - m)/M;  CM.vy *= (M - m)/M;  CM.vz *= (M - m)/M;
                         CM.x    += m*X/M;      CM.y += m*Y/M;      CM.z += m*Z/M;      CM.vx += m*vX/M;     CM.vy += m*vY/M;     CM.vz += m*vZ/M;
-                        if (inner_fluid_disk_bool){
-                              fluid_disk_Sigma += m/(M_PI*(Rroche*Rroche - R_unit*R_unit)); //The mass of the dumped body is added to the inner fluid disk
+                        if (inner_fluid_disk_bool && willMergeWithDisk(moonlets, j)){       //The mass of the dumped body is added to the inner fluid disk only if its periapsis
+                              fluid_disk_Sigma += m/(M_PI*(Rroche*Rroche - R_unit*R_unit)); //is above the surface or if it will cross the xy plane before hitting the surface
                               CM.mass -= m;
                         }
-                        lose_moonlet(j);                      
+                        lose_moonlet(j);
+                        losing_that_one = 1;
                   }
                   else if (DX*DX + DY*DY + DZ*DZ > high_dumping_threshold*high_dumping_threshold){
                         lose_moonlet(j);
+                        losing_that_one = 1;
                         need_to_reduce_COM_bool = 1;
                   }
-                  if (R > maxR){
+                  if (R > maxR && !losing_that_one){
                         maxR = R;
                   }
-                  how_many_moonlets ++;
-                  total_mass += m;
+                  if (m > maxM && !losing_that_one){
+                        maxM = m;
+                  }
+                  if(!losing_that_one){
+                        how_many_moonlets ++;
+                        total_mass += m;
+                  }
+                  losing_that_one = 0;
             }
       }
       
       /******** Reducing the center of mass if needed (a super-catastrophic disruption happened or a body crossed the high_dumping_threshold) ********/
       if ((need_to_reduce_COM_bool && reduce_to_COM_bool) || progressed){
-      
             total_momentum(moonlets, com); //Getting the speed and position of the center of mass
             if (need_to_reduce_COM_bool && reduce_to_COM_bool){
                   if (central_mass_bool){
@@ -206,7 +215,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                         printf("                  Bodies mass = %.8lf\n", total_mass);
                   }
             }
-            printf("                  Largest body radius = %.8lf\n", maxR);
+            printf("                  Largest body radius = %.8lf,  Largest body mass = %.8lf\n", maxR, maxM);
             if (central_tides_bool && central_mass_bool){
                   printf("                  Length of day = %.13lf\n", 2.0*M_PI/SideralOmega);
                   if (J2_bool && Sun_bool){
@@ -270,7 +279,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
             /******** If the simulation progressed by at least 0.1% since last display, I display useful informations ********/
             if (progressed){
                   printf("                  average number of neighbours = %.3lf\n", average_neighbours);
-                  printf("                  gamma = %.6lf = %.2lf km\n", gam, gam*6371.0);
+                  printf("                  gamma = %.6lf\n", gam);
             }
       
             /******** Reinitializing some global variables ********/
@@ -302,8 +311,14 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
             typ quotient               = floor(time_since_last_spawn/time_between_spawn);
             time_since_last_spawn     -= quotient*time_between_spawn;
             int how_many_to_be_spawned = (int) quotient;
-            while (how_many_to_be_spawned && fluid_disk_Sigma != 0.){ //If the time elapsed since the last spawn if above the characteristic timescale of body spawning, I spawn a body
-                  typ mf            = 16.0*fast_pow(M_PI,4)*f_tilde*f_tilde*fast_pow(fluid_disk_Sigma*Rroche*Rroche,3)/(M_unit*M_unit); //Mass of the spawned body
+            typ cart[6];
+            /******** Removing from the disk the mass that flows out from the inner edge ********/
+            typ flowed_mass   = timestep*dotMinner*fluid_disk_Sigma*fluid_disk_Sigma*fluid_disk_Sigma;
+            fluid_disk_Sigma -= flowed_mass/(M_PI*(Rroche*Rroche - R_unit*R_unit));
+            CM.mass          += flowed_mass;
+            /******** If the time elapsed since the last spawn if above the characteristic timescale of body spawning, I spawn a body at the outer edge ********/
+            while (how_many_to_be_spawned && fluid_disk_Sigma != 0.){
+                  typ mf            = 16.0*fast_pow(M_PI, 4)*f_tilde*f_tilde*fast_pow(fluid_disk_Sigma*Rroche*Rroche, 3)/(M_unit*M_unit); //Mass of the spawned body
                   typ rad           = pow(3.0*mf/(4.0*M_PI*spawned_density), 1.0/3.0);
                   fluid_disk_Sigma -= mf/(M_PI*(Rroche*Rroche - R_unit*R_unit)); //New surface density of the inner fluid disk
                   int index         = get_free_index(0); //Retrieving an index in the bodies array for the new body
@@ -311,17 +326,27 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   nu              = rdm(0.0, 2.0*M_PI);
                   omega           = rdm(0.0, 2.0*M_PI);
                   Omega           = rdm(0.0, 2.0*M_PI);
-                  *(moonlets + index) = init(Rroche, 0.0, 0.0, nu, omega, Omega, spawned_density, rad); //Spawning a body at the Roche radius on a circular and equatorial orbit
-                  how_many_to_be_spawned --;
-                  X  = (moonlets + index) -> x;  //Taking the body's momentum away from Earth for conservation
-                  Y  = (moonlets + index) -> y;
-                  Z  = (moonlets + index) -> z;
-                  vX = (moonlets + index) -> vx;
-                  vY = (moonlets + index) -> vy;
-                  vZ = (moonlets + index) -> vz;
+                  ell2cart(Rroche, 0., 0., nu, omega, Omega, G*M_unit, cart); //Cartesian coordinate of the spawned body in the geocentric reference frame
+                  X  = cart[0] + CM.x;
+                  Y  = cart[1] + CM.y;
+                  Z  = cart[2] + CM.z;
+                  vX = cart[3] + CM.vx;
+                  vY = cart[4] + CM.vy;
+                  vZ = cart[5] + CM.vz;
+                  /******* Spawning a body on an equatorial and circular orbit with respect to the central body ********/
+                  (moonlets + index) -> x      = X;
+                  (moonlets + index) -> y      = Y;
+                  (moonlets + index) -> z      = Z;
+                  (moonlets + index) -> vx     = vX;
+                  (moonlets + index) -> vy     = vY;
+                  (moonlets + index) -> vz     = vZ;
+                  (moonlets + index) -> mass   = mf;
+                  (moonlets + index) -> radius = rad;
+                  /********  Taking the body's momentum away from Earth for conservation ********/
                   M  = CM.mass + fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit);
                   CM.x  *= (M + mf)/M;  CM.y *= (M + mf)/M;  CM.z *= (M + mf)/M;  CM.vx *= (M + mf)/M;  CM.vy *= (M + mf)/M;  CM.vz *= (M + mf)/M;
                   CM.x  -= mf*X/M;      CM.y -= mf*Y/M;      CM.z -= mf*Z/M;      CM.vx -= mf*vX/M;     CM.vy -= mf*vY/M;     CM.vz -= mf*vZ/M;
+                  how_many_to_be_spawned --;
             }
       }
 
@@ -464,6 +489,7 @@ void integration_tree(typ t){
                   }
             }        
             kick(moonlets, &CM, vector_field);
+            time_elapsed += 0.5*timestep;
 
             /******** Performing a full drift ********/
             if (collision_bool){
@@ -493,7 +519,7 @@ void integration_tree(typ t){
             drift(moonlets, &CM);
 
             iter ++;
-            time_elapsed += timestep;
+            time_elapsed += 0.5*timestep;
             progress = time_elapsed/t;
             
             /******** Displaying informations in the terminal, and reinitializing what needs to be reinitialized after every timestep ********/
@@ -645,6 +671,8 @@ void integration_mesh(typ t){
                   }
             }
             drift(moonlets, &CM); //Performing a full drift
+            time_elapsed += 0.5*timestep;
+            
             if (!collision_bool && !force_naive_bool){
                   three_largest_moonlets(moonlets);
                   three_largest_three_first(moonlets);
@@ -653,7 +681,7 @@ void integration_mesh(typ t){
             kick(moonlets, &CM, vector_field); //Performing a full kick
 
             iter ++;
-            time_elapsed += timestep;
+            time_elapsed += 0.5*timestep;
             progress = time_elapsed/t;
             
             /******** Displaying informations in the terminal, and reinitializing what needs to be reinitialized after every timestep ********/
@@ -774,14 +802,15 @@ void integration_brute_force_SABA1(typ t){
             }
 
             /******** Integrator is SBAB1 ********/
-            kick(moonlets, &CM, vector_field); //Performing a full kick            
+            kick(moonlets, &CM, vector_field); //Performing a full kick
+            time_elapsed += 0.5*timestep;            
             if (collision_bool){
                   brute_force(moonlets);  //Resolving collisions and going backward
             }           
             drift(moonlets, &CM);         //Performing a full drift
 
             iter ++;
-            time_elapsed += timestep;
+            time_elapsed += 0.5*timestep;
             progress = time_elapsed/t;
             
             /******** Displaying informations in the terminal, and reinitializing what needs to be reinitialized after every timestep ********/
@@ -792,9 +821,7 @@ void integration_brute_force_SABA1(typ t){
             }
             
             /******** Taking care of the end of the timestep ********/
-            end_of_timestep(moonlets, progressed);
-            
-            
+            end_of_timestep(moonlets, progressed);      
       }
       
       /******** Last file saving ********/
