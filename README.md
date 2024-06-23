@@ -68,6 +68,8 @@ The 3D visualization of simulations in real time is made possible by the REBOUND
 In order to make real-time 3D visualization possible, NcorpiON has to communicate with REBOUND. At every timestep of the simulation, NcorpiON computes the new state of the system and sends that information to REBOUND.
 REBOUND then communicates with your web browser for the 3D rendering.
 
+To activate the 3D real-time visualization, set ```openGL_bool``` to ```1``` in ```src/parameters.h``` and in ```src/makefile```.
+
 The communication between NcorpiON and REBOUND uses MPI. If you are a Linux user on a Debian-based distro, you can download MPI on your system with the command
 
       sudo apt install mpich
@@ -95,6 +97,8 @@ on Debian based distros or
       brew install ffmpeg
       
 on MacOS to install it. Note that you will still be able to produce the images even if ```ffmpeg``` is not installed. You can then use another tool to assemble them.
+
+To make the animations, set ```make_animation_bool```, ```write_to_files_bool``` and ```write_elliptic_bool``` to ```1``` in ```src/parameters.h```. 
 
 
 ## Non-random initial conditions
