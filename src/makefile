@@ -7,7 +7,7 @@ else
 	FF = gcc
 endif
 
-OPTF = -O2 -g
+OPTF = -O2 -Wall -Wextra -pedantic -g
 
 all: ncorpion
 

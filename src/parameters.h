@@ -43,7 +43,6 @@
 #define pth "/path/towards/input/output/location/"
 
 
-
 /**************************************************************************/
 /******** Defining booleans to determine the behaviour of NcorpiON ********/
 /**************************************************************************/
@@ -52,7 +51,7 @@
 #define write_to_files_bool      0   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
                                      //You can also set this boolean to 0 if you only want to 3D visualize the simulation in your browser.
 #define make_animation_bool      0   //Determines if animations of the simulation are produced. write_to_files_bool and write_elliptic_bool must both be set to 1
-#define write_cartesian_bool     1   //Determines if the cartesian elements x, y, z, vx, vy, vz   should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
+#define write_cartesian_bool     0   //Determines if the cartesian elements x, y, z, vx, vy, vz   should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
 #define write_elliptic_bool      0   //Determines if the elliptic  elements a, lambda, k, h, q, p should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
 #define write_collisions_bool    1   //Determines if statistics regarding the collisions are output. Unimportant if not both write_to_files_bool and collision_bool are 1
 #define central_mass_bool        1   //Determines if there is a central mass. If 0, none of the bodies in the simulation play any particular role. If 1, the central body is initially
@@ -70,7 +69,7 @@
 #define seed_bool                1   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
 #define one_collision_only_bool  0   //Determines if bodies are only allowed to collide once per timestep. If 0, there is no restriction on the number of collisions a body can experience
                                      //during a timestep. Setting first to 1 and then to 0 is a good way to know if the timestep is adapted to the bodies' mean free path.
-#define openGL_bool              0   //Determines if a 3D real-time visualization of the simulation is enabled. You must match openGL_bool to the same value in the makefile
+#define openGL_bool              0   //Determines if a 3D real-time visualization of the simulation is enabled. MATCH TO THE SAME VALUE IN THE MAKEFILE
 #define resume_simulation_bool   0   //Determines if, at the end of the simulation, NcorpiON generates a file named init.txt that can be used to resume the simulation. The file init.txt
                                      //is stored at the path indicated above. To resume the simulation, you need to set random_initial_bool to 0, initial_cartesian_bool to 1, and N_0 to
                                      //the number of lines of init.txt. If init.txt already exists in path pth, it will be overwritten. Simulation's variables should be updated.
@@ -122,12 +121,12 @@
                                      //M_unit stays the mass used for conversions cartesian <-> elliptic.
 
 /******** Physical constants relative to interactions with the central body (J2, inner disk, central tides) or a distant object. Unimportant if central_mass_bool is 0 ********/
-#define Tearth 2.845377447           //Central body's sideral period in units of the surface orbital period. Must be > 1. Earth's current value is 17.038
+#define Tearth 2.8453774472222//2.8453774472222//4.2680661708333  //Central body's sideral period in units of the surface orbital period. Must be > 1. Earth's current value is 17.038
                                      //In case of tides, the sideral period changes and this is the value at initial time.
 #define J2_value 0.0                 //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body) where Omega is the
                                      //sideral frequency and Omega_crit = sqrt(G*M_unit/R_unit^3). In that case, J2 is variable throughout the simulation.
 #define k2 1.5                       //Second Love number of the central body. Here the value is for a fluid body (zero shear modulus). The constant timelag model is used
-#define Delta_t 0.0002428            //The timelag between stress and response. Here 10 minutes. In units of the orbital period at the surface of the central body.
+#define Delta_t 0.0023711478726851669//The timelag between tidal stress and response. In simulation's units
 #define dimensionless_moi 0.3307     //The moment of inertia of the central body, in simulation units (in units of its mass times its radius squared).
 #define star_semi_major 23481.066    //The semi-major axis of the orbit of the system around the distant object in simulation units.
 #define star_mass 332946.0434581987  //The mass of the distant object in simulation units.
@@ -152,7 +151,7 @@
 #define t_init 0.                    //Time at the beginning of the simulation (in simulation's units)
 #define t_end 64.                    //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
 #define time_step 0.015625           //Timestep of the simulation (in simulation's units)
-#define output_step 8                //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
+#define output_step 32               //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define high_dumping_threshold 235.  //Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
 
 /******** Specific parameters ********/
@@ -234,7 +233,7 @@
                                      //The precision (and computational time) of the mutual gravity computed by Ncorpion increases with increasing p and decreasing theta_min.
 #define subdivision_threshold 23     //A cubic cell is not divided as long as it contains at most that many bodies. Called s in Dehnen (2002). Must be > 0. The precision does not depend
                                      //on this threshold, but the computational time does. Suggested values are 5 < s < 200 but must be tweaked by the user to obtain the best performances
-#define root_sidelength 192.0        //Sidelength of the root cell (in simulation's units). Should be machine representable. Particles outside of the root cell don't feel others.
+#define root_sidelength 128.0        //Sidelength of the root cell (in simulation's units). Should be machine representable. Particles outside of the root cell don't feel others.
 #define level_max 25                 //The maximum allowed number of levels in the tree. Root is at level 0 and a cell at level level_max - 1 is never divided.
 #define child_multipole_threshold 1  //If number of bodies/number of children is at most this threshold then the multipole moments of a cell are computed directly from the bodies.
                                      //Otherwise, they are computed from that of the children. Choose 1 for p < 5, and a small integer otherwise.
@@ -287,9 +286,9 @@
 #define nu_parameter 0.4             //The exponent of the density         in the coupling parameter. See Table 3 of Housen & Holsapple (2011)
 #define C1_parameter 1.5             //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
 #define k_parameter 0.2              //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
-#define frag_threshold 1.0e-8        //Ejected mass threshold below which the collision results in a merger. If the ejected mass is above that threshold but the mass of the second
-                                     //largest fragment is below, then the tail is reunited into a single body. If the mass of the second largest fragment is above that threshold
-                                     //then the collision results in a full fragmentation. To be given in simulation's units
+#define fragment_threshold 1.0e-8    //Threshold on the mass of the ejecta fragments. If the fragments of the ejecta tail have a mass smaller than that and if the ejected mass is less
+                                     //than the mass of the largest fragment (Qr/Qr* >= 50%), then the tail is reunited into a single body. Otherwise it is a full fragmentation.                
+
 #define pq_min_max {-1,3,-1,1}       //Extremal integer values for p_k and q_k to determine the position of the tail fragments with respect to the largest fragment.
                                      //Must define a rectangle containing exactly N_tilde points with integer coordinates. More precisely, if pq_min_max = {a, b, c, d},
                                      //then we must have N_tilde = (b - a + 1)*(d - c + 1). See NcorpiON's paper for details

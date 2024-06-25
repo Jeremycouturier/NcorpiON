@@ -280,8 +280,10 @@ void display(struct moonlet * moonlets){
       typ X, Y, Z, vX, vY, vZ, m, R;
       typ total_mass = 0.0;
       typ inner_fluid_disk_mass;
-      typ maxR = 0.0;
-      typ maxM = 0.0;
+      typ M1, M2, R1, R2;                                 //Masses and radii of the two most massive bodies
+      typ a1, a2, l1, l2, K1, K2, H1, H2, Q1, Q2, P1, P2; //Orbital elements of the two most massive bodies
+      int i1, i2;                                         //Indexes          of the two most massive bodies
+      M1 = 0.; M2 = 0.; i1 = 0; i2 = 0;
       
       if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
             if (write_cartesian_bool){
@@ -346,48 +348,61 @@ void display(struct moonlet * moonlets){
                         fprintf(filem, "%.14lf ", m);
                   }
                   total_mass += m;
-                  if (R > maxR){
-                        maxR = R;
+                  if (m > M1){
+                        M2 = M1;
+                        i2 = i1;
+                        M1 = m;
+                        i1 = p;
                   }
-                  if (m > maxM){
-                        maxM = m;
+                  else if (m > M2){
+                        M2 = m;
+                        i2 = p;
                   }
             }
       }
+      
+      /******** Obtaining statistics regarding the two most massive bodies ********/
+      if (how_many_moonlets == 0){
+            M1 = 0.; M2 = 0.; R1 = 0.; R2 = 0.; a1 = 0.; a2 = 0.; l1 = 0.; l2 = 0.; K1 = 0.; K2 = 0.; H1 = 0.; H2 = 0.; Q1 = 0.; Q2 = 0.; P1 = 0.; P2 = 0.;
+      }
+      else if(how_many_moonlets == 1){
+            M2 = 0.; R2 = 0.; a2 = 0.; l2 = 0.; K2 = 0.; H2 = 0.; Q2 = 0.; P2 = 0.;
+            R1 = (moonlets + i1) -> radius;
+            cart2ell(moonlets, i1, alkhqp);
+            a1 = *alkhqp; l1 = alkhqp[1]; K1 = alkhqp[2]; H1 = alkhqp[3]; Q1 = alkhqp[4]; P1 = alkhqp[5];
+      }
+      else{
+            R1 = (moonlets + i1) -> radius;  R2 = (moonlets + i2) -> radius;
+            cart2ell(moonlets, i1, alkhqp);
+            a1 = *alkhqp; l1 = alkhqp[1]; K1 = alkhqp[2]; H1 = alkhqp[3]; Q1 = alkhqp[4]; P1 = alkhqp[5];
+            cart2ell(moonlets, i2, alkhqp);
+            a2 = *alkhqp; l2 = alkhqp[1]; K2 = alkhqp[2]; H2 = alkhqp[3]; Q2 = alkhqp[4]; P2 = alkhqp[5];
+      }
 
       /******** Writing statistics ********/
-      fprintf(filestat, "%.14lf %d %d %.14lf %.14lf %.14lf %.14lf", time_elapsed + t_init, how_many_moonlets, collision_count, maxR, maxM, total_mass, CM.mass);
-      if (inner_fluid_disk_bool && central_mass_bool){
+      fprintf(filestat, "%.14lf %d %d", time_elapsed + t_init, how_many_moonlets, collision_count);
+      if (central_mass_bool){
+            fprintf(filestat, " %.14lf", CM_buffer.mass);
+      }
+      else{
+            fprintf(filestat, " %.1lf",  0.);
+      }
+      fprintf(filestat, " %.14lf", total_mass);
+      if (inner_fluid_disk_bool){
             inner_fluid_disk_mass = fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit);
             fprintf(filestat, " %.14lf", inner_fluid_disk_mass);
       }
       else{
-            fprintf(filestat, " %.1lf", 0.0);
+            fprintf(filestat, " %.1lf",  0.);
       }
-      if (collision_bool && fragmentation_bool){
-            fprintf(filestat, " %d %d %d %d", merger_count, super_catastrophic_count, half_fragmentation_count, full_fragmentation_count);
-      }
-      else{
-            fprintf(filestat, " %d %d %d %d", 0, 0, 0, 0);
-      }
-      if ((central_tides_bool || J2_bool) && central_mass_bool){
-            fprintf(filestat, " %.14lf", 2.0*M_PI/SideralOmega);
+      if (central_tides_bool || (J2_bool && J2_value == 0.)){
+            fprintf(filestat, " %.14lf", SideralOmega);
       }
       else{
-            fprintf(filestat, " %.1lf", 999999999.9);
+            fprintf(filestat, " %.1lf", 0.);
       }
-      if (J2_bool && central_mass_bool){
-            fprintf(filestat, " %.14lf", J2);
-      }
-      else{
-            fprintf(filestat, " %.1lf", 0.0);
-      }
-      if (Sun_bool && J2_bool && central_mass_bool){
-            fprintf(filestat, " %.14lf", evection_resonance);
-      }
-      else{
-            fprintf(filestat, " %.1lf", 0.0);
-      }
+      fprintf(filestat, " %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf",
+      M1, M2, R1, R2, a1, a2, l1, l2, K1, K2, H1, H2, Q1, Q2, P1, P2);
 
       /******** Terminating the lines ********/
       fprintf(filestat, "\n");
@@ -483,14 +498,15 @@ void readme(){
       fprintf(file, "\n");
       fprintf(file, "You will also find a file stat.txt containing some statistics about the simulation. Like the other files, it contains one line per output,\n");
       fprintf(file, "but unlike the other files, it has a constant number of columns. Its columns are :\n");
-      fprintf(file, "Time, N, number of collisions, largest radius, largest mass, total body mass, central mass, inner fluid disk mass, number of mergers, super-catastrophic\n");
-      fprintf(file, "collisions, half-fragmentations, full-fragmentations, length of day, J2, evection resonance.\n");
+      fprintf(file, "Time, N, collisions, central mass, total bodies mass, inner fluid disk mass, sideral rotation, M1, M2, R1, R2, a1, a2, l1, l2, k1, k2, h1, h2, q1, q2, p1, p2.\n");
+      fprintf(file, "The last 16 columns are the masses, radii and orbital elements of the most massive and second most massive bodies (central body excluded).\n");
       fprintf(file, "Many of these columns can be 0, depending of the booleans values that you set in the parameter file. The central radius stays at R_unit throughout the simulation\n");
-      fprintf(file, "The largest radius and the total body mass exclude the central body, if any. The number of bodies also excludes the central body.\n");
       fprintf(file, "\n");
-      fprintf(file, "Finally, the file collisions.txt, that you will find if collision_bool is set to 1, contains statistics about the collisions.\n");
+      fprintf(file, "Finally, the file collisions.txt, that you will find if collision_bool and write_collisions_bool are set to 1, contains statistics about the collisions.\n");
       fprintf(file, "It contains one line per collision, and its columns are (in simulation's units and radians):\n");
-      fprintf(file, "Time, impactor mass, target mass, impactor radius, target radius, Delta V, impact angle, mass of the largest remnant.");
+      fprintf(file, "Time, impactor mass, target mass, impactor radius, target radius, Delta V, impact angle, mass of the largest remnant.\n");
+      fprintf(file, "The time of collision is found assuming that the bodies were moving on a staight line between two timesteps. It can be between two timesteps and smaller than\n");
+      fprintf(file, "the initial time if bodies were overlapping at the beginning of the simulation.");
       fclose(file);
 }
 

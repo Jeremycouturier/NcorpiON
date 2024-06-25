@@ -288,7 +288,7 @@ void cart2aei(struct moonlet * moonlets, int id, typ * aei){
       /******** Getting the semimajor axis from the orbital energy ********/
       r  = sqrt(X*X + Y*Y + Z*Z);
       v2 = vX*vX + vY*vY + vZ*vZ;
-      mu = G*M_unit;
+      mu = central_mass_bool ? G*CM.mass : G*M_unit;
       a  = mu*r/(2.0*mu - r*v2);
       
       /******** If the Earth is oblate, correcting Kepler third law (See Greenberg, 1981) ********/
@@ -1359,7 +1359,7 @@ void verify(){
       if(!type_check(typeof(nu_parameter),              typ)){fprintf(stderr, "Error : nu_parameter must be given as a floating-point number.\n");          abort();}
       if(!type_check(typeof(C1_parameter),              typ)){fprintf(stderr, "Error : C1_parameter must be given as a floating-point number.\n");          abort();}
       if(!type_check(typeof(k_parameter),               typ)){fprintf(stderr, "Error : k_parameter must be given as a floating-point number.\n");           abort();}
-      if(!type_check(typeof(frag_threshold),            typ)){fprintf(stderr, "Error : frag_threshold must be given as a floating-point number.\n");        abort();}
+      if(!type_check(typeof(fragment_threshold),        typ)){fprintf(stderr, "Error : fragment_threshold must be given as a floating-point number.\n");    abort();}
 
       /******** I now verify that integer numbers stayed that way ********/
       if(!type_check(typeof(N_max),                     int)){fprintf(stderr, "Error : N_max must be given as an integer.\n");                              abort();}

@@ -667,7 +667,7 @@ void merger(struct moonlet * moonlets, int a, int b){
       
       #if write_collisions_bool //Writing collision's data
       typ DeltaV = sqrt((vx_a - vx_b)*(vx_a - vx_b) + (vy_a - vy_b)*(vy_a - vy_b) + (vz_a - vz_b)*(vz_a - vz_b));
-      if (write_to_files_bool){
+      if (write_to_files_bool && !fragmentation_bool){
             (collisionDatas + indexCollision) -> time         = t_init + time_elapsed + time_until_collision;
             (collisionDatas + indexCollision) -> m1           = m_b;
             (collisionDatas + indexCollision) -> m2           = m_a;
@@ -766,17 +766,14 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       #endif
       
       /******** Merger case. If there is no ejecta (v_max <= vesc) then bodies a and b merge together ********/
- 
-      if (m_check <= 0.){ //No ejecta
+      if (m_check <= 1.0e-4*M){ //No ejecta or the ejecta mass is less than 0.01% of m1 + m2
             merger(moonlets, a, b);
             merger_count ++;
             return;
       }
       
-      
       /******** Super-catastrophic fragmentation. The mass of the largest fragment is less than 10 % of the total mass. The ejecta is discarded ********/
-      
-      if (m_tilde < 0.1*M){ //m_tilde is not proportionnal to Qr/Qr* in this regime
+      if (m_tilde < 0.1*M){ //m_tilde is not proportionnal to Qr/Qr* in this regime but is proportionnal to (Qr/Qr*)^(-3/2)
       
             m_tilde = 0.1*M*pow(1.0/0.9*m_check/M, -1.5); //Eq. (44) of Leinhardt and Stewart (2012)
             
@@ -799,7 +796,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             super_catastrophic_count ++;
             /******** The discarded mass is put in the inner fluid disk to prevent mass from just vanishing, or in the central body ********/
             typ discarded_mass = M - m_tilde;
-            if (m_tilde < frag_threshold/4.0){ //Body a is discarded as well
+            if (m_tilde < fragment_threshold/4.0){ //Body a is discarded as well
                   lose_moonlet(a);
                   discarded_mass = M;
             }
@@ -820,9 +817,8 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       }
       
       
-      /******** Partial fragmentation. The tail is reunited into a single body. ********/
-      
-      if (m_tilde_2 < frag_threshold){
+      /******** Partial fragmentation. The tail is reunited into a single body. ********/ 
+      if (m_tilde_2 < fragment_threshold && m_check <= m_tilde){
             typ r_k[3]; //Position of the tail with respect to the largest fragment
             typ v_k[3]; //Velocity of the tail with respect to the largest fragment
             typ v_k_scalar = vesc/stigma*(m_check + K)/m_check*(1.0 - pow(K/(K + m_check), stigma)); //Scalar velocity of the tail with respect to the largest fragment
@@ -833,10 +829,10 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             typ in_front_of = v_k_scalar/R;
             r_k[0] = -dx;  r_k[1] = -dy;  r_k[2] = -dz;
             v_k[0] = in_front_of*r_k[0];  v_k[1] = in_front_of*r_k[1];  v_k[2] = in_front_of*r_k[2];
-            typ R_tilde   = pow(3.0*m_tilde  /(4.0*M_PI*average_density), 1.0/3.0); //Radius of the largest fragment
-            typ R_tilde_2 = pow(3.0*m_tilde_2/(4.0*M_PI*average_density), 1.0/3.0); //Radius of the fragments of the tail
-            typ R_tilde12 = R_tilde + R_tilde_2;
-            typ dr_norm = sqrt(r_k[0]*r_k[0] + r_k[1]*r_k[1] + r_k[2]*r_k[2]);
+            typ R_tilde   = pow(3.0*m_tilde/(4.0*M_PI*average_density), 1.0/3.0); //Radius of the largest fragment
+            typ R_check   = pow(3.0*m_check/(4.0*M_PI*average_density), 1.0/3.0); //Radius of the fragment of the tail
+            typ R_tilde12 = R_tilde + R_check;
+            typ dr_norm   = sqrt(r_k[0]*r_k[0] + r_k[1]*r_k[1] + r_k[2]*r_k[2]);
             r_k[0] *= R_tilde12/dr_norm;  r_k[1] *= R_tilde12/dr_norm;  r_k[2] *= R_tilde12/dr_norm;
 
             /******** Total momentum is conserved ********/
@@ -848,7 +844,6 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             v_tilde[2] = v_cm[2] - m_check/M*v_k[2];  
             
             /******** Actualizing the bodies ********/
-            typ R_check = pow(3.0*m_check/(4.0*M_PI*average_density), 1.0/3.0); //Radius of the tail fragment
             (moonlets + a) -> x      = r_tilde[0] - time_until_collision*v_tilde[0];
             (moonlets + a) -> y      = r_tilde[1] - time_until_collision*v_tilde[1];
             (moonlets + a) -> z      = r_tilde[2] - time_until_collision*v_tilde[2];
@@ -880,7 +875,6 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       
       
       /******** Full fragmentation. The tail is made up of N_tilde bodies ********/
-
       else{
             /******** Determination of the r_k' and v_k' ********/ 
             typ r_k[3*N_tilde]; //Position of the fragments of the tail with respect to the largest fragment
