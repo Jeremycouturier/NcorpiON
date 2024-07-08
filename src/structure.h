@@ -43,10 +43,10 @@ extern int how_many_free;            //Total number of indexes used in priority 
 extern int how_many_moonlets;        //Total number of bodies in the simulation
 extern int force_naive_bool;         //If 1, then forces the program to use the brute-force algorithm for collision detection. Automatically set to 1 by the program when N becomes small
 extern typ time_until_collision;     //Time until collision
-extern typ time_since_last_spawn;    //The time elapsed since a body last spawned from the inner fluid disk
-extern typ time_between_spawn;       //The characteristic timescale between body spawning
 extern typ dotMinner;                //The rate of mass loss on the inner edge of the inner fluid disk divided by fluid_disk_Sigma^3
+extern typ dotMouter;                //The rate of mass loss on the outer edge of the inner fluid disk divided by fluid_disk_Sigma^3
 extern typ fluid_disk_Sigma;         //The mass of the inner fluid disk per unit area
+extern typ flowed_since_last_spawn;  //Mass that flowed out of the inner fluid disk by its outer edge since the last time a body spawned
 extern typ SideralOmega;             //The sideral rotation frequency of the central body
 extern typ star_mean_motion;         //The mean motion of the central body around its star or companion star
 extern typ evection_resonance;       //The position of the evection resonance. To be fed to python for image production

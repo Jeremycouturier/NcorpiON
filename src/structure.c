@@ -88,10 +88,10 @@ int half_fragmentation_count;
 int full_fragmentation_count;
 int merger_count;
 int collision_count;
-typ time_since_last_spawn;
-typ time_between_spawn;
 typ dotMinner;
+typ dotMouter;
 typ fluid_disk_Sigma;
+typ flowed_since_last_spawn;
 typ SideralOmega;
 typ star_mean_motion;
 typ evection_resonance;
@@ -489,7 +489,7 @@ void variable_initialization(){
       how_many_moonlets       = N_0;
       how_many_cells          = 0;
       cell_id                 = 0;
-      force_naive_bool        = N_0 < switch_to_brute_force ? 1 : 0;
+      force_naive_bool        = N_0 < switch_to_brute_force - 10 ? 1 : 0;
       IndexPeanoHilbertOrder  = N_0;
       SideralOmega            = 2.0*M_PI/Tearth;
       star_mean_motion        = sqrt(G*(M_unit + star_mass)/(star_semi_major*star_semi_major*star_semi_major));
@@ -519,20 +519,18 @@ void variable_initialization(){
             full_fragmentation_count = 0;
             merger_count             = 0;
       }
-      if (inner_fluid_disk_bool && central_mass_bool){
-            time_since_last_spawn = 0.0;
-            fluid_disk_Sigma      = inner_mass/(M_PI*(Rroche*Rroche - R_unit*R_unit));
-            typ x                 = Rroche/R_unit;
-            typ x52               = fast_pow(sqrt(x), 5) - 1.0;
-            typ x32               = fast_pow(sqrt(x), 3);
-            typ x2                = x*x - 1.0;
-            typ gx                = (4.0*x*x52-5.0*x2*x32)/(4.0*x52-5.0*x2);
-            typ Rroche3           = Rroche*Rroche*Rroche;
-            typ Omega_out         = sqrt(G*M_unit/Rroche3);
-            typ Omega_in          = sqrt(G*M_unit/(R_unit*R_unit*R_unit));
-            time_between_spawn    = 16.0*M_PI*f_tilde*f_tilde*Rroche3*Rroche3*Omega_out*Omega_out*Omega_out*gx*(1. - x)*(1. - gx)/(M_unit*M_unit*x*G*G); //From Salmon & Canup 2012
-            dotMinner             = M_PI*M_PI*M_PI*G*G/(Omega_in*Omega_in*Omega_in*(x - 1.)*(1. - gx));                                                  //From Salmon & Canup 2012
-            printf("Characteristic timescale between spawn = %.8lf\n", time_between_spawn);
+      if (inner_fluid_disk_bool){
+            fluid_disk_Sigma        = inner_mass/(M_PI*(Rroche*Rroche - R_unit*R_unit));
+            typ x                   = Rroche/R_unit;
+            typ x52                 = fast_pow(sqrt(x), 5) - 1.0;
+            typ x32                 = fast_pow(sqrt(x), 3);
+            typ x2                  = x*x - 1.0;
+            typ gx                  = (4.0*x*x52-5.0*x2*x32)/(4.0*x52-5.0*x2);
+            typ Omega_in            = sqrt(G*M_unit/(R_unit*R_unit*R_unit));
+            dotMinner               = M_PI*M_PI*M_PI*G*G/(Omega_in*Omega_in*Omega_in*(x - 1.)*(1. - gx)); //From Salmon & Canup 2012
+            dotMouter               = -fast_pow(sqrt(x), 11)*dotMinner/gx;                                //From Salmon & Canup 2012
+            flowed_since_last_spawn = 0.;
+            //time_between_spawn    = 16.0*M_PI*f_tilde*f_tilde*Rroche3*Rroche3*Omega_out*Omega_out*Omega_out*gx*(1. - x)*(1. - gx)/(M_unit*M_unit*x*G*G); //From Salmon & Canup 2012
       }
 }
 
@@ -902,9 +900,8 @@ void tidy_up(struct moonlet * moonlets){
             }
       }
       
-      largest_id = i - 1;
-      how_many_free = 0;
-      
+      largest_id    = i - 1;
+      how_many_free = 0;    
 }
 
 
@@ -915,7 +912,7 @@ void three_largest_moonlets(struct moonlet * moonlets){
       /******** this function, *three_largest_indexes, *(three_largest_indexes+1)  ********/
       /******** and *(three_largest_indexes+2) are the indexes of the largest,     ********/
       /******** second largest and third largest body of the simulation            ********/
-
+      /******** This function is only called if mesh_bool is 1                     ********/
 
       int i = 0;
       int j;
@@ -1002,13 +999,14 @@ void three_largest_moonlets(struct moonlet * moonlets){
 void three_largest_three_first(struct moonlet * moonlets){
 
       /******** Makes sure that the three largest bodies are the three first bodies ********/
+      /******** This function is only called if mesh_bool is 1                     ********/
       
-      struct moonlet buffer; // A buffer used to temporarily store a body
+      struct moonlet buffer;    // A buffer used to temporarily store a body
       int first, second, third; //The indexes of the first, second and third largest body
       
-      first = *three_largest_indexes;
+      first  = *three_largest_indexes;
       second = *(three_largest_indexes + 1);
-      third = *(three_largest_indexes + 2);
+      third  = *(three_largest_indexes + 2);
       
       if (first != 0){
             if (*exists){ //There is a body at index zero, but it is not the largest body. I exchange it with the largest body
@@ -1077,7 +1075,7 @@ void lose_moonlet(int a){
       *(free_indexes + how_many_free) = a;
       how_many_free ++;
       *(exists + a) = 0;
-      if (a <= 2 && mesh_bool && !force_naive_bool){
+      if (a <= 2 && mesh_bool){
             how_many_free --;
       }
 }
@@ -1144,7 +1142,7 @@ void readFromFile(char * file_name, typ * storage, int n_data){
 typ * readFromFile_withoutConstraint(char * file_name, int * size){
 
       /******** Same as above but the number of data to be read does not need to be specified. ********/
-      /******** Writes the number of data read in *size and returns the buffer                 ********/
+      /******** Writes the number of data read in *size and returns a buffer                   ********/
 
       FILE * file = fopen(file_name, "r");
       if (file == NULL){

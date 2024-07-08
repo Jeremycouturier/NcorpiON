@@ -158,7 +158,7 @@
 #define max_ids_per_node 173         //The maximum number of ids in each node of the unrolled linked lists (chains). Choose such that sizeof(struct chain) be a multiple of the cache line
 #define softening_parameter 0.       //The softening parameter for mutual gravitational interations, in units of the sum of the radii.
 #define seed 129425373               //The seed used for random number generation. Unimportant if seed_bool is 0.
-#define switch_to_brute_force 256    //Threshold for N below which the program switches to the brute-force method for mutual interactions. Unimportant if brute_force_bool is 1
+#define switch_to_brute_force 256    //Threshold for N below which NcorpiON switches to the brute-force method for mutual interactions. Unimportant if brute_force_bool is already 1
 
 /******** Bounds for initial conditions. Unimportant if random_initial_bool is 0. The initial conditions are drawn uniformly at random between these bounds ********/
 #define radius_min 0.004             //Minimal radius                   of a body at initial time
@@ -233,7 +233,7 @@
                                      //The precision (and computational time) of the mutual gravity computed by Ncorpion increases with increasing p and decreasing theta_min.
 #define subdivision_threshold 23     //A cubic cell is not divided as long as it contains at most that many bodies. Called s in Dehnen (2002). Must be > 0. The precision does not depend
                                      //on this threshold, but the computational time does. Suggested values are 5 < s < 200 but must be tweaked by the user to obtain the best performances
-#define root_sidelength 128.0        //Sidelength of the root cell (in simulation's units). Should be machine representable. Particles outside of the root cell don't feel others.
+#define root_sidelength 196.0        //Sidelength of the root cell (in simulation's units). Should be machine representable. Particles outside of the root cell don't feel others.
 #define level_max 25                 //The maximum allowed number of levels in the tree. Root is at level 0 and a cell at level level_max - 1 is never divided.
 #define child_multipole_threshold 1  //If number of bodies/number of children is at most this threshold then the multipole moments of a cell are computed directly from the bodies.
                                      //Otherwise, they are computed from that of the children. Choose 1 for p < 5, and a small integer otherwise.

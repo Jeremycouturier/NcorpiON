@@ -403,6 +403,27 @@ void display(struct moonlet * moonlets){
       }
       fprintf(filestat, " %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf",
       M1, M2, R1, R2, a1, a2, l1, l2, K1, K2, H1, H2, Q1, Q2, P1, P2);
+      
+      /******** To be removed ********/
+      X       = moonlets -> x  - CM.x;
+      Y       = moonlets -> y  - CM.y;
+      Z       = moonlets -> z  - CM.z;
+      vX      = moonlets -> vx - CM.vx;
+      vY      = moonlets -> vy - CM.vy;
+      vZ      = moonlets -> vz - CM.vz;
+      m       = moonlets -> mass;
+      typ v2  = vX*vX + vY*vY + vZ*vZ;
+      typ r   = sqrt(X*X + Y*Y + Z*Z);
+      typ mu  = G*(M_unit + m);
+      typ HK  = 0.5*v2 - mu/r;
+      typ r3  = r*r*r;
+      typ r4  = r3*r;
+      typ r5  = r4*r;
+      typ tau = timestep;
+      typ rv  = X*vX + Y*vY + Z*vZ;
+      typ Hlf = -tau*tau/24.*(mu*v2/r3 - 3.*mu/r5*rv*rv - 2.*mu*mu/r4);
+      typ Ht  = -0.5*k2*G*CM.mass*R_unit*R_unit*R_unit*R_unit*R_unit/(r*r5);
+      fprintf(filestat, " %.14lf %.14lf %.14lf", HK, Hlf, Ht);
 
       /******** Terminating the lines ********/
       fprintf(filestat, "\n");

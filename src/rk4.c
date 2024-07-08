@@ -290,7 +290,10 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       }
       
       /******** If there are very few bodies, I switch to the brute-force algorithm ********/
-      if (!brute_force_bool && !force_naive_bool && how_many_moonlets < switch_to_brute_force){
+      if (!brute_force_bool && !force_naive_bool && how_many_moonlets < switch_to_brute_force - 10){
+            force_naive_bool = 1;
+      }
+      else if (!brute_force_bool && force_naive_bool && how_many_moonlets > switch_to_brute_force + 10){
             force_naive_bool = 1;
       }
       
@@ -299,7 +302,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
             tidy_up(moonlets);
             if ((mutual_bool || collision_bool) && (falcON_bool || standard_tree_bool) && !brute_force_bool && !force_naive_bool){
                   IndexPeanoHilbertOrder = largest_id + 1;
-                  for (j = 0; j < IndexPeanoHilbertOrder; j++){
+                  for (j = 0; j < IndexPeanoHilbertOrder; j ++){
                         PeanoHilbertOrder[j] = j;
                   }
             }
@@ -307,26 +310,25 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       
       /******** Spawning bodies from the inner fluid disk ********/
       if (inner_fluid_disk_bool){
-            time_since_last_spawn     += timestep;
-            typ quotient               = floor(time_since_last_spawn/time_between_spawn);
-            time_since_last_spawn     -= quotient*time_between_spawn;
-            int how_many_to_be_spawned = (int) quotient;
-            typ cart[6];
             /******** Removing from the disk the mass that flows out from the inner edge ********/
             typ flowed_mass   = timestep*dotMinner*fluid_disk_Sigma*fluid_disk_Sigma*fluid_disk_Sigma;
             fluid_disk_Sigma -= flowed_mass/(M_PI*(Rroche*Rroche - R_unit*R_unit));
             CM.mass          += flowed_mass;
-            /******** If the time elapsed since the last spawn if above the characteristic timescale of body spawning, I spawn a body at the outer edge ********/
-            while (how_many_to_be_spawned && fluid_disk_Sigma != 0.){
-                  typ mf            = 16.0*fast_pow(M_PI, 4)*f_tilde*f_tilde*fast_pow(fluid_disk_Sigma*Rroche*Rroche, 3)/(M_unit*M_unit); //Mass of the spawned body
-                  typ rad           = pow(3.0*mf/(4.0*M_PI*spawned_density), 1.0/3.0);
-                  fluid_disk_Sigma -= mf/(M_PI*(Rroche*Rroche - R_unit*R_unit)); //New surface density of the inner fluid disk
-                  int index         = get_free_index(0); //Retrieving an index in the bodies array for the new body
-                  typ nu, omega, Omega;
-                  nu              = rdm(0.0, 2.0*M_PI);
-                  omega           = rdm(0.0, 2.0*M_PI);
-                  Omega           = rdm(0.0, 2.0*M_PI);
-                  ell2cart(Rroche, 0., 0., nu, omega, Omega, G*M_unit, cart); //Cartesian coordinate of the spawned body in the geocentric reference frame
+            /******** If the mass that flowed out of the inner fluid disk by the outer edge since the last time a body spawned exceeds the spawn mass, I spawn a body ********/
+            flowed_since_last_spawn += timestep*dotMouter*fluid_disk_Sigma*fluid_disk_Sigma*fluid_disk_Sigma;
+            typ spawned_mass         = 16.*fast_pow(M_PI, 4)*f_tilde*f_tilde*fast_pow(fluid_disk_Sigma*Rroche*Rroche, 3)/(M_unit*M_unit);
+            spawned_mass             = spawned_mass > 1.0e-7*M_unit ? spawned_mass : 1.0e-7*M_unit; //Threshold needed for very long simulations
+            if (flowed_since_last_spawn > spawned_mass){
+                  typ cart[6];
+                  flowed_since_last_spawn -= spawned_mass;
+                  M                        = CM.mass + fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit);
+                  typ rad                  = pow(3.0*spawned_mass/(4.0*M_PI*spawned_density), 1.0/3.0);
+                  fluid_disk_Sigma        -= spawned_mass/(M_PI*(Rroche*Rroche - R_unit*R_unit)); //New surface density of the inner fluid disk
+                  int index                = get_free_index(0); //Retrieving an index in the bodies array for the new body
+                  typ nu                   = rdm(0.0, 2.0*M_PI);
+                  typ omega                = rdm(0.0, 2.0*M_PI);
+                  typ Omega                = rdm(0.0, 2.0*M_PI);
+                  ell2cart(Rroche, 0., 0., nu, omega, Omega, G*M, cart); //Cartesian coordinate of the spawned body in the geocentric reference frame
                   X  = cart[0] + CM.x;
                   Y  = cart[1] + CM.y;
                   Z  = cart[2] + CM.z;
@@ -340,13 +342,12 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   (moonlets + index) -> vx     = vX;
                   (moonlets + index) -> vy     = vY;
                   (moonlets + index) -> vz     = vZ;
-                  (moonlets + index) -> mass   = mf;
+                  (moonlets + index) -> mass   = spawned_mass;
                   (moonlets + index) -> radius = rad;
                   /********  Taking the body's momentum away from Earth for conservation ********/
-                  M  = CM.mass + fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit);
+                  typ mf = spawned_mass;
                   CM.x  *= (M + mf)/M;  CM.y *= (M + mf)/M;  CM.z *= (M + mf)/M;  CM.vx *= (M + mf)/M;  CM.vy *= (M + mf)/M;  CM.vz *= (M + mf)/M;
                   CM.x  -= mf*X/M;      CM.y -= mf*Y/M;      CM.z -= mf*Z/M;      CM.vx -= mf*vX/M;     CM.vy -= mf*vY/M;     CM.vz -= mf*vZ/M;
-                  how_many_to_be_spawned --;
             }
       }
 

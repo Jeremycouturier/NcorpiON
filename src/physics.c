@@ -766,7 +766,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       #endif
       
       /******** Merger case. If there is no ejecta (v_max <= vesc) then bodies a and b merge together ********/
-      if (m_check <= 1.0e-4*M){ //No ejecta or the ejecta mass is less than 0.01% of m1 + m2
+      if (m_check <= 1.0e-4*M){ //No ejecta or the ejected mass is less than 0.01% of m1 + m2
             merger(moonlets, a, b);
             merger_count ++;
             return;
