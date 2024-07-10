@@ -314,6 +314,11 @@ struct moonlet * generate_visco_elastic_body(){
                   (viscoelastic + j) -> radius = radius;
             }
             overlap(viscoelastic);
+            
+            /******** Setting the final radii ********/
+            for (j = 0; j < N_0; j ++){
+                  (viscoelastic + j) -> radius = 2.0*nodes_radius*radius;
+            }
       }
       else{
             /******** Generating particles from files ********/
@@ -414,7 +419,7 @@ void generate_connections(struct moonlet * viscoelastic){
                   rmax_and_rcrit_flattree (FlatTree, viscoelastic);
                   viscoelastic_flattree   (FlatTree, viscoelastic, 0);
                   for (j = 0; j < N_0; j ++){
-                        (viscoelastic + j) -> radius = radius;
+                        (viscoelastic + j) -> radius = 2.0*nodes_radius*radius;
                   }
             }
             if(falcON_bool){ //Resetting the octree and the associated data
@@ -510,7 +515,7 @@ void generate_connections(struct moonlet * viscoelastic){
       }
       else{
             typ rest_length;
-            char fileOfIC[800]; 
+            char fileOfIC[800];
             strcpy(fileOfIC, pth);
             strcat(fileOfIC, "connections.txt");
             typ * IC = NULL;
@@ -1036,21 +1041,23 @@ void three_closest_nodes(struct moonlet * viscoelastic, int k, int * indexes){
       Zk = (viscoelastic + k) -> z;
 
       for (j = 0; j < N_0; j ++){
-            dX   = (viscoelastic + j) -> x - Xk;
-            dY   = (viscoelastic + j) -> y - Yk;
-            dZ   = (viscoelastic + j) -> z - Zk;
-            dist = dX*dX + dY*dY + dZ*dZ;
-            if      (dist < d1){
-                  i3 = i2; d3 = d2;
-                  i2 = i1; d2 = d1;
-                  i1 = j;  d1 = dist;
-            }
-            else if (dist < d2){
-                  i3 = i2; d3 = d2;
-                  i2 = j;  d2 = dist;
-            }
-            else if (dist < d3){
-                  i3 = j;  d3 = dist;
+            if (j != k){
+                  dX   = (viscoelastic + j) -> x - Xk;
+                  dY   = (viscoelastic + j) -> y - Yk;
+                  dZ   = (viscoelastic + j) -> z - Zk;
+                  dist = dX*dX + dY*dY + dZ*dZ;
+                  if (dist < d1){
+                        i3 = i2; d3 = d2;
+                        i2 = i1; d2 = d1;
+                        i1 = j;  d1 = dist;
+                  }
+                  else if (dist < d2){
+                        i3 = i2; d3 = d2;
+                        i2 = j;  d2 = dist;
+                  }
+                  else if (dist < d3){
+                        i3 = j;  d3 = dist;
+                  }
             }
       }
       * indexes      = i1;

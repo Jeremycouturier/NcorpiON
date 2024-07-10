@@ -1,4 +1,4 @@
-/**************************************************************************************/
+/**************************************************************************************/                                                                                                      
 /**************************************************************************************/
 /**************************************************************************************/
 /******** @file    parameters.h                                                ********/
@@ -101,16 +101,16 @@
 #define instant_merger_bool      0   //Determines if the collisions all result in a merger.
 #define fragmentation_bool       1   //Determines if the outcome of the collision should be either a merge, a partial fragmentation, a full fragmentation, or a catastrophic disruption,
                                      //depending on the relative velocity. Set to 1 to use the fragmentation model of NcorpiON.
-                                     
-                                     
+
+
 
 /**************************************************/
 /******** Defining some physical constants ********/
 /**************************************************/
 
 /******** Defining a system of units for the simulation. If random_initial_bool is 0, then the units in the file init.txt must be the simulation's units ********/
-#define R_unit 1.0                   //If central_mass_bool is 1, then radius of the central body. Otherwise, unimportant for the simulation. You define your own unit of length.
-#define M_unit 1.0                   //If central_mass_bool is 1, then   mass of the central body. Otherwise this is the mass for conversions cartesian <-> elliptic
+#define R_unit 1.                    //If central_mass_bool is 1, then radius of the central body. Otherwise, unimportant for the simulation. You define your own unit of length.
+#define M_unit 1.                    //If central_mass_bool is 1, then   mass of the central body. Otherwise this is the mass for conversions cartesian <-> elliptic
 #define G 39.47841760435743447533796 //The gravitational constant. If you set it to 4*pi^2, then a particle of semi-major axis 1 orbiting a mass 1 has a period 1.
                                      //If viscoelastic_bool is 1, M_unit and R_unit are the mass and mean radius of the viscoelastic body to be simulated.
                                      //Note that R_unit and M_unit do not necessarily have to be 1, they should just be equal to the mass and radius of the central body in the system
@@ -123,21 +123,21 @@
 /******** Physical constants relative to interactions with the central body (J2, inner disk, central tides) or a distant object. Unimportant if central_mass_bool is 0 ********/
 #define Tearth 2.8453774472222//2.8453774472222//4.2680661708333  //Central body's sideral period in units of the surface orbital period. Must be > 1. Earth's current value is 17.038
                                      //In case of tides, the sideral period changes and this is the value at initial time.
-#define J2_value 0.0                 //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body) where Omega is the
+#define J2_value 0.                  //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body) where Omega is the
                                      //sideral frequency and Omega_crit = sqrt(G*M_unit/R_unit^3). In that case, J2 is variable throughout the simulation.
 #define k2 1.5                       //Second Love number of the central body. Here the value is for a fluid body (zero shear modulus). The constant timelag model is used
 #define Delta_t 0.0023711478726851669//The timelag between tidal stress and response. In simulation's units
 #define dimensionless_moi 0.3307     //The moment of inertia of the central body, in simulation units (in units of its mass times its radius squared).
 #define star_semi_major 23481.066    //The semi-major axis of the orbit of the system around the distant object in simulation units.
 #define star_mass 332946.0434581987  //The mass of the distant object in simulation units.
-#define obliquity 0.0                //The angle between the simulation's reference plane and the orbit of the distant object.
+#define obliquity 0.                 //The angle between the simulation's reference plane and the orbit of the distant object.
 #define inner_mass 0.                //Mass of the inner fluid disk at initial time.
 #define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
 #define f_tilde 0.3                  //A parameter controlling the mass of bodies spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
 #define Rroche 2.9                   //The Roche radius where bodies spawn from the inner fluid disk (in simulation's units). Must be larger than disruption_threshold and than R_unit.
 #define disruption_threshold 2.      //Threshold (in simulation's units) below which bodies are tidally disrupted by the central mass. If inner_fluid_disk_bool is 0, then the mass of
                                      //the dumped body is added to the central body. Otherwise, the mass of the dumped body is added to the inner fluid disk if the body's periapsis is
-                                     //above the surface or if it will cross the xy plane before hitting the surface, and to the central mass else.                                    
+                                     //above the surface or if it will cross the xy plane before hitting the surface, and to the central mass else.
 
 
 
@@ -146,10 +146,10 @@
 /*******************************************************/
 
 /******** General parameters ********/
-#define N_max 9000                   //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
+#define N_max 10000                  //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
 #define N_0 1000                     //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
 #define t_init 0.                    //Time at the beginning of the simulation (in simulation's units)
-#define t_end 64.                    //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
+#define t_end 128.                   //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
 #define time_step 0.015625           //Timestep of the simulation (in simulation's units)
 #define output_step 32               //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define high_dumping_threshold 235.  //Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
@@ -173,7 +173,7 @@
 #define inclination_max 0.174533     //Maximal inclination (in radians) of a body at initial time
                                      //The true longitude, argument of pericenter and longitude of the ascending node are drawn uniformly at random between 0 and 2*M_PI
                                      //These bounds must be defined in the simulation's units
-                                     
+
 /******** Parameters relative to 3D visualization with REBOUND. Unimportant if openGL_bool is 0 ********/
 #define browser_port 1234            //The http port where your browser will communicate with REBOUND. You can visualize several simulations at the same time if you change the port
 #define radius_blow_up_factor 4.0    //All the bodies, except the central mass (if any), are displayed with a radius that much larger than their true radius. Can enhance visualization
@@ -199,7 +199,9 @@
 #define minimal_distance 0.6         //Minimal initial distance between two particles in units of (V/N_0)^(1/3) where V is the volume of the body. 0.3 < minimal_distance < 0.7 is best
 #define connections_per_node 25.0    //Expected value of the number of connections per node. Values larger than 12.0 are advised for structural integrity. Some nodes will be connected
                                      //less than that as this is just the expected value. NcorpiON makes sure that no node is connected less than three times to prevent wandering.
-                                     
+#define nodes_radius 0.125           //Nodes' radii in units of the minimal initial distance. Can be used to check the structural integrity. In the resting simulation, if collision_bool
+                                     //is set to 1 and this parameter is set to a small value (e.g. 0.1), then no collisions should occur if spring_modulus is large enough
+
 /******** Orbit of the point-mass perturbator, in an inertial reference frame. ********/
 #define pert_sma -11690.1474151781531//The perturbator is on a Keplerian trajectory defined by the six elements (semi-major axis, eccentricity, inclination, true anomaly, argument of
 #define pert_ecc 4.2399307249518     //periapsis, longitude of ascending node), given by these six parameters (in radians and simulation's units). The gravitational parameter used to
@@ -246,7 +248,7 @@
                                      //time slightly does. However, note that the computational cost depends much more on the subdivision threshold s that on these thresholds. Suggested
                                      //values are (s, N_cc_pre, N_cc_post, N_cs) = (26, 8, 64, 64) for p = 3 and (s, N_cc_pre, N_cc_post, N_cs) = (80, 256, 1024, 128) for p = 6 but this
                                      //depends on the architecture and should be tweaked. N_cc_post must be larger that N_cc_pre.
-                                     
+
 /******** Parameters specifically relative to mutual gravity computation with the standard tree code ********/
 #define N_cb_pre 6                   //If N1 < N_cb_pre, the interaction between a body and a cell with N1 bodies is performed brute-forcely, regardless of their well-separation
 #define N_cb_post 16                 //If N1 < N_cb_post and they are not well-separated, the interaction between a body and a cell with N1 bodies is performed brute-forcely.
@@ -259,9 +261,9 @@
 /******** Parameters specifically relative to collision detection with the standard tree code ********/
 #define N_cb_collision 16            //This is N_cb_post. For a body not well-separated from a node with Na bodies, if Na < N_cb_collision, then collisions are searched brute-forcely,
                                      //otherwise, the node is subdivised. N_cb_pre is always 0 when the standard tree code is used for collision detection and is not a parameter
-                                     
-                                     
-                                     
+
+
+
 /*****************************************************************************************************************/
 /******** Parameters relative to the mesh-grid algorithm. If mesh_bool is 1 then a mesh algorithm is used ********/
 /******** to compute mutual gravity and detect collisions. In that case, these parameters must be defined ********/
@@ -287,12 +289,12 @@
 #define C1_parameter 1.5             //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
 #define k_parameter 0.2              //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
 #define fragment_threshold 1.0e-8    //Threshold on the mass of the ejecta fragments. If the fragments of the ejecta tail have a mass smaller than that and if the ejected mass is less
-                                     //than the mass of the largest fragment (Qr/Qr* >= 50%), then the tail is reunited into a single body. Otherwise it is a full fragmentation.                
+                                     //than the mass of the largest fragment (Qr/Qr* >= 50%), then the tail is reunited into a single body. Otherwise it is a full fragmentation.
 
 #define pq_min_max {-1,3,-1,1}       //Extremal integer values for p_k and q_k to determine the position of the tail fragments with respect to the largest fragment.
                                      //Must define a rectangle containing exactly N_tilde points with integer coordinates. More precisely, if pq_min_max = {a, b, c, d},
                                      //then we must have N_tilde = (b - a + 1)*(d - c + 1). See NcorpiON's paper for details
-                                     
+
 
 
 /*********************************************************/
@@ -305,7 +307,7 @@
                                      //Open the file /usr/share/gtksourceview/language-specs/c.lang and then find the field
                                      //<context id="types" style-ref="type">. Add the lines <keyword>typ</keyword> and <keyword>bigint</keyword> to it
                                      //and color gedit with C. The keywords typ and bigint should now be colored after a reboot
-#define type_check __builtin_types_compatible_p 
+#define type_check __builtin_types_compatible_p
 
 
 

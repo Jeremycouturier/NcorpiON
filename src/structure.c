@@ -530,7 +530,6 @@ void variable_initialization(){
             dotMinner               = M_PI*M_PI*M_PI*G*G/(Omega_in*Omega_in*Omega_in*(x - 1.)*(1. - gx)); //From Salmon & Canup 2012
             dotMouter               = -fast_pow(sqrt(x), 11)*dotMinner/gx;                                //From Salmon & Canup 2012
             flowed_since_last_spawn = 0.;
-            //time_between_spawn    = 16.0*M_PI*f_tilde*f_tilde*Rroche3*Rroche3*Omega_out*Omega_out*Omega_out*gx*(1. - x)*(1. - gx)/(M_unit*M_unit*x*G*G); //From Salmon & Canup 2012
       }
 }
 
@@ -1334,6 +1333,7 @@ void verify(){
       if(!type_check(typeof(spring_modulus),            typ)){fprintf(stderr, "Error : spring_modulus must be given as a floating-point number.\n");        abort();}
       if(!type_check(typeof(damping_coefficient),       typ)){fprintf(stderr, "Error : damping_coefficient must be given as a floating-point number.\n");   abort();}
       if(!type_check(typeof(connections_per_node),      typ)){fprintf(stderr, "Error : connections_per_node must be given as a floating-point number.\n");  abort();}
+      if(!type_check(typeof(nodes_radius),              typ)){fprintf(stderr, "Error : nodes_radius must be given as a floating-point number.\n");          abort();}
       if(!type_check(typeof(minimal_distance),          typ)){fprintf(stderr, "Error : minimal_distance must be given as a floating-point number.\n");      abort();}
       if(!type_check(typeof(pert_sma),                  typ)){fprintf(stderr, "Error : pert_sma must be given as a floating-point number.\n");              abort();}
       if(!type_check(typeof(pert_ecc),                  typ)){fprintf(stderr, "Error : pert_ecc must be given as a floating-point number.\n");              abort();}

@@ -120,17 +120,20 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       
       int index;
       int j;
-      typ X, Y, Z, vX, vY, vZ, m, R, M;
+      typ X, Y, Z, vX, vY, vZ, m, M;
       typ XX, YY, ZZ, DX, DY, DZ;
       typ com[6];
+      typ alkhqp[6];
       
       first_passage = 1;
 
       /******** Removing from the simulation the bodies that need to be removed ********/
       how_many_moonlets   = 0;
       typ total_mass      = 0.0;
-      typ maxR            = 0.0;
-      typ maxM            = 0.0;
+      typ M1, M2, R1, R2;         //Masses and radii of the two most massive bodies
+      typ a1, a2, e1, e2, I1, I2; //Orbital elements of the two most massive bodies
+      int i1, i2;                 //Indexes          of the two most massive bodies
+      M1 = 0.; M2 = 0.; i1 = 0; i2 = 0;
       int losing_that_one = 0;
       XX                  = (central_mass_bool ? CM.x : 0.);
       YY                  = (central_mass_bool ? CM.y : 0.);
@@ -140,7 +143,6 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   X  = (moonlets + j) -> x;
                   Y  = (moonlets + j) -> y;
                   Z  = (moonlets + j) -> z;
-                  R  = (moonlets + j) -> radius;
                   m  = (moonlets + j) -> mass;
                   DX = X - XX;  DY = Y - YY;  DZ = Z - ZZ;
                   if (DX*DX + DY*DY + DZ*DZ < disruption_threshold*disruption_threshold && central_mass_bool){ //Merging the body with the central body or the inner fluid disk
@@ -158,16 +160,20 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                         lose_moonlet(j);
                         losing_that_one = 1;
                   }
-                  else if (DX*DX + DY*DY + DZ*DZ > high_dumping_threshold*high_dumping_threshold){
+                  else if (DX*DX + DY*DY + DZ*DZ > high_dumping_threshold*high_dumping_threshold){ //Too far away
                         lose_moonlet(j);
                         losing_that_one = 1;
                         need_to_reduce_COM_bool = 1;
                   }
-                  if (R > maxR && !losing_that_one){
-                        maxR = R;
+                  if (m > M1 && !losing_that_one){
+                        M2 = M1;
+                        i2 = i1;
+                        M1 = m;
+                        i1 = j;
                   }
-                  if (m > maxM && !losing_that_one){
-                        maxM = m;
+                  else if (m > M2 && !losing_that_one){
+                        M2 = m;
+                        i2 = j;
                   }
                   if(!losing_that_one){
                         how_many_moonlets ++;
@@ -201,37 +207,54 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       
       /******** If the simulation progressed by at least 0.1%, I display useful informations ********/
       if (progressed){
-            printf("                  N = %d   (largest id in the body array = %d)\n", how_many_moonlets, largest_id);
-            if (inner_fluid_disk_bool && central_mass_bool){
-                  typ disk_mass = M_PI*(Rroche*Rroche - R_unit*R_unit)*fluid_disk_Sigma;
-                  printf("                  Central mass = %.8lf,  Bodies mass = %.8lf,  Fluid disk mass = %.8lf,  Bodies + disk = %.8lf\n",
-                  CM.mass, total_mass, disk_mass, disk_mass + total_mass);
+            if (collision_bool){
+                  printf("                  N = %d  |  Collisions = %d   (largest id in the body array = %d)\n", how_many_moonlets, collision_count, largest_id);
             }
             else{
-                  if (central_mass_bool){
-                        printf("                  Central mass = %.8lf,  Bodies mass = %.8lf\n", CM.mass, total_mass);
-                  }
-                  else{
-                        printf("                  Bodies mass = %.8lf\n", total_mass);
-                  }
+                  printf("                  N = %d   (largest id in the body array = %d)\n", how_many_moonlets, largest_id);
             }
-            printf("                  Largest body radius = %.8lf,  Largest body mass = %.8lf\n", maxR, maxM);
-            if (central_tides_bool && central_mass_bool){
-                  printf("                  Length of day = %.13lf\n", 2.0*M_PI/SideralOmega);
-                  if (J2_bool && Sun_bool){
-                        printf("                  Evection resonance at a = %.13lf\n", evection_resonance);
-                  }
-            }
-            if (collision_bool){
-                  printf("                  Total collisions = %d\n", collision_count);
-                  if (fragmentation_bool && collision_count != 0){
+            if (!viscoelastic_bool){
+                  if (collision_bool && fragmentation_bool && collision_count != 0){
                         typ cll = (typ) collision_count;
                         typ mrg = 100.0*((typ) merger_count)/cll;
                         typ spc = 100.0*((typ) super_catastrophic_count)/cll;
                         typ hfr = 100.0*((typ) half_fragmentation_count)/cll;
                         typ ffr = 100.0*((typ) full_fragmentation_count)/cll;
-                        printf("                  Merger = %.2lf %% | Super-catastrophic = %.2lf %% | Partially fragmented = %.2lf %% | Fully fragmented = %.2lf %%\n", 
-                        mrg, spc, hfr, ffr);
+                        printf("                  Merger = %.2lf %% | Super-catastrophic = %.2lf %% | Partially fragmented = %.2lf %% | Fully fragmented = %.2lf %%\n", mrg, spc, hfr, ffr);
+                  }
+                  if (inner_fluid_disk_bool){
+                        typ disk_mass = M_PI*(Rroche*Rroche - R_unit*R_unit)*fluid_disk_Sigma;
+                        printf("                  Central mass = %.8lf,  Bodies mass = %.8lf,  Fluid disk mass = %.8lf,  Bodies + disk = %.8lf\n",
+                        CM.mass, total_mass, disk_mass, disk_mass + total_mass);
+                  }
+                  else{
+                        if (central_mass_bool){
+                              printf("                  Central mass = %.8lf,  Bodies mass = %.8lf\n", CM.mass, total_mass);
+                        }
+                        else{
+                              printf("                  Bodies total mass = %.8lf\n", total_mass);
+                        }
+                  }
+                  if (how_many_moonlets > 1){
+                        R1 = (moonlets + i1) -> radius;  R2 = (moonlets + i2) -> radius;
+                        cart2ell(moonlets, i1, alkhqp);
+                        a1 = *alkhqp; e1 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I1 = 360.0*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
+                        cart2ell(moonlets, i2, alkhqp);
+                        a2 = *alkhqp; e2 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I2 = 360.0*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
+                        printf("                  Most massive body   : (M, R, a, e, i) = (%.7lf, %.7lf, %.7lf, %.7lf, %.7lf°)\n", M1, R1, a1, e1, I1);
+                        printf("                  Second most massive : (M, R, a, e, i) = (%.7lf, %.7lf, %.7lf, %.7lf, %.7lf°)\n", M2, R2, a2, e2, I2);
+                  }
+                  else if (how_many_moonlets == 1){
+                        R1 = (moonlets + i1) -> radius;
+                        cart2ell(moonlets, i1, alkhqp);
+                        a1 = *alkhqp; e1 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I1 = 360.0*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
+                        printf("                  Most massive body   : (M, R, a, e, i) = (%.7lf, %.7lf, %.7lf, %.7lf, %.7lf°)\n", M1, R1, a1, e1, I1);
+                  }
+                  if (central_tides_bool && central_mass_bool){
+                        printf("                  Length of day = %.13lf\n", 2.0*M_PI/SideralOmega);
+                        if (J2_bool && Sun_bool){
+                              printf("                  Evection resonance at a = %.13lf\n", evection_resonance);
+                        }
                   }
             }
             printf("                  COM = (%.9lf, %.9lf,  %.9lf,  %.9lf,  %.9lf,  %.9lf)\n", com[0], com[1], com[2], com[3], com[4], com[5]);
