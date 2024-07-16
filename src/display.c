@@ -279,11 +279,12 @@ void display(struct moonlet * moonlets){
       int p;
       typ X, Y, Z, vX, vY, vZ, m, R;
       typ total_mass = 0.0;
-      typ inner_fluid_disk_mass;
+      typ inner_fluid_disk_mass, mu;
       typ M1, M2, R1, R2;                                 //Masses and radii of the two most massive bodies
       typ a1, a2, l1, l2, K1, K2, H1, H2, Q1, Q2, P1, P2; //Orbital elements of the two most massive bodies
       int i1, i2;                                         //Indexes          of the two most massive bodies
       M1 = 0.; M2 = 0.; i1 = 0; i2 = 0;
+      mu = central_mass_bool ? CM.mass : M_unit;  mu += inner_fluid_disk_bool ? fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : 0.;  mu *= G;
       
       if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
             if (write_cartesian_bool){
@@ -299,21 +300,6 @@ void display(struct moonlet * moonlets){
                   fprintf(filevx, "%.14lf ", vX);
                   fprintf(filevy, "%.14lf ", vY);
                   fprintf(filevz, "%.14lf ", vZ);
-            }
-            if (write_elliptic_bool){
-                  cart2ell(&CM_buffer, 0, alkhqp); //Computing the elliptic elements of the central body.
-                  fprintf(filea, "%.14lf ", alkhqp[0]);
-                  fprintf(filel, "%.14lf ", alkhqp[1]);
-                  fprintf(filek, "%.14lf ", alkhqp[2]);
-                  fprintf(fileh, "%.14lf ", alkhqp[3]);
-                  fprintf(fileq, "%.14lf ", alkhqp[4]);
-                  fprintf(filep, "%.14lf ", alkhqp[5]);
-            }
-            if (write_cartesian_bool || write_elliptic_bool){
-                  m = CM_buffer.mass;
-                  R = CM_buffer.radius;
-                  fprintf(filer, "%.14lf ", R);
-                  fprintf(filem, "%.14lf ", m);
             }
       }
       for (p = 0; p <= largest_id; p ++){
@@ -332,8 +318,10 @@ void display(struct moonlet * moonlets){
                         fprintf(filevy, "%.14lf ", vY);
                         fprintf(filevz, "%.14lf ", vZ);
                   }
+                  m  = (moonlets + p) ->   mass;
+                  R  = (moonlets + p) -> radius;
                   if (write_elliptic_bool){
-                        cart2ell(moonlets, p, alkhqp); //Computing the elliptic elements of body p
+                        cart2ell(moonlets, p, alkhqp, mu + G*m); //Computing the elliptic elements of body p
                         fprintf(filea,   "%.14lf ", alkhqp[0]);
                         fprintf(filel,   "%.14lf ", alkhqp[1]);
                         fprintf(filek,   "%.14lf ", alkhqp[2]);
@@ -341,8 +329,6 @@ void display(struct moonlet * moonlets){
                         fprintf(fileq,   "%.14lf ", alkhqp[4]);
                         fprintf(filep,   "%.14lf ", alkhqp[5]);
                   }
-                  m  = (moonlets + p) ->   mass;
-                  R  = (moonlets + p) -> radius;
                   if (write_cartesian_bool || write_elliptic_bool){
                         fprintf(filer, "%.14lf ", R);
                         fprintf(filem, "%.14lf ", m);
@@ -368,14 +354,14 @@ void display(struct moonlet * moonlets){
       else if(how_many_moonlets == 1){
             M2 = 0.; R2 = 0.; a2 = 0.; l2 = 0.; K2 = 0.; H2 = 0.; Q2 = 0.; P2 = 0.;
             R1 = (moonlets + i1) -> radius;
-            cart2ell(moonlets, i1, alkhqp);
+            cart2ell(moonlets, i1, alkhqp, mu + G*M1);
             a1 = *alkhqp; l1 = alkhqp[1]; K1 = alkhqp[2]; H1 = alkhqp[3]; Q1 = alkhqp[4]; P1 = alkhqp[5];
       }
       else{
             R1 = (moonlets + i1) -> radius;  R2 = (moonlets + i2) -> radius;
-            cart2ell(moonlets, i1, alkhqp);
+            cart2ell(moonlets, i1, alkhqp, mu + G*M1);
             a1 = *alkhqp; l1 = alkhqp[1]; K1 = alkhqp[2]; H1 = alkhqp[3]; Q1 = alkhqp[4]; P1 = alkhqp[5];
-            cart2ell(moonlets, i2, alkhqp);
+            cart2ell(moonlets, i2, alkhqp, mu + G*M2);
             a2 = *alkhqp; l2 = alkhqp[1]; K2 = alkhqp[2]; H2 = alkhqp[3]; Q2 = alkhqp[4]; P2 = alkhqp[5];
       }
 
@@ -389,11 +375,11 @@ void display(struct moonlet * moonlets){
       }
       fprintf(filestat, " %.14lf", total_mass);
       if (inner_fluid_disk_bool){
-            inner_fluid_disk_mass = fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit);
-            fprintf(filestat, " %.14lf", inner_fluid_disk_mass);
+            inner_fluid_disk_mass = fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit);
+            fprintf(filestat, " %.14lf %.14lf", inner_fluid_disk_mass, Rout);
       }
       else{
-            fprintf(filestat, " %.1lf",  0.);
+            fprintf(filestat, " %.1lf %.1lf",  0., 0.);
       }
       if (central_tides_bool || (J2_bool && J2_value == 0.)){
             fprintf(filestat, " %.14lf", SideralOmega);
@@ -403,27 +389,6 @@ void display(struct moonlet * moonlets){
       }
       fprintf(filestat, " %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf",
       M1, M2, R1, R2, a1, a2, l1, l2, K1, K2, H1, H2, Q1, Q2, P1, P2);
-      
-      /******** To be removed ********/
-      X       = moonlets -> x  - CM.x;
-      Y       = moonlets -> y  - CM.y;
-      Z       = moonlets -> z  - CM.z;
-      vX      = moonlets -> vx - CM.vx;
-      vY      = moonlets -> vy - CM.vy;
-      vZ      = moonlets -> vz - CM.vz;
-      m       = moonlets -> mass;
-      typ v2  = vX*vX + vY*vY + vZ*vZ;
-      typ r   = sqrt(X*X + Y*Y + Z*Z);
-      typ mu  = G*(M_unit + m);
-      typ HK  = 0.5*v2 - mu/r;
-      typ r3  = r*r*r;
-      typ r4  = r3*r;
-      typ r5  = r4*r;
-      typ tau = timestep;
-      typ rv  = X*vX + Y*vY + Z*vZ;
-      typ Hlf = -tau*tau/24.*(mu*v2/r3 - 3.*mu/r5*rv*rv - 2.*mu*mu/r4);
-      typ Ht  = -0.5*k2*G*CM.mass*R_unit*R_unit*R_unit*R_unit*R_unit/(r*r5);
-      fprintf(filestat, " %.14lf %.14lf %.14lf", HK, Hlf, Ht);
 
       /******** Terminating the lines ********/
       fprintf(filestat, "\n");
@@ -498,10 +463,15 @@ void readme(){
       fprintf(file, "These files contain one line per output and one column per body. For example, the j^th column of the n^th line of x.txt contains the x-coordinate of the j^th\n");
       fprintf(file, "body of the simulation when the n^th output occured. The number of columns can therefore be variable if the number of bodies was variable throughout your\n");
       fprintf(file, "simulation, for example if you used the fragmentation model to resolve collisions, or simply if you lost bodies along the way.\n");
-      fprintf(file, "The number of lines of these files depends on the length of the simulation (set with t_end in the parameter file), the timestep (set with time_step)\n");
-      fprintf(file, "and the frequency of outputs (set with output_step). For example, if you set output_step to 5, then you have one line for every five timesteps.\n");
-      fprintf(file, "If you set central_mass_bool to 1 in the parameter file, then the central body of your simulation is always displayed in the first column.\n");
-      fprintf(file, "If you set viscoelastic_bool to 1 in the parameter file, then the perturbing body of your simulation is always displayed in the first column.\n");
+      fprintf(file, "The number of lines of these files depends on the length of the simulation (set with t_init and t_end in the parameter file), the timestep (set with time_step)\n");
+      fprintf(file, "and the frequency of outputs (set with output_step). For example, if you set output_step to 5, then you have one line every five timesteps.\n");
+      fprintf(file, "\n");
+      fprintf(file, "If you set central_mass_bool to 1 in the parameter file, then the cartesian coordinates of the central body are displayed in the first column.\n");
+      fprintf(file, "If you set viscoelastic_bool to 1 and pert_mass is not 0.0, then the cartesian coordinates of the perturbing body are displayed in the first column.\n");
+      fprintf(file, "If you set central_mass_bool to 1, then the parameter used for conversion cartesian -> elliptic is mu = G*(central mass + inner fluid disk mass + body mass).\n");
+      fprintf(file, "Otherwise, the parameter used for conversion cartesian -> elliptic is mu = G*M_unit.\n");
+      fprintf(file, "All coordinates are displayed in the inertial reference frame, except elliptic coordinates when central_mass_bool is 1 which are in the frame of the central body.\n");
+      fprintf(file, "The elliptic elements, mass and radius of the central body or perturbing body are not displayed.\n");
       fprintf(file, "\n");
       fprintf(file, "These files are given in the simulation's units, which you defined when you set the values of G, M_unit and R_unit in the parameter file. If you set\n");
       fprintf(file, "random_initial_bool to 0, then your simulation used initial conditions from the file init.txt that you put here, and you should make sure that the units you\n");
@@ -510,7 +480,7 @@ void readme(){
       fprintf(file, "\n");
       fprintf(file, "If you set the boolean resume_simulation_bool to 1, then you will find a file init.txt, or the one that was already here has been modified.\n");
       fprintf(file, "You can use it to restart the simulation where it stopped. Just set random_initial_bool to 0 and initial_cartesian_bool to 1. You will also need to\n");
-      fprintf(file, "update some parameters like N_0, to restart the simulation exactly like it was left.\n");
+      fprintf(file, "update some parameters like N_0, to restart the simulation exactly like it was left. Refer to the last line of stat.txt.\n");
       fprintf(file, "\n");
       fprintf(file, "If you set viscoelastic_bool to 1 and resume_simulation_bool to 1, then you will have two files named init.txt and connections.txt that you can use to restart\n");
       fprintf(file, "your simulation. This way, you can run a first simulation with pert_mass to 0.0 and random_initial_bool to 1 to generate a viscoelastic body and let it rest,\n");
@@ -519,7 +489,7 @@ void readme(){
       fprintf(file, "\n");
       fprintf(file, "You will also find a file stat.txt containing some statistics about the simulation. Like the other files, it contains one line per output,\n");
       fprintf(file, "but unlike the other files, it has a constant number of columns. Its columns are :\n");
-      fprintf(file, "Time, N, collisions, central mass, total bodies mass, inner fluid disk mass, sideral rotation, M1, M2, R1, R2, a1, a2, l1, l2, k1, k2, h1, h2, q1, q2, p1, p2.\n");
+      fprintf(file, "Time, N, collisions, central mass, bodies mass, inner disk mass and outer edge, sideral rotation, M1, M2, R1, R2, a1, a2, l1, l2, k1, k2, h1, h2, q1, q2, p1, p2.\n");
       fprintf(file, "The last 16 columns are the masses, radii and orbital elements of the most massive and second most massive bodies (central body excluded).\n");
       fprintf(file, "Many of these columns can be 0, depending of the booleans values that you set in the parameter file. The central radius stays at R_unit throughout the simulation\n");
       fprintf(file, "\n");

@@ -59,7 +59,7 @@ void vector_field(struct moonlet * moonlets){
       
       if (central_mass_bool){
             XX        = CM.x;  YY = CM.y;  ZZ = CM.z;
-            M         = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit) : CM.mass);
+            M         = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : CM.mass);
             CM_acc[0] = 0.;  CM_acc[1] = 0.;  CM_acc[2] = 0.;
       }
       
@@ -485,7 +485,7 @@ void tides(struct moonlet * bodies){
       typ X, Y, Z, vX, vY, vZ, m, K, r2, r10, rv, r_x_OmX, r_x_OmY, aX, aY, aZ;
       typ R5 = R_unit*R_unit*R_unit*R_unit*R_unit;
       typ A  = 3.0*k2*G*R5;
-      typ M  = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit) : CM.mass);
+      typ M  = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : CM.mass);
       
       for (j = 0; j <= largest_id; j ++){ //Looping over all bodies
             if (*(exists + j)){
@@ -766,7 +766,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       #endif
       
       /******** Merger case. If there is no ejecta (v_max <= vesc) then bodies a and b merge together ********/
-      if (m_check <= 1.0e-4*M){ //No ejecta or the ejected mass is less than 0.01% of m1 + m2
+      if (m_check <= merging_threshold*M){ //No ejecta or the ejected mass is less than merging_threshold*(m1 + m2)
             merger(moonlets, a, b);
             merger_count ++;
             return;
@@ -801,7 +801,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
                   discarded_mass = M;
             }
             if (inner_fluid_disk_bool){
-                  fluid_disk_Sigma += discarded_mass/(M_PI*(Rroche*Rroche - R_unit*R_unit));
+                  fluid_disk_Sigma += discarded_mass/(M_PI*(Rout*Rout - R_unit*R_unit));
             }
             else if (central_mass_bool){
                   CM.mass += discarded_mass;
@@ -1105,20 +1105,23 @@ int willMergeWithDisk(struct moonlet * bodies, int id){
       
       typ alkhqp[6];
       typ cart[6];
-      typ a, k, h, q, p, e, i, nu, omega, Omega, mu, Z, z;
+      typ a, k, h, q, p, e, i, nu, omega, Omega, mu, Z, z, disk_angular_momentum;
       
       /******** Retrieving the orbital elements of the bodies ********/
-      cart2ell(bodies, id, alkhqp);
+      mu = G*(CM.mass + fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) + (bodies + id) -> mass);
+      cart2ell(bodies, id, alkhqp, mu);
       a     = *alkhqp;
       k     = alkhqp[2];
       h     = alkhqp[3];
       e     = sqrt(k*k + h*h);
-      if (a*(1.0 - e) > R_unit){ //The periapsis is above the surface
-            return 1;
-      }
       q     = alkhqp[4];
       p     = alkhqp[5];
       i     = 2.0*asin(sqrt(q*q + p*p));
+      if (a*(1.0 - e) > R_unit){ //The periapsis is above the surface
+            disk_angular_momentum = 0.8*fluid_disk_Sigma*M_PI*(Rout*Rout*sqrt(Rout) - R_unit*R_unit*sqrt(R_unit));
+            innerFluidDiskAngularMomentum((bodies + id) -> mass, a, e, cos(i), disk_angular_momentum, fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit));
+            return 1;
+      }
       Omega = atan2(p, q);
       omega = atan2(h, k) - Omega;
       
@@ -1126,12 +1129,61 @@ int willMergeWithDisk(struct moonlet * bodies, int id){
       nu = -acos((a*(1 - e*e) - R_unit)/(e*R_unit));
 
       /******** Getting the cartesian coordinates of the intersection of the orbit with the surface ********/
-      mu = G*CM.mass;
       ell2cart(a, e, i, nu, omega, Omega, mu, cart);
 
       /******** The body will cross the xy plane before hitting the surface if, and only if, its Z coordinate ********/
       /******** has a different sign than the z coordinate of the intersection of the orbit with the surface  ********/
       Z = (bodies + id) -> z - CM.z;
       z = cart[2];
-      return z*Z < 0. ? 1 : 0;
+      if (z*Z < 0.){
+            disk_angular_momentum = 0.8*fluid_disk_Sigma*M_PI*(Rout*Rout*sqrt(Rout) - R_unit*R_unit*sqrt(R_unit));
+            innerFluidDiskAngularMomentum((bodies + id) -> mass, a, e, cos(i), disk_angular_momentum, fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit));
+            return 1;
+      }
+      return 0;
+}
+
+
+void innerFluidDiskAngularMomentum(typ m, typ a, typ e, typ cosi, typ g1, typ m1){
+
+      /******** Updates Rout to the new outer radius of the inner fluid disk so that the angular ********/
+      /******** momentum is conserved. Called when a body spawns or merges with the inner disk   ********/
+      /******** The body's mass m is given positive (resp. negative) for a merge (resp. a spawn) ********/
+      /******** There is no analytical expression for Rout so a Newton-Raphson method is used    ********/
+      /******** The mass per unit area of the inner fluid disk is also updated                   ********/
+      
+      typ g         = m*cosi*sqrt(a*(1. - e*e)); //z-component of the angular momentum of the body that spawned/merged 
+      typ X         = sqrt(Rout);                //We take the current outer edge as initial condition
+      typ precision = 1.;
+      int n_steps   = 0;
+      typ mm1       = 0.8*(m + m1);
+      typ gg1       = g + g1;
+      typ X0        = sqrt(R_unit); typ X02 = X0*X0; typ X03 = X02*X0; typ X04 = X02*X02;
+      typ fX, dfX, X2, X3, X4, dX;
+      
+      while(precision > 1.e-6){
+            n_steps ++;
+            X2        = X*X;  X3 = X2*X;  X4 = X2*X2;
+            fX        = mm1*(X4 + X0*X3 + X02*X2 + X03*X + X04) - gg1*(X + X0)*(X2 + X02);
+            dfX       = mm1*(4.*X3 + 3.*X0*X2 + 2.*X02*X + X03) - gg1*(3.*X2 + X02 + 2.*X*X0);
+            dX        = -fX/dfX;
+            X        += dX;
+            precision = fabs(dX/X);
+            
+            /******** If the method gets lost, I try to put it back on track ********/
+            if (X < 0. || X != X){
+                  X = rdm(0., 50.*sqrt(R_unit));
+            }
+            
+            /******** Checking the convergence of the Newton-Raphson method. To be removed when the code is robust ********/
+            if (n_steps >= 150){
+                  printf("Warning : The Newton-Raphson method to find the inner fluid disk's outer edge does not converge. The angular momentum will not be conserved.\n");
+                  fluid_disk_Sigma = mm1/(M_PI*(Rout*Rout - R_unit*R_unit));
+                  return;
+            }
+      }
+      
+      Rout             = X*X;
+      Rout             = Rout <= R_unit ? 1.01*R_unit : Rout;
+      fluid_disk_Sigma = (m + m1)/(M_PI*(Rout*Rout - R_unit*R_unit));
 }

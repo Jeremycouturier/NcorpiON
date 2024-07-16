@@ -91,7 +91,7 @@ def draw_orbit(rad, xx, yy, linewidth, color, npoints): #draws a circle of radiu
       py.plot(x,y,linestyle="-",color=color, linewidth=linewidth)
 
       
-def draw_oblate_Earth(rad, sideral_period): #The sideral period is given in units of the surface orbital period
+def draw_oblate_Earth(rad, sideral_period):
       eps_20 = -5.0/6.0/(sideral_period**2)
       tps=np.linspace(0.0,2.0*m.pi,250)
       x=rad*np.sin(tps)*(1.0+eps_20*P2costheta(tps))
@@ -149,7 +149,7 @@ def draw_moonlet(sma, ecc, inc, rad, p, maxR1, maxR2, maxR3, largest_index_1, la
       Y = abs(sma[p] * m.sin(inc[p]))
       if (X <= acosi_max + 0.2 and Y <= asini_max + 0.2):
             if (radius >= 0.5):
-                  draw_orbit(radius, X, Y, 4, "grey", 250)
+                  draw_orbit(radius, X, Y, 4, color, 250)
             elif (radius >= 0.12):
                   draw_orbit(radius, X, Y, 3, color, 150)
             elif (radius >= 0.06):
@@ -166,8 +166,8 @@ def draw_moonlet(sma, ecc, inc, rad, p, maxR1, maxR2, maxR3, largest_index_1, la
 def make_image(sma, ecc, inc, rad, sta, q):
       where_to_plot = 0.65
       py.xticks([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])
-      #sideral_period = float(sta[10])
-      #draw_oblate_Earth(1.0, sideral_period)
+      sideral_period = 2.0*m.pi/float(sta[7])
+      draw_oblate_Earth(1.0, sideral_period)
       artisanal_colorbar(asini_min+0.05*(asini_max-asini_min),asini_max-0.05*(asini_max-asini_min),acosi_max*0.94,acosi_max*0.96)
       maxR1 = 0.0
       maxR2 = 0.0
@@ -187,23 +187,19 @@ def make_image(sma, ecc, inc, rad, sta, q):
       py.text(0.08,asini_max*0.94,"t = " + str(round(float(sta[0]),3)), alpha=0.4, fontsize=20)
       py.text(0.08,asini_max*0.88,"N = " + sta[1], alpha=0.4, fontsize=20)
       py.text(0.08,asini_max*0.82,"Collisions = " + sta[2], alpha=0.4, fontsize=20)
-      py.text(0.08,asini_max*0.76,"Largest radii = (" + str(round(maxR1,3)) + ", " + str(round(maxR2,3)) + ", " + str(round(maxR3,3)) + ")" + r" $R_{\oplus}$", alpha=0.4, fontsize=20)
+      py.text(0.08,asini_max*0.76,"Largest radii = (" + str(round(maxR1,3)) + ", " + str(round(maxR2,3)) + ", " + str(round(maxR3,3)) + ")", alpha=0.4, fontsize=20)
       if (inner_bl):
-            py.text(0.08,asini_max*0.70,"(Bodies mass, Inner disk mass) = (" + str(round(float(sta[5]),4))+", "+str(round(float(sta[7]),4))+")"+r" $M_{\oplus}$", alpha=0.4, fontsize=20)
+            py.text(0.08,asini_max*0.70,"(Bodies mass, Inner disk mass) = (" + str(round(float(sta[4]),4))+", "+str(round(float(sta[5]),4))+")", alpha=0.4, fontsize=20)
       else:
-            py.text(0.08,asini_max*0.70,"Bodies mass = " + str(round(float(sta[5]),4)) + r" $M_{\oplus}$", alpha=0.4, fontsize=20)
+            py.text(0.08,asini_max*0.70,"Bodies mass = " + str(round(float(sta[4]),4)), alpha=0.4, fontsize=20)
       if (tides_bl):
-            py.text(0.08,asini_max*0.64,"Length of day = " + str(round(float(sta[12]),4)), alpha=0.4, fontsize=20)
+            py.text(0.08,asini_max*0.64,"Sideral rotation = " + str(round(float(sta[7]),4)), alpha=0.4, fontsize=20)
             where_to_plot = 0.59
       py.text(0.08,asini_max*where_to_plot,"thin: R < 0.06", alpha=0.4, fontsize=8)
       py.text(0.08,asini_max*(where_to_plot-0.03),"thick: R > 0.06", alpha=0.4, fontsize=8)
       py.text(0.08,asini_max*(where_to_plot-2*0.03),"thickest: R > 0.12", alpha=0.4, fontsize=8)
       py.text(0.08,asini_max*(where_to_plot-3*0.03),"single pixel (barely visible): R < 0.001", alpha=0.4, fontsize=8)
       py.text(0.08,asini_max*(where_to_plot-4*0.03),"Everything is at scale. Dark red = e > 1", alpha=0.4, fontsize=8)
-      evection_resonance = float(sta[14])
-      if (evection_resonance != 0.0):
-            py.vlines(evection_resonance, asini_min, asini_max, colors='black', linestyles='dashed', linewidth = 0.5, alpha=0.4)
-            py.text(evection_resonance*1.003,asini_max*0.82,"Evection resonance", rotation=-90, alpha=0.4, fontsize=8)
       py.axis('square')
       py.xlim([acosi_min,acosi_max])
       py.ylim([asini_min,asini_max])

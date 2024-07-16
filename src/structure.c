@@ -88,10 +88,9 @@ int half_fragmentation_count;
 int full_fragmentation_count;
 int merger_count;
 int collision_count;
-typ dotMinner;
-typ dotMouter;
 typ fluid_disk_Sigma;
 typ flowed_since_last_spawn;
+typ Rout;
 typ SideralOmega;
 typ star_mean_motion;
 typ evection_resonance;
@@ -104,10 +103,10 @@ void ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ mu, typ * c
       /******** a is the semi-major axis, e is the eccentricity, i is the inclination, nu is the true anomaly,********/
       /******** omega is the argument of periapsis and Omega is the longitude of the ascending node           ********/
       
-      typ X,Y,Z,vX,vY,vZ; //Cartesian coordinates
+      typ X,Y,Z,vX,vY,vZ;                //Cartesian coordinates
       typ X_buff,Y_buff,vX_buff,vY_buff; //Buffer for cartesian coordinates
-      typ r;    //Body's distance to Earth's center
-      typ g;    //Angular momentum per unit mass
+      typ r;                             //Body's distance to Earth's center
+      typ g;                             //Angular momentum per unit mass
       typ dnudt;
       typ drdt;
       typ cosnu    = cos(nu);
@@ -121,8 +120,8 @@ void ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ mu, typ * c
       typ qq       = 1.0 - 2.0*q*q;
       typ dpq      = 2.0*p*q;
 
-      /********  In the orbital plane (see e.g. Laskar & Robutel 1995)  ********/
-      r  = a*(1.0 - e*e)/(1.0 + e*cosnu);
+      /******** In the orbital plane (see e.g. Laskar & Robutel 1995) ********/
+      r = a*(1.0 - e*e)/(1.0 + e*cosnu);
       if (J2_bool && central_mass_bool){ //Using the geometric elliptical elements instead of the osculating ones in case of an oblate Earth (See Greenberg, 1981)
             mu = mu*(1.0 + 1.5*J2*R_unit*R_unit/(a*a));
       }
@@ -134,7 +133,7 @@ void ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ mu, typ * c
       vX_buff = drdt*cosnu - r*dnudt*sinnu;
       vY_buff = drdt*sinnu + r*dnudt*cosnu;
       
-      /********  Rotations to convert to reference plane (see e.g. Laskar & Robutel 1995)  ********/      
+      /******** Rotations to convert to reference plane (see e.g. Laskar & Robutel 1995) ********/      
       X  =  X_buff*(pp*cosvarpi + dpq*sinvarpi) +  Y_buff*(dpq*cosvarpi - pp*sinvarpi);
       vX = vX_buff*(pp*cosvarpi + dpq*sinvarpi) + vY_buff*(dpq*cosvarpi - pp*sinvarpi);
       Y  =  X_buff*(qq*sinvarpi + dpq*cosvarpi) +  Y_buff*(qq*cosvarpi  - dpq*sinvarpi);
@@ -142,7 +141,7 @@ void ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ mu, typ * c
       Z  =  X_buff*(2.0*q*chi*sinvarpi - 2.0*p*chi*cosvarpi) +  Y_buff*(2.0*p*chi*sinvarpi + 2.0*q*chi*cosvarpi);
       vZ = vX_buff*(2.0*q*chi*sinvarpi - 2.0*p*chi*cosvarpi) + vY_buff*(2.0*p*chi*sinvarpi + 2.0*q*chi*cosvarpi);
       
-      /********  Writing the cartesian coordinates  ********/
+      /******** Writing the cartesian coordinates ********/
       * cart      = X;
       *(cart + 1) = Y;
       *(cart + 2) = Z;
@@ -152,7 +151,7 @@ void ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ mu, typ * c
 }
 
 
-void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp){
+void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp, typ mu){
 
       /******** Computes the elliptic elements a, l, k, h, q & p where a is the semi-major axis and l is the mean      ********/
       /******** longitude. k, h, q & p are defined as k + ih = e*exp(i*varpi) and q + ip = sin(I/2)*exp(i*Omega). The  ********/
@@ -165,7 +164,7 @@ void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp){
 
       typ X, Y, Z, vX, vY, vZ, R, V2, RV, C1, C2, C3, DC, CC, AA, aux0;
       typ a11, a12, a21, a22, c11, c12, c21, c22, K1, H1, K2, H2, K, H;
-      typ CMU, SMU, FAC1, FAC2, b12, b22, sinF, cosF, F, USQA, aux1;
+      typ SMU, FAC1, FAC2, b12, b22, sinF, cosF, F, USQA, aux1;
 
       /******** Getting the cartesian coordinates ********/
       X  = (moonlets + id) -> x;
@@ -182,18 +181,17 @@ void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp){
       vZ -= central_mass_bool ? CM.vz : 0.;
 
       /******** Computing the semi-major axis ********/
-      CMU = central_mass_bool ? G*CM.mass : G*M_unit;
       R   = sqrt(X*X + Y*Y + Z*Z);
       V2  = vX*vX + vY*vY + vZ*vZ;
-      AA  = R*CMU/(2.0*CMU - R*V2); //Division by zero if the trajectory is perfectly parabolic.
-      if (J2_bool && AA > 0.0 && central_mass_bool){     //If the Earth is oblate and the trajectory is elliptic, correcting Kepler third law (See Greenberg, 1981)
-            CMU *= 1.0 + 1.5*J2*R_unit*R_unit/(AA*AA);
-            AA = R*CMU/(2.0*CMU - R*V2);
+      AA  = R*mu/(2.0*mu - R*V2); //Division by zero if the trajectory is perfectly parabolic.
+      if (J2_bool && AA > 0.0 && central_mass_bool){  //If the Earth is oblate and the trajectory is elliptic, correcting Kepler third law (See Greenberg, 1981)
+            mu *= 1.0 + 1.5*J2*R_unit*R_unit/(AA*AA);
+            AA = R*mu/(2.0*mu - R*V2);
       }
       *alkhqp = AA;
 
       /******** Normalizing the velocities (Adopting the convention of J. Laskar's 2004 lectures notes) ********/
-      SMU = sqrt(CMU);
+      SMU = sqrt(mu);
       vX /= SMU;
       vY /= SMU;
       vZ /= SMU;
@@ -496,6 +494,9 @@ void variable_initialization(){
       evection_resonance      = pow(1.5*sqrt(M_unit/star_mass)*J2, 2.0/7.0)*pow(star_semi_major/R_unit, 3.0/7.0)*R_unit;
       need_to_reduce_COM_bool = 0;
       indexCollision          = 0;
+      Rout                    = R_out;
+      fluid_disk_Sigma        = inner_mass/(M_PI*(Rout*Rout - R_unit*R_unit));
+      flowed_since_last_spawn = 0.;
       if(!brute_force_bool){
             typ sinsigma = sin(inclination_max);
             gam = pow(sma_max*sma_max*sma_max-sma_min*sma_min*sma_min,1.0/3.0)*pow(4.0*M_PI*how_many_neighbours*sinsigma/(((typ) N_0)*81.0),1.0/3.0); //The mesh-size for the O(N) 
@@ -518,18 +519,6 @@ void variable_initialization(){
             half_fragmentation_count = 0;
             full_fragmentation_count = 0;
             merger_count             = 0;
-      }
-      if (inner_fluid_disk_bool){
-            fluid_disk_Sigma        = inner_mass/(M_PI*(Rroche*Rroche - R_unit*R_unit));
-            typ x                   = Rroche/R_unit;
-            typ x52                 = fast_pow(sqrt(x), 5) - 1.0;
-            typ x32                 = fast_pow(sqrt(x), 3);
-            typ x2                  = x*x - 1.0;
-            typ gx                  = (4.0*x*x52-5.0*x2*x32)/(4.0*x52-5.0*x2);
-            typ Omega_in            = sqrt(G*M_unit/(R_unit*R_unit*R_unit));
-            dotMinner               = M_PI*M_PI*M_PI*G*G/(Omega_in*Omega_in*Omega_in*(x - 1.)*(1. - gx)); //From Salmon & Canup 2012
-            dotMouter               = -fast_pow(sqrt(x), 11)*dotMinner/gx;                                //From Salmon & Canup 2012
-            flowed_since_last_spawn = 0.;
       }
 }
 
@@ -1199,7 +1188,7 @@ void total_momentum(struct moonlet * moonlets, typ * momentum){
       vY  = (central_mass_bool ? CM.vy   : 0.);
       vZ  = (central_mass_bool ? CM.vz   : 0.);
       M   = (central_mass_bool ? CM.mass : 0.);
-      M  += (inner_fluid_disk_bool ? fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit) : 0.);
+      M  += (inner_fluid_disk_bool ? fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : 0.);
       momentum[0] = M*X;  momentum[1] = M*Y;  momentum[2] = M*Z;  momentum[3] = M*vX;  momentum[4] = M*vY;  momentum[5] = M*vZ;
       
       /******** Contribution from the other bodies ********/
@@ -1313,7 +1302,7 @@ void verify(){
       if(!type_check(typeof(inner_mass),                typ)){fprintf(stderr, "Error : inner_mass must be given as a floating-point number.\n");            abort();}
       if(!type_check(typeof(spawned_density),           typ)){fprintf(stderr, "Error : spawned_density must be given as a floating-point number.\n");       abort();}
       if(!type_check(typeof(f_tilde),                   typ)){fprintf(stderr, "Error : f_tilde must be given as a floating-point number.\n");               abort();}
-      if(!type_check(typeof(Rroche),                    typ)){fprintf(stderr, "Error : Rroche must be given as a floating-point number.\n");                abort();}
+      if(!type_check(typeof(R_out),                     typ)){fprintf(stderr, "Error : R_out must be given as a floating-point number.\n");                 abort();}
       if(!type_check(typeof(disruption_threshold),      typ)){fprintf(stderr, "Error : disruption_threshold must be given as a floating-point number.\n");  abort();}
       if(!type_check(typeof(t_end),                     typ)){fprintf(stderr, "Error : t_end must be given as a floating-point number.\n");                 abort();}
       if(!type_check(typeof(time_step),                 typ)){fprintf(stderr, "Error : time_step must be given as a floating-point number.\n");             abort();}
@@ -1357,6 +1346,7 @@ void verify(){
       if(!type_check(typeof(nu_parameter),              typ)){fprintf(stderr, "Error : nu_parameter must be given as a floating-point number.\n");          abort();}
       if(!type_check(typeof(C1_parameter),              typ)){fprintf(stderr, "Error : C1_parameter must be given as a floating-point number.\n");          abort();}
       if(!type_check(typeof(k_parameter),               typ)){fprintf(stderr, "Error : k_parameter must be given as a floating-point number.\n");           abort();}
+      if(!type_check(typeof(merging_threshold),         typ)){fprintf(stderr, "Error : merging_threshold must be given as a floating-point number.\n");     abort();}
       if(!type_check(typeof(fragment_threshold),        typ)){fprintf(stderr, "Error : fragment_threshold must be given as a floating-point number.\n");    abort();}
 
       /******** I now verify that integer numbers stayed that way ********/

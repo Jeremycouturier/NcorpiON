@@ -979,13 +979,13 @@ void get_tolerance_parameter(struct node * FlatTree, int a, typ precision){
       /******** Solves Eq. (13) of Dehnen (2002) with a Newton-Raphson method ********/
       /******** Initializes the field r_crit of (FlatTree + a)                ********/
       
-      typ M0 = (FlatTree + a) -> M0;
-      typ one_theta_min = 1.0-theta_min;
-      typ power = ((typ) expansion_order)+2.0;
-      typ rhs = fast_pow(theta_min,power)/one_theta_min/one_theta_min*pow(M0/Mtot,-1.0/3.0);
-
+      typ M0                = (FlatTree + a) -> M0;
+      typ one_theta_min     = 1. - theta_min;
+      typ power             = ((typ) expansion_order) + 2.;
+      typ rhs               = fast_pow(theta_min, power)/one_theta_min/one_theta_min*pow(M0/Mtot, -1.0/3.0);
       typ current_precision = 1.0;
-      typ theta = 0.7;
+      typ theta             = 0.7;
+      
       if (M0/Mtot < 0.00000000001){
             (FlatTree + a) -> r_crit = (FlatTree + a) -> r_max; //theta = 1
             return;
@@ -996,22 +996,22 @@ void get_tolerance_parameter(struct node * FlatTree, int a, typ precision){
       else if (M0 < 0.0001*Mtot){
             theta = 0.8;
       }
-      typ fX0,dfX0,one_theta,one_theta_2,one_theta_3,theta_power,dtheta;
-      int nstep=0;
+      typ fX0, dfX0, one_theta, one_theta_2, one_theta_3, theta_power, dtheta;
+      int nstep = 0;
       while(current_precision > precision){
-            one_theta = 1.0-theta;
-            one_theta_2 = one_theta*one_theta;
-            one_theta_3 = one_theta_2*one_theta;
-            theta_power = fast_pow(theta,power);
-            fX0 = theta_power/one_theta_2-rhs;
-            dfX0 = (2.0*theta_power+power*one_theta*theta_power/theta)/one_theta_3;
-            dtheta = -fX0/dfX0;
-            theta += dtheta;
+            one_theta         = 1. - theta;
+            one_theta_2       = one_theta*one_theta;
+            one_theta_3       = one_theta_2*one_theta;
+            theta_power       = fast_pow(theta, power);
+            fX0               = theta_power/one_theta_2-rhs;
+            dfX0              = (2.*theta_power + power*one_theta*theta_power/theta)/one_theta_3;
+            dtheta            = -fX0/dfX0;
+            theta            += dtheta;
             current_precision = fabs(dtheta/theta);
-            nstep++;
+            nstep ++;
             
             /******** If the method gets lost, I try to put it back on track ********/
-            if (theta >= 1.0 || theta <= theta_min){
+            if (theta >= 1.0 || theta <= theta_min || theta != theta){
                   theta = rdm(theta_min, 1.0);
             }
             
@@ -1025,9 +1025,6 @@ void get_tolerance_parameter(struct node * FlatTree, int a, typ precision){
       /******** Initializing the relevant field ********/
       (FlatTree + a) -> r_crit = (FlatTree + a) -> r_max / theta;
 }
-
-
-
 
 
 void get_Xn(int k, int n, typ * X, typ m, typ * M){

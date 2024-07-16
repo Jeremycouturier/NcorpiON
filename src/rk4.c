@@ -150,13 +150,12 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                         vY       = (moonlets + j) -> vy;
                         vZ       = (moonlets + j) -> vz;
                         CM.mass += m;
-                        M        = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit) : CM.mass);
+                        M        = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : CM.mass);
                         CM.x    *= (M - m)/M;  CM.y *= (M - m)/M;  CM.z *= (M - m)/M;  CM.vx *= (M - m)/M;  CM.vy *= (M - m)/M;  CM.vz *= (M - m)/M;
                         CM.x    += m*X/M;      CM.y += m*Y/M;      CM.z += m*Z/M;      CM.vx += m*vX/M;     CM.vy += m*vY/M;     CM.vz += m*vZ/M;
-                        if (inner_fluid_disk_bool && willMergeWithDisk(moonlets, j)){       //The mass of the dumped body is added to the inner fluid disk only if its periapsis
-                              fluid_disk_Sigma += m/(M_PI*(Rroche*Rroche - R_unit*R_unit)); //is above the surface or if it will cross the xy plane before hitting the surface
-                              CM.mass -= m;
-                        }
+                        if (inner_fluid_disk_bool && willMergeWithDisk(moonlets, j)){ //The mass of the dumped body is added to the inner fluid disk only if its periapsis
+                              CM.mass -= m;                                           //is above the surface or if it will cross the xy plane before hitting the surface
+                        }                                                             //Mass and outer radius are updated during call to function willMergeWithDisk
                         lose_moonlet(j);
                         losing_that_one = 1;
                   }
@@ -208,10 +207,11 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       /******** If the simulation progressed by at least 0.1%, I display useful informations ********/
       if (progressed){
             if (collision_bool){
-                  printf("                  N = %d  |  Collisions = %d   (largest id in the body array = %d)\n", how_many_moonlets, collision_count, largest_id);
+                  printf("                  N = %d  |  Collisions = %d  |  t = %.13lf   (largest id in the body array = %d)\n",
+                  how_many_moonlets, collision_count, t_init + time_elapsed, largest_id);
             }
             else{
-                  printf("                  N = %d   (largest id in the body array = %d)\n", how_many_moonlets, largest_id);
+                  printf("                  N = %d  |  t = %.13lf   (largest id in the body array = %d)\n", how_many_moonlets, t_init + time_elapsed, largest_id);
             }
             if (!viscoelastic_bool){
                   if (collision_bool && fragmentation_bool && collision_count != 0){
@@ -223,7 +223,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                         printf("                  Merger = %.2lf %% | Super-catastrophic = %.2lf %% | Partially fragmented = %.2lf %% | Fully fragmented = %.2lf %%\n", mrg, spc, hfr, ffr);
                   }
                   if (inner_fluid_disk_bool){
-                        typ disk_mass = M_PI*(Rroche*Rroche - R_unit*R_unit)*fluid_disk_Sigma;
+                        typ disk_mass = M_PI*(Rout*Rout - R_unit*R_unit)*fluid_disk_Sigma;
                         printf("                  Central mass = %.8lf,  Bodies mass = %.8lf,  Fluid disk mass = %.8lf,  Bodies + disk = %.8lf\n",
                         CM.mass, total_mass, disk_mass, disk_mass + total_mass);
                   }
@@ -235,26 +235,30 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                               printf("                  Bodies total mass = %.8lf\n", total_mass);
                         }
                   }
+                  typ mu = central_mass_bool ? CM.mass : M_unit;  mu += inner_fluid_disk_bool ? fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : 0.;  mu *= G;
                   if (how_many_moonlets > 1){
                         R1 = (moonlets + i1) -> radius;  R2 = (moonlets + i2) -> radius;
-                        cart2ell(moonlets, i1, alkhqp);
+                        cart2ell(moonlets, i1, alkhqp, mu + G*M1);
                         a1 = *alkhqp; e1 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I1 = 360.0*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
-                        cart2ell(moonlets, i2, alkhqp);
+                        cart2ell(moonlets, i2, alkhqp, mu + G*M2);
                         a2 = *alkhqp; e2 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I2 = 360.0*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
-                        printf("                  Most massive body   : (M, R, a, e, i) = (%.7lf, %.7lf, %.7lf, %.7lf, %.7lf°)\n", M1, R1, a1, e1, I1);
-                        printf("                  Second most massive : (M, R, a, e, i) = (%.7lf, %.7lf, %.7lf, %.7lf, %.7lf°)\n", M2, R2, a2, e2, I2);
+                        printf("                  Most massive body   : (M, R, a, e, i) = (%.8lf, %.8lf, %.8lf, %.8lf, %.8lf°)\n", M1, R1, a1, e1, I1);
+                        printf("                  Second most massive : (M, R, a, e, i) = (%.8lf, %.8lf, %.8lf, %.8lf, %.8lf°)\n", M2, R2, a2, e2, I2);
                   }
                   else if (how_many_moonlets == 1){
                         R1 = (moonlets + i1) -> radius;
-                        cart2ell(moonlets, i1, alkhqp);
+                        cart2ell(moonlets, i1, alkhqp, mu + G*M1);
                         a1 = *alkhqp; e1 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I1 = 360.0*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
-                        printf("                  Most massive body   : (M, R, a, e, i) = (%.7lf, %.7lf, %.7lf, %.7lf, %.7lf°)\n", M1, R1, a1, e1, I1);
+                        printf("                  Most massive body   : (M, R, a, e, i) = (%.8lf, %.8lf, %.8lf, %.8lf, %.8lf°)\n", M1, R1, a1, e1, I1);
                   }
-                  if (central_tides_bool && central_mass_bool){
-                        printf("                  Length of day = %.13lf\n", 2.0*M_PI/SideralOmega);
-                        if (J2_bool && Sun_bool){
-                              printf("                  Evection resonance at a = %.13lf\n", evection_resonance);
-                        }
+                  if (central_tides_bool && inner_fluid_disk_bool){
+                        printf("                  Sideral rotation = %.13lf,  Inner fluid disk outer edge = %.13lf\n", SideralOmega, Rout);
+                  }
+                  else if (central_tides_bool){
+                        printf("                  Sideral rotation = %.13lf\n", SideralOmega);
+                  }
+                  else if (inner_fluid_disk_bool){
+                        printf("                  Inner fluid disk outer edge = %.13lf\n", Rout);
                   }
             }
             printf("                  COM = (%.9lf, %.9lf,  %.9lf,  %.9lf,  %.9lf,  %.9lf)\n", com[0], com[1], com[2], com[3], com[4], com[5]);
@@ -333,25 +337,35 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       
       /******** Spawning bodies from the inner fluid disk ********/
       if (inner_fluid_disk_bool){
+            M             = CM.mass + fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit);
+            typ x         = Rout/R_unit;
+            typ x52       = fast_pow(sqrt(x), 5) - 1.;
+            typ x32       = fast_pow(sqrt(x), 3);
+            typ x2        = x*x - 1.;
+            typ gx        = (4.*x*x52 - 5.*x2*x32)/(4.*x52 - 5.*x2);
+            typ Omega_in  = sqrt(G*M/(R_unit*R_unit*R_unit));
+            typ dotMinner = M_PI*M_PI*M_PI*G*G/(Omega_in*Omega_in*Omega_in*(x - 1.)*(1. - gx)); //From Salmon & Canup 2012
+            typ dotMouter = -fast_pow(sqrt(x), 11)*dotMinner/gx;      
             /******** Removing from the disk the mass that flows out from the inner edge ********/
             typ flowed_mass   = timestep*dotMinner*fluid_disk_Sigma*fluid_disk_Sigma*fluid_disk_Sigma;
-            fluid_disk_Sigma -= flowed_mass/(M_PI*(Rroche*Rroche - R_unit*R_unit));
+            fluid_disk_Sigma -= flowed_mass/(M_PI*(Rout*Rout - R_unit*R_unit));
             CM.mass          += flowed_mass;
             /******** If the mass that flowed out of the inner fluid disk by the outer edge since the last time a body spawned exceeds the spawn mass, I spawn a body ********/
             flowed_since_last_spawn += timestep*dotMouter*fluid_disk_Sigma*fluid_disk_Sigma*fluid_disk_Sigma;
-            typ spawned_mass         = 16.*fast_pow(M_PI, 4)*f_tilde*f_tilde*fast_pow(fluid_disk_Sigma*Rroche*Rroche, 3)/(M_unit*M_unit);
+            typ spawned_mass         = 16.*fast_pow(M_PI, 4)*f_tilde*f_tilde*fast_pow(fluid_disk_Sigma*Rout*Rout, 3)/(M_unit*M_unit);
             spawned_mass             = spawned_mass > 1.0e-7*M_unit ? spawned_mass : 1.0e-7*M_unit; //Threshold needed for very long simulations
             if (flowed_since_last_spawn > spawned_mass){
                   typ cart[6];
-                  flowed_since_last_spawn -= spawned_mass;
-                  M                        = CM.mass + fluid_disk_Sigma*M_PI*(Rroche*Rroche - R_unit*R_unit);
-                  typ rad                  = pow(3.0*spawned_mass/(4.0*M_PI*spawned_density), 1.0/3.0);
-                  fluid_disk_Sigma        -= spawned_mass/(M_PI*(Rroche*Rroche - R_unit*R_unit)); //New surface density of the inner fluid disk
-                  int index                = get_free_index(0); //Retrieving an index in the bodies array for the new body
-                  typ nu                   = rdm(0.0, 2.0*M_PI);
-                  typ omega                = rdm(0.0, 2.0*M_PI);
-                  typ Omega                = rdm(0.0, 2.0*M_PI);
-                  ell2cart(Rroche, 0., 0., nu, omega, Omega, G*M, cart); //Cartesian coordinate of the spawned body in the geocentric reference frame
+                  flowed_since_last_spawn  -= spawned_mass;
+                  typ rad                   = pow(3.0*spawned_mass/(4.0*M_PI*spawned_density), 1.0/3.0);
+                  int index                 = get_free_index(0); //Retrieving an index in the bodies array for the new body
+                  typ nu                    = rdm(0.0, 2.0*M_PI);
+                  typ omega                 = rdm(0.0, 2.0*M_PI);
+                  typ Omega                 = rdm(0.0, 2.0*M_PI);
+                  ell2cart(Rout, 0., 0., nu, omega, Omega, G*(M + spawned_mass), cart);   //Cartesian coordinate of the spawned body in the geocentric reference frame
+                  typ disk_mass             = fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit);
+                  typ disk_angular_momentum = 0.8*fluid_disk_Sigma*M_PI*(Rout*Rout*sqrt(Rout) - R_unit*R_unit*sqrt(R_unit));
+                  innerFluidDiskAngularMomentum(-spawned_mass, Rout, 0., 1., disk_angular_momentum, disk_mass);
                   X  = cart[0] + CM.x;
                   Y  = cart[1] + CM.y;
                   Z  = cart[2] + CM.z;

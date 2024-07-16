@@ -109,16 +109,15 @@
 /**************************************************/
 
 /******** Defining a system of units for the simulation. If random_initial_bool is 0, then the units in the file init.txt must be the simulation's units ********/
-#define R_unit 1.                    //If central_mass_bool is 1, then radius of the central body. Otherwise, unimportant for the simulation. You define your own unit of length.
-#define M_unit 1.                    //If central_mass_bool is 1, then   mass of the central body. Otherwise this is the mass for conversions cartesian <-> elliptic
+#define R_unit 1.                    //If central_mass_bool is 1, then radius of the central body. If viscoelastic_bool is 1, then radius of the viscoelastic body
+#define M_unit 1.                    //If central_mass_bool is 1, then   mass of the central body. If viscoelastic_bool is 1, then mass   of the viscoelastic body
 #define G 39.47841760435743447533796 //The gravitational constant. If you set it to 4*pi^2, then a particle of semi-major axis 1 orbiting a mass 1 has a period 1.
                                      //If viscoelastic_bool is 1, M_unit and R_unit are the mass and mean radius of the viscoelastic body to be simulated.
-                                     //Note that R_unit and M_unit do not necessarily have to be 1, they should just be equal to the mass and radius of the central body in the system
-                                     //of units that you want to use for the simulation. It is generally advised to use a system of units such that the simulation will not have to
-                                     //manipulate absurdely large or small floating points numbers. If central_mass_bool is 0, then you don't have to define R_unit and you should define
-                                     //M_unit as the mass, in your system of units, that is used to convert cartesian coordinates into elliptic coordinates. Whether central_mass_bool
-                                     //is 0 or 1, you have to define G as the value of the gravitational constant in your system of units. Even if the mass of the central body changes,
-                                     //M_unit stays the mass used for conversions cartesian <-> elliptic.
+                                     //Note that R_unit and M_unit do not necessarily have to be 1, they should just be equal to the mass and radius of the central body or viscoelastic
+                                     //body in the system of units that you use. It is generally advised to use a system of units such that the simulation will not have to manipulate
+                                     //absurdely large or small floating points numbers. If both central_mass_bool and viscoelastic_bool are 0, then you don't have to define R_unit and
+                                     //you should define M_unit as the mass, in your system of units, that is used to convert cartesian coordinates into elliptic coordinates.
+                                     //Regardless of central_mass_bool and viscoelastic_bool, you have to define G as the value of the gravitational constant in your system of units.
 
 /******** Physical constants relative to interactions with the central body (J2, inner disk, central tides) or a distant object. Unimportant if central_mass_bool is 0 ********/
 #define Tearth 2.8453774472222//2.8453774472222//4.2680661708333  //Central body's sideral period in units of the surface orbital period. Must be > 1. Earth's current value is 17.038
@@ -126,7 +125,7 @@
 #define J2_value 0.                  //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body) where Omega is the
                                      //sideral frequency and Omega_crit = sqrt(G*M_unit/R_unit^3). In that case, J2 is variable throughout the simulation.
 #define k2 1.5                       //Second Love number of the central body. Here the value is for a fluid body (zero shear modulus). The constant timelag model is used
-#define Delta_t 0.0023711478726851669//The timelag between tidal stress and response. In simulation's units
+#define Delta_t 0.0015807652484567779//The timelag between tidal stress and response. In simulation's units
 #define dimensionless_moi 0.3307     //The moment of inertia of the central body, in simulation units (in units of its mass times its radius squared).
 #define star_semi_major 23481.066    //The semi-major axis of the orbit of the system around the distant object in simulation units.
 #define star_mass 332946.0434581987  //The mass of the distant object in simulation units.
@@ -134,7 +133,7 @@
 #define inner_mass 0.                //Mass of the inner fluid disk at initial time.
 #define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
 #define f_tilde 0.3                  //A parameter controlling the mass of bodies spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
-#define Rroche 2.9                   //The Roche radius where bodies spawn from the inner fluid disk (in simulation's units). Must be larger than disruption_threshold and than R_unit.
+#define R_out 2.9                    //The outer radius of the inner fluid disk where bodies spawn (in simulation's units). Must be larger than disruption_threshold and than R_unit.
 #define disruption_threshold 2.      //Threshold (in simulation's units) below which bodies are tidally disrupted by the central mass. If inner_fluid_disk_bool is 0, then the mass of
                                      //the dumped body is added to the central body. Otherwise, the mass of the dumped body is added to the inner fluid disk if the body's periapsis is
                                      //above the surface or if it will cross the xy plane before hitting the surface, and to the central mass else.
@@ -233,7 +232,7 @@
 #define expansion_order 3            //The order p of the Taylor expansions. This is p = 3 in Dehnen (2002). NcorpiON allows up to p = 6. Minimum is 1 as order 0 yields no acceleration
 #define theta_min 0.5                //Minimal value of the tolerance parameter theta. Must be strictly less than 1. Sensible values are 0.2 < theta_min < 0.8
                                      //The precision (and computational time) of the mutual gravity computed by Ncorpion increases with increasing p and decreasing theta_min.
-#define subdivision_threshold 23     //A cubic cell is not divided as long as it contains at most that many bodies. Called s in Dehnen (2002). Must be > 0. The precision does not depend
+#define subdivision_threshold 24     //A cubic cell is not divided as long as it contains at most that many bodies. Called s in Dehnen (2002). Must be > 0. The precision does not depend
                                      //on this threshold, but the computational time does. Suggested values are 5 < s < 200 but must be tweaked by the user to obtain the best performances
 #define root_sidelength 196.0        //Sidelength of the root cell (in simulation's units). Should be machine representable. Particles outside of the root cell don't feel others.
 #define level_max 25                 //The maximum allowed number of levels in the tree. Root is at level 0 and a cell at level level_max - 1 is never divided.
@@ -280,7 +279,7 @@
 /*****************************************************************************************/
 
 /******** Collision resolution when all collisions are inelastic. Important only if both collision_bool and inelastic_collision_bool are 1 ********/
-#define collision_parameter 1.0      //The collision parameter f to model inelastic collision. Must be between 1 (completely inelastic) and 2 (elastic)
+#define collision_parameter 2.       //The collision parameter f to model inelastic collision. Must be between 1 (completely inelastic) and 2 (elastic)
 
 /******** Collision resolution with the fragmentation model described in NcorpiON's paper. Important only if both collision_bool and fragmentation_bool are 1 ********/
 #define N_tilde 15                   //Ratio between ejected mass and mass of the second largest fragment : N° of fragments in the tail. 2*beta/(3-beta) in Leinhardt & Stewart(2012)
@@ -288,8 +287,10 @@
 #define nu_parameter 0.4             //The exponent of the density         in the coupling parameter. See Table 3 of Housen & Holsapple (2011)
 #define C1_parameter 1.5             //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
 #define k_parameter 0.2              //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
-#define fragment_threshold 1.0e-8    //Threshold on the mass of the ejecta fragments. If the fragments of the ejecta tail have a mass smaller than that and if the ejected mass is less
-                                     //than the mass of the largest fragment (Qr/Qr* >= 50%), then the tail is reunited into a single body. Otherwise it is a full fragmentation.
+#define merging_threshold 0.0002     //Threshold on the total ejected mass. If (total ejected mass)/(m1 + m2) is less than that, then the collision results in a merger.
+#define fragment_threshold 1.0e-8    //Threshold on the mass of the fragments. If the fragments of the ejecta tail have a mass smaller than that and if the tail is less massive than
+                                     //the largest fragment and if the collision is not a merger, then the tail is reunited into a single body instead of being fragmented into
+                                     //N_tilde fragments. These two threshold prevent the number of bodies to grow uncontrollably
 
 #define pq_min_max {-1,3,-1,1}       //Extremal integer values for p_k and q_k to determine the position of the tail fragments with respect to the largest fragment.
                                      //Must define a rectangle containing exactly N_tilde points with integer coordinates. More precisely, if pq_min_max = {a, b, c, d},
