@@ -1178,12 +1178,15 @@ void innerFluidDiskAngularMomentum(typ m, typ a, typ e, typ cosi, typ g1, typ m1
             /******** Checking the convergence of the Newton-Raphson method. To be removed when the code is robust ********/
             if (n_steps >= 150){
                   printf("Warning : The Newton-Raphson method to find the inner fluid disk's outer edge does not converge. The angular momentum will not be conserved.\n");
-                  fluid_disk_Sigma = mm1/(M_PI*(Rout*Rout - R_unit*R_unit));
+                  fluid_disk_Sigma = (m + m1)/(M_PI*(Rout*Rout - R_unit*R_unit));
                   return;
             }
       }
       
-      Rout             = X*X;
-      Rout             = Rout <= R_unit ? 1.01*R_unit : Rout;
+      Rout = X*X;
+      if (Rout <= R_unit){
+            printf("Warning : The inner fluid disk's new outer edge is smaller than R_unit. Increasing to 1.01*R_unit. The angular momentum will not be conserved.\n");
+            Rout = 1.01*R_unit;
+      }
       fluid_disk_Sigma = (m + m1)/(M_PI*(Rout*Rout - R_unit*R_unit));
 }
