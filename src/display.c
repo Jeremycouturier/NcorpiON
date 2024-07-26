@@ -584,7 +584,7 @@ void resume(struct moonlet * moonlets){
                   vZ = (moonlets + j) -> vz - vZZ;
                   m  = (moonlets + j) -> mass;
                   R  = (moonlets + j) -> radius;                  
-                  fprintf(init_file, "%.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf\n", X, Y, Z, vX, vY, vZ, m, R);
+                  fprintf(init_file, "%.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf\n", X, Y, Z, vX, vY, vZ, m, R);
             }
       }     
       fclose(init_file);
@@ -605,7 +605,7 @@ void resume(struct moonlet * moonlets){
                   rest_length = (connections + j) -> rest_length;
                   a           = (connections + j) -> Pair.fst;
                   b           = (connections + j) -> Pair.snd;
-                  fprintf(connection_file, "%.1lf %.1lf %.14lf\n", (typ) a, (typ) b, rest_length);
+                  fprintf(connection_file, "%.1lf %.1lf %.15lf\n", (typ) a, (typ) b, rest_length);
             }
             fclose(connection_file);
       #endif

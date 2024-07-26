@@ -40,7 +40,8 @@
 /******** init.txt used to resume a simulation is written when resume_simulation_bool is 1  ********/
 /***************************************************************************************************/
 
-#define pth "/path/towards/input/output/location/"
+#define pth "/path/towards/input/output/location/" //The path must be absolute, end with / and already exist
+
 
 
 /**************************************************************************/
@@ -69,7 +70,7 @@
 #define seed_bool                1   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
 #define one_collision_only_bool  0   //Determines if bodies are only allowed to collide once per timestep. If 0, there is no restriction on the number of collisions a body can experience
                                      //during a timestep. Setting first to 1 and then to 0 is a good way to know if the timestep is adapted to the bodies' mean free path.
-#define openGL_bool              0   //Determines if a 3D real-time visualization of the simulation is enabled. MATCH TO THE SAME VALUE IN THE MAKEFILE
+#define openGL_bool              0   //MATCH TO THE SAME VALUE IN THE MAKEFILE. Determines if a 3D real-time visualization of the simulation with WebGL is enabled.
 #define resume_simulation_bool   0   //Determines if, at the end of the simulation, NcorpiON generates a file named init.txt that can be used to resume the simulation. The file init.txt
                                      //is stored at the path indicated above. To resume the simulation, you need to set random_initial_bool to 0, initial_cartesian_bool to 1, and N_0 to
                                      //the number of lines of init.txt. If init.txt already exists in path pth, it will be overwritten. Simulation's variables should be updated.
@@ -120,7 +121,7 @@
                                      //Regardless of central_mass_bool and viscoelastic_bool, you have to define G as the value of the gravitational constant in your system of units.
 
 /******** Physical constants relative to interactions with the central body (J2, inner disk, central tides) or a distant object. Unimportant if central_mass_bool is 0 ********/
-#define Tearth 2.8453774472222//2.8453774472222//4.2680661708333  //Central body's sideral period in units of the surface orbital period. Must be > 1. Earth's current value is 17.038
+#define Tearth 3.55672180902775      //Central body's sideral period in units of the surface orbital period. Must be > 1.
                                      //In case of tides, the sideral period changes and this is the value at initial time.
 #define J2_value 0.                  //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body) where Omega is the
                                      //sideral frequency and Omega_crit = sqrt(G*M_unit/R_unit^3). In that case, J2 is variable throughout the simulation.
@@ -133,7 +134,7 @@
 #define inner_mass 0.                //Mass of the inner fluid disk at initial time.
 #define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
 #define f_tilde 0.3                  //A parameter controlling the mass of bodies spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
-#define R_out 2.9                    //The outer radius of the inner fluid disk where bodies spawn (in simulation's units). Must be larger than disruption_threshold and than R_unit.
+#define R_roche 2.9                  //The initial outer radius of the inner fluid disk where bodies spawn (in simulation's units). Must be larger than disruption_threshold and R_unit.
 #define disruption_threshold 2.      //Threshold (in simulation's units) below which bodies are tidally disrupted by the central mass. If inner_fluid_disk_bool is 0, then the mass of
                                      //the dumped body is added to the central body. Otherwise, the mass of the dumped body is added to the inner fluid disk if the body's periapsis is
                                      //above the surface or if it will cross the xy plane before hitting the surface, and to the central mass else.
@@ -151,7 +152,7 @@
 #define t_end 128.                   //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
 #define time_step 0.015625           //Timestep of the simulation (in simulation's units)
 #define output_step 32               //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
-#define high_dumping_threshold 235.  //Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
+#define high_dumping_threshold 230.95//Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
 
 /******** Specific parameters ********/
 #define max_ids_per_node 173         //The maximum number of ids in each node of the unrolled linked lists (chains). Choose such that sizeof(struct chain) be a multiple of the cache line
@@ -193,12 +194,12 @@
 /******** NcorpiON assumes that the shape model is in the principal axis frame (X,Y,Z) with Z towards the shortest axis, but this is not required  ********/
 /**********************************************************************************************************************************************************/
 
-#define spring_modulus 400.0         //The expected bulk modulus of the body. Spring stiffness is k = spring_modulus*L. Force is -spring_modulus*L*dL with L the rest_length
+#define spring_modulus 500.0         //The expected bulk modulus of the body. Spring stiffness is k = spring_modulus*L. Force is -spring_modulus*L*dL with L the rest_length
 #define damping_coefficient 0.125    //The damping coefficient of the dampers in the Kelvin-Voigt models. Force is -damping_coefficient*L*dL/dt with L the rest_length
 #define minimal_distance 0.6         //Minimal initial distance between two particles in units of (V/N_0)^(1/3) where V is the volume of the body. 0.3 < minimal_distance < 0.7 is best
-#define connections_per_node 25.0    //Expected value of the number of connections per node. Values larger than 12.0 are advised for structural integrity. Some nodes will be connected
+#define connections_per_node 35.0    //Expected value of the number of connections per node. Values larger than 12.0 are advised for structural integrity. Some nodes will be connected
                                      //less than that as this is just the expected value. NcorpiON makes sure that no node is connected less than three times to prevent wandering.
-#define nodes_radius 0.125           //Nodes' radii in units of the minimal initial distance. Can be used to check the structural integrity. In the resting simulation, if collision_bool
+#define nodes_radius 0.25            //Nodes' radii in units of the minimal initial distance. Can be used to check the structural integrity. In the resting simulation, if collision_bool
                                      //is set to 1 and this parameter is set to a small value (e.g. 0.1), then no collisions should occur if spring_modulus is large enough
 
 /******** Orbit of the point-mass perturbator, in an inertial reference frame. ********/
@@ -234,7 +235,7 @@
                                      //The precision (and computational time) of the mutual gravity computed by Ncorpion increases with increasing p and decreasing theta_min.
 #define subdivision_threshold 24     //A cubic cell is not divided as long as it contains at most that many bodies. Called s in Dehnen (2002). Must be > 0. The precision does not depend
                                      //on this threshold, but the computational time does. Suggested values are 5 < s < 200 but must be tweaked by the user to obtain the best performances
-#define root_sidelength 196.0        //Sidelength of the root cell (in simulation's units). Should be machine representable. Particles outside of the root cell don't feel others.
+#define root_sidelength 462.0        //Sidelength of the root cell (in simulation's units). Should be machine representable. Particles outside of the root cell don't feel others.
 #define level_max 25                 //The maximum allowed number of levels in the tree. Root is at level 0 and a cell at level level_max - 1 is never divided.
 #define child_multipole_threshold 1  //If number of bodies/number of children is at most this threshold then the multipole moments of a cell are computed directly from the bodies.
                                      //Otherwise, they are computed from that of the children. Choose 1 for p < 5, and a small integer otherwise.
@@ -288,7 +289,7 @@
 #define C1_parameter 1.5             //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
 #define k_parameter 0.2              //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
 #define merging_threshold 0.0002     //Threshold on the total ejected mass. If (total ejected mass)/(m1 + m2) is less than that, then the collision results in a merger.
-#define fragment_threshold 1.0e-8    //Threshold on the mass of the fragments. If the fragments of the ejecta tail have a mass smaller than that and if the tail is less massive than
+#define fragment_threshold 1.5e-8    //Threshold on the mass of the fragments. If the fragments of the ejecta tail have a mass smaller than that and if the tail is less massive than
                                      //the largest fragment and if the collision is not a merger, then the tail is reunited into a single body instead of being fragmented into
                                      //N_tilde fragments. These two threshold prevent the number of bodies to grow uncontrollably
 

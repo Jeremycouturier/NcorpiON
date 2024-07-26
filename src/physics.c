@@ -149,7 +149,7 @@ void vector_field(struct moonlet * moonlets){
                   
                   
                   /******** Mutual gravitational interactions with the brute-force O(N^2) algorithm ********/
-                  if (mutual_bool && (brute_force_bool || force_naive_bool)){
+                  if (mutual_bool && (brute_force_bool || force_naive_bool) && 0){
                         for (p = 0; p < k; p ++){
                               if (*(exists + p)){
                               
@@ -1149,7 +1149,7 @@ void innerFluidDiskAngularMomentum(typ m, typ a, typ e, typ cosi, typ g1, typ m1
       /******** Updates Rout to the new outer radius of the inner fluid disk so that the angular ********/
       /******** momentum is conserved. Called when a body spawns or merges with the inner disk   ********/
       /******** The body's mass m is given positive (resp. negative) for a merge (resp. a spawn) ********/
-      /******** There is no analytical expression for Rout so a Newton-Raphson method is used    ********/
+      /******** There is no analytical expression for Rout so a Newton-Raphson method is used.   ********/
       /******** The mass per unit area of the inner fluid disk is also updated                   ********/
       
       typ g         = m*cosi*sqrt(a*(1. - e*e)); //z-component of the angular momentum of the body that spawned/merged 
@@ -1177,16 +1177,13 @@ void innerFluidDiskAngularMomentum(typ m, typ a, typ e, typ cosi, typ g1, typ m1
             
             /******** Checking the convergence of the Newton-Raphson method. To be removed when the code is robust ********/
             if (n_steps >= 150){
-                  printf("Warning : The Newton-Raphson method to find the inner fluid disk's outer edge does not converge. The angular momentum will not be conserved.\n");
+                  printf("Warning : The Newton-Raphson method to find the inner fluid disk's outer edge does not converge.\n");
                   fluid_disk_Sigma = (m + m1)/(M_PI*(Rout*Rout - R_unit*R_unit));
                   return;
             }
       }
       
       Rout = X*X;
-      if (Rout <= R_unit){
-            printf("Warning : The inner fluid disk's new outer edge is smaller than R_unit. Increasing to 1.01*R_unit. The angular momentum will not be conserved.\n");
-            Rout = 1.01*R_unit;
-      }
+      Rout = Rout < R_roche ? R_roche : Rout;
       fluid_disk_Sigma = (m + m1)/(M_PI*(Rout*Rout - R_unit*R_unit));
 }

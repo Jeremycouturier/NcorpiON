@@ -840,7 +840,7 @@ void integration_brute_force_SABA1(typ t){
             }
 
             /******** Integrator is SBAB1 ********/
-            kick(moonlets, &CM, vector_field); //Performing a full kick
+            kick(moonlets, &CM, vector_field); //Performing a full kick            
             time_elapsed += 0.5*timestep;            
             if (collision_bool){
                   brute_force(moonlets);  //Resolving collisions and going backward

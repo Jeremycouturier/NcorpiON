@@ -327,13 +327,15 @@ struct moonlet init(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ densi
       /******** omega is the argument of periapsis, Omega is the longitude of the ascending node and m is the mass ********/
 
       struct moonlet mlt;
-      mlt.radius = rad;                                    //Initializing the radius
-      typ m = 4.0/3.0*M_PI*density*rad*rad*rad;            //Defining the mass
-      mlt.mass = m;                                        //Initializing the mass
+      mlt.radius = rad;                                 //Initializing the radius
+      typ m      = 4.0/3.0*M_PI*density*rad*rad*rad;    //Defining the mass
+      mlt.mass   = m;                                   //Initializing the mass
+      typ mu     = central_mass_bool ? CM.mass : M_unit;  mu += inner_fluid_disk_bool ? fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : 0.;
+      mu        += m;  mu *= G;
       
       typ cart[6] = {a, e, i, nu, omega, Omega};
-      ell2cart(a, e, i, nu, omega, Omega, G*M_unit, cart); //Computing the cartesian coordinates from the orbital elements
-      mlt.x  = * cart;                                     //Initializing the cartesian coordinates
+      ell2cart(a, e, i, nu, omega, Omega, mu , cart);   //Computing the cartesian coordinates from the orbital elements
+      mlt.x  = * cart;                                  //Initializing the cartesian coordinates
       mlt.y  = *(cart + 1);
       mlt.z  = *(cart + 2);
       mlt.vx = *(cart + 3);
@@ -494,7 +496,7 @@ void variable_initialization(){
       evection_resonance      = pow(1.5*sqrt(M_unit/star_mass)*J2, 2.0/7.0)*pow(star_semi_major/R_unit, 3.0/7.0)*R_unit;
       need_to_reduce_COM_bool = 0;
       indexCollision          = 0;
-      Rout                    = R_out;
+      Rout                    = R_roche;
       fluid_disk_Sigma        = inner_mass/(M_PI*(Rout*Rout - R_unit*R_unit));
       flowed_since_last_spawn = 0.;
       if(!brute_force_bool){
@@ -1302,7 +1304,7 @@ void verify(){
       if(!type_check(typeof(inner_mass),                typ)){fprintf(stderr, "Error : inner_mass must be given as a floating-point number.\n");            abort();}
       if(!type_check(typeof(spawned_density),           typ)){fprintf(stderr, "Error : spawned_density must be given as a floating-point number.\n");       abort();}
       if(!type_check(typeof(f_tilde),                   typ)){fprintf(stderr, "Error : f_tilde must be given as a floating-point number.\n");               abort();}
-      if(!type_check(typeof(R_out),                     typ)){fprintf(stderr, "Error : R_out must be given as a floating-point number.\n");                 abort();}
+      if(!type_check(typeof(R_roche),                   typ)){fprintf(stderr, "Error : R_roche must be given as a floating-point number.\n");               abort();}
       if(!type_check(typeof(disruption_threshold),      typ)){fprintf(stderr, "Error : disruption_threshold must be given as a floating-point number.\n");  abort();}
       if(!type_check(typeof(t_end),                     typ)){fprintf(stderr, "Error : t_end must be given as a floating-point number.\n");                 abort();}
       if(!type_check(typeof(time_step),                 typ)){fprintf(stderr, "Error : time_step must be given as a floating-point number.\n");             abort();}
