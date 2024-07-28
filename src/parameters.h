@@ -146,10 +146,10 @@
 /*******************************************************/
 
 /******** General parameters ********/
-#define N_max 10000                  //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
+#define N_max 9000                   //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
 #define N_0 1000                     //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
 #define t_init 0.                    //Time at the beginning of the simulation (in simulation's units)
-#define t_end 128.                   //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
+#define t_end 1024.                  //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
 #define time_step 0.015625           //Timestep of the simulation (in simulation's units)
 #define output_step 32               //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define high_dumping_threshold 230.95//Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
@@ -197,7 +197,7 @@
 #define spring_modulus 500.0         //The expected bulk modulus of the body. Spring stiffness is k = spring_modulus*L. Force is -spring_modulus*L*dL with L the rest_length
 #define damping_coefficient 0.125    //The damping coefficient of the dampers in the Kelvin-Voigt models. Force is -damping_coefficient*L*dL/dt with L the rest_length
 #define minimal_distance 0.6         //Minimal initial distance between two particles in units of (V/N_0)^(1/3) where V is the volume of the body. 0.3 < minimal_distance < 0.7 is best
-#define connections_per_node 35.0    //Expected value of the number of connections per node. Values larger than 12.0 are advised for structural integrity. Some nodes will be connected
+#define connections_per_node 35.     //Expected value of the number of connections per node. Values larger than 12.0 are advised for structural integrity. Some nodes will be connected
                                      //less than that as this is just the expected value. NcorpiON makes sure that no node is connected less than three times to prevent wandering.
 #define nodes_radius 0.25            //Nodes' radii in units of the minimal initial distance. Can be used to check the structural integrity. In the resting simulation, if collision_bool
                                      //is set to 1 and this parameter is set to a small value (e.g. 0.1), then no collisions should occur if spring_modulus is large enough

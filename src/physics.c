@@ -703,7 +703,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       typ rho_2 = 3.0*m_2/(4.0*M_PI*R_2*R_2*R_2);
       typ average_density = (m_1*rho_1 + m_2*rho_2)/M;         //The average density of the moonlets, weighted by mass
       typ rho_12 = rho_1/rho_2;
-      typ rho_12_3nu = pow(rho_12, 3.0*nu_parameter);;         //Ratio between the density of the impactor and that of the target at the power 3*nu           
+      typ rho_12_3nu = pow(rho_12, 3.0*nu_parameter);          //Ratio between the density of the impactor and that of the target at the power 3*nu           
       
       /******** Getting the speeds at the impact ********/
       vx_a = (moonlets + a) -> vx;
@@ -942,9 +942,9 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
                               abort();
                         }
                         in_front_of  = v_k_scalar/sqrt(1.0 + ((typ) p)*((typ) p) + ((typ) q)*((typ) q));
-                        v_k[3*n]     = in_front_of*(dr[0]/dr_norm + ((typ) p)*u[0] + ((typ) q)*v[0]);
-                        v_k[3*n + 1] = in_front_of*(dr[1]/dr_norm + ((typ) p)*u[1] + ((typ) q)*v[1]);
-                        v_k[3*n + 2] = in_front_of*(dr[2]/dr_norm + ((typ) p)*u[2] + ((typ) q)*v[2]);
+                        v_k[3*n]     = in_front_of*(dr[0]/R_tilde12 + ((typ) p)*u[0] + ((typ) q)*v[0]);
+                        v_k[3*n + 1] = in_front_of*(dr[1]/R_tilde12 + ((typ) p)*u[1] + ((typ) q)*v[1]);
+                        v_k[3*n + 2] = in_front_of*(dr[2]/R_tilde12 + ((typ) p)*u[2] + ((typ) q)*v[2]);
                         n ++;
                   }
             }
@@ -1184,6 +1184,6 @@ void innerFluidDiskAngularMomentum(typ m, typ a, typ e, typ cosi, typ g1, typ m1
       }
       
       Rout = X*X;
-      Rout = Rout < R_roche ? R_roche : Rout;
+      Rout = Rout < 1.1*disruption_threshold ? 1.1*disruption_threshold : Rout;
       fluid_disk_Sigma = (m + m1)/(M_PI*(Rout*Rout - R_unit*R_unit));
 }

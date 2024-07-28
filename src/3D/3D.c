@@ -51,7 +51,7 @@
 #define typ double                   //Renaming double as typ
 #define MPI_TYP MPI_DOUBLE           //Renaming double as typ for mpi
 
-int rank  = 0;
+int rank = 0;
 int central_mass_bool;
 typ radius_blow_up_factor;
 
@@ -89,7 +89,7 @@ int main(int argc, char* argv[]){
       reb_simulation_start_server(r, browser_port);
       printf("The 3D visualization will start in 5 seconds.\n");
       usleep(5000000.);                     //Waiting 5 seconds to give the user enough time to open a web browser tab
-      reb_simulation_integrate(r, until);   //Pseudo - integrating. Only what is done in the heartbeat function serves a purpose
+      reb_simulation_integrate(r, until);   //Pseudo-integrating. Only what is done in the heartbeat function serves a purpose
 
       /******** Finishing ********/
       MPI_Finalize();
