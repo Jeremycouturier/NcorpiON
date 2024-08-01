@@ -127,7 +127,7 @@ In a N-body simulation with large N, collisions can be numerous and can lead to 
 to realistically render impacts between the bodies. Using NcorpiON is therefore also relevant in a system with numerous collisions, like a protoplanetary disk for example.
 
 
-##Getting started
+## Getting started
 
 To quickly get started with NcorpiON, just download the project to your computer, move to the ```src``` folder and run ```./ncorpion.sh```. This will launch the default simulation which is
 a collisional and fragmenting disk. Then you can:
