@@ -121,10 +121,22 @@ If your simulation has a central mass, then its initial conditions must not be g
 Other N-body softwares exist, like REBOUND, and you might wonder what NcorpiON has that they don't. The major strength of NcorpiON is its implementation of the algorithm FalcON of Walter Dehnen to compute mutual gravitational interactions and to detect collisions between bodies in $\mathcal{O}(N)$.
 This Fast Multipole algorithm is a considerable improvement over the Barnes-Hut tree code, significantly faster for the same precision, and that conserves the total momentum of the system to machine precision (Barnes-Hut doesn't).
 
-NcorpiON's implementation of FalcON allows multipole expansion up to order ```p = 8```, allowing very precise yet fast gravity evaluations. Using NcorpiON for a N-body numerical integration is thus very relevant for a system with large N where precision on the computation of mutual gravity is still needed.
+NcorpiON's implementation of FalcON allows multipole expansions up to order ```p = 8```, allowing very precise yet fast gravity evaluations. Using NcorpiON for a N-body simulation is thus very relevant for a system with large N where precision on the computation of mutual gravity is still needed.
 
 In a N-body simulation with large N, collisions can be numerous and can lead to the fragmentation of the bodies. NcorpiON features a fragmentation module based on the litterature on crater scaling and ejecta models
 to realistically render impacts between the bodies. Using NcorpiON is therefore also relevant in a system with numerous collisions, like a protoplanetary disk for example.
+
+
+##Getting started
+
+To quickly get started with NcorpiON, just download the project to your computer, move to the ```src``` folder and run ```./ncorpion.sh```. This will launch the default simulation which is
+a collisional and fragmenting disk. Then you can:
+
+- Try to change the number of bodies in the disk by updating the parameter ```N_0``` in the file ```parameters.h```
+- Try to change the initial conditions of the disk by updating them in the file ```parameters.h```
+- Set ```openGL_bool``` to ```1``` in both files ```parameters.h``` and ```makefile``` to visualize the disk (MPI needed)
+- For a large choice of ```N_0```, set ```brute_force_bool``` to ```1``` and ```falcON_bool``` to ```0``` to appreciate the speed-up provided by FalcON algorithm
+- Modify the file ```parameters.h``` to explore new possibilities.
 
 
 ## Official website
