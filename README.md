@@ -74,9 +74,15 @@ The communication between NcorpiON and REBOUND uses MPI. If you are a Linux user
 
       sudo apt install mpich
       
+Or, if ```mpich``` does not work, remove it with ```sudo apt remove mpich``` and run instead
+
+      sudo apt install libopenmpi-dev
+      
 If you are a MacOS user, you can install MPI with brew
 
       brew install openmpi
+      
+If REBOUND complains that it could not automatically download the file ```rebound.html```, make sure that curl is installed on your system with ```sudo apt install curl```.
 
 Note that the parts of REBOUND needed for the 3D visualization are already embedded in NcorpiON, so you don't need to download REBOUND to enjoy the 3D visualization (although you are still encouraged to check out the REBOUND project at <https://rebound.readthedocs.io>).
 Depending on your needs, REBOUND could be more adapted to your N-body problem than NcorpiON. Once MPI is installed, NcorpiON takes care of everything and you only need to run the command
@@ -113,7 +119,7 @@ If your simulation has a central mass, then its initial conditions must not be g
 ## Why NcorpiON
 
 Other N-body softwares exist, like REBOUND, and you might wonder what NcorpiON has that they don't. NcorpiON can use the algorithm FalcON of Walter Dehnen to compute mutual gravitational interactions and to detect collisions between bodies in $\mathcal{O}(N)$.
-This FFM algorithm is a considerable improvement of the Barnes-Hut tree code, significantly faster for the same precision, and that conserves the total momentum of the system to machine precision (Barnes-Hut doesn't).
+This Fast Multipole algorithm is a considerable improvement of the Barnes-Hut tree code, significantly faster for the same precision, and that conserves the total momentum of the system to machine precision (Barnes-Hut doesn't).
 Using NcorpiON for a N-body numerical integration is thus very relevant for a system with large N where precision on the computation of mutual gravity is still needed.
 
 In a N-body simulation with large N, collisions can be numerous and can lead to the fragmentation of the bodies. NcorpiON features a fragmentation module based on the litterature on crater scaling and ejecta models
