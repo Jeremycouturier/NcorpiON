@@ -85,7 +85,7 @@ If you are a MacOS user, you can install MPI with brew
 If REBOUND complains that it could not automatically download the file ```rebound.html```, make sure that curl is installed on your system with ```sudo apt install curl```.
 
 Note that the parts of REBOUND needed for the 3D visualization are already embedded in NcorpiON, so you don't need to download REBOUND to enjoy the 3D visualization (although you are still encouraged to check out the REBOUND project at <https://rebound.readthedocs.io>).
-Depending on your needs, REBOUND could be more adapted to your N-body problem than NcorpiON. Once MPI is installed, NcorpiON takes care of everything and you only need to run the command
+Once MPI is installed, NcorpiON takes care of everything and you only need to run the command
 
       ./ncorpion.sh
       
