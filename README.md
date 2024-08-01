@@ -121,7 +121,7 @@ If your simulation has a central mass, then its initial conditions must not be g
 Other N-body softwares exist, like REBOUND, and you might wonder what NcorpiON has that they don't. The major strength of NcorpiON is its implementation of the algorithm FalcON of Walter Dehnen to compute mutual gravitational interactions and to detect collisions between bodies in $\mathcal{O}(N)$.
 This Fast Multipole algorithm is a considerable improvement over the Barnes-Hut tree code, significantly faster for the same precision, and that conserves the total momentum of the system to machine precision (Barnes-Hut doesn't).
 
-NcorpiON's implementation of FalcON allows multipole expansion up to order ```p=8```, allowing very precise yet fast gravity evaluations. Using NcorpiON for a N-body numerical integration is thus very relevant for a system with large N where precision on the computation of mutual gravity is still needed.
+NcorpiON's implementation of FalcON allows multipole expansion up to order ```p = 8```, allowing very precise yet fast gravity evaluations. Using NcorpiON for a N-body numerical integration is thus very relevant for a system with large N where precision on the computation of mutual gravity is still needed.
 
 In a N-body simulation with large N, collisions can be numerous and can lead to the fragmentation of the bodies. NcorpiON features a fragmentation module based on the litterature on crater scaling and ejecta models
 to realistically render impacts between the bodies. Using NcorpiON is therefore also relevant in a system with numerous collisions, like a protoplanetary disk for example.
