@@ -45,28 +45,21 @@
 typ Mtot;
 int how_many_cells;
 int cell_id;
-int k_from_s2s3[7][7];
-int s1s2s3_from_kn[28][7][3];
-int s2s3_from_k[28][2];
-int ijklmn_from_kn[28][7][6];
-int k_from_ijklmn[4][4][4][4][4][4];
-int factorial[7] = {1, 1, 2, 6, 24, 120, 720};
-int perm_from_kn[28][7];
-int q1fromq2q3[28][28];
 int * PeanoHilbertOrder;
 int IndexPeanoHilbertOrder;
 typ * C1Moonlets;
-typ * C2FlatTree;
-typ * C3FlatTree;
-typ * C4FlatTree;
-typ * C5FlatTree;
-typ * C6FlatTree;
-typ * M2FlatTree;
-typ * M3FlatTree;
-typ * M4FlatTree;
-typ * M5FlatTree;
 
-/******** Arrays relative to Hilbert-Peano order ********/
+int k_from_s2s3[expansion_order + 1][expansion_order + 1];
+int s1s2s3_from_kn[((expansion_order + 1)*(expansion_order + 2))/2][expansion_order + 1][3];
+int s2s3_from_k[((expansion_order + 1)*(expansion_order + 2))/2][2];
+int ijklmn_from_kn[(expansion_order*(expansion_order + 1))/2][expansion_order][expansion_order - 1];
+int perm_from_kn[((expansion_order + 1)*(expansion_order + 2))/2][expansion_order + 1];
+int q1fromq2q3[((expansion_order + 1)*(expansion_order + 2))/2][((expansion_order + 1)*(expansion_order + 2))/2];
+int k_from_ijklmn[4][4][4][4][4][4];
+
+
+/******** Arrays relative to Hilbert-Peano order      ********/
+/******** These arrays were provided by Walter Dehnen ********/
 int RotationFromOctant[48][8] = {
       {36,10,25,25,28,10,27,27},
       {29,37,24,26,11,11,24,26},
@@ -118,56 +111,6 @@ int RotationFromOctant[48][8] = {
       {13,41,13,22, 7,41, 7,20}
 };
 
-int DigitFromOctant[48][8] = {
-      { 0, 3, 1, 2, 7, 4, 6, 5},
-      { 7, 0, 6, 1, 4, 3, 5, 2},
-      { 4, 7, 5, 6, 3, 0, 2, 1},
-      { 3, 4, 2, 5, 0, 7, 1, 6},
-      { 1, 2, 6, 5, 0, 3, 7, 4},
-      { 0, 1, 7, 6, 3, 2, 4, 5},
-      { 3, 0, 4, 7, 2, 1, 5, 6},
-      { 2, 3, 5, 4, 1, 0, 6, 7},
-      { 6, 5, 7, 4, 1, 2, 0, 3},
-      { 1, 6, 0, 7, 2, 5, 3, 4},
-      { 2, 1, 3, 0, 5, 6, 4, 7},
-      { 5, 2, 4, 3, 6, 1, 7, 0},
-      { 7, 4, 0, 3, 6, 5, 1, 2},
-      { 6, 7, 1, 0, 5, 4, 2, 3},
-      { 5, 6, 2, 1, 4, 7, 3, 0},
-      { 4, 5, 3, 2, 7, 6, 0, 1},
-      { 6, 1, 5, 2, 7, 0, 4, 3},
-      { 7, 6, 4, 5, 0, 1, 3, 2},
-      { 0, 7, 3, 4, 1, 6, 2, 5},
-      { 1, 0, 2, 3, 6, 7, 5, 4},
-      { 2, 5, 1, 6, 3, 4, 0, 7},
-      { 3, 2, 0, 1, 4, 5, 7, 6},
-      { 4, 3, 7, 0, 5, 2, 6, 1},
-      { 5, 4, 6, 7, 2, 3, 1, 0},
-      { 7, 4, 6, 5, 0, 3, 1, 2},
-      { 0, 7, 1, 6, 3, 4, 2, 5},
-      { 3, 0, 2, 1, 4, 7, 5, 6},
-      { 4, 3, 5, 2, 7, 0, 6, 1},
-      { 6, 5, 1, 2, 7, 4, 0, 3},
-      { 7, 6, 0, 1, 4, 5, 3, 2},
-      { 4, 7, 3, 0, 5, 6, 2, 1},
-      { 5, 4, 2, 3, 6, 7, 1, 0},
-      { 1, 2, 0, 3, 6, 5, 7, 4},
-      { 6, 1, 7, 0, 5, 2, 4, 3},
-      { 5, 6, 4, 7, 2, 1, 3, 0},
-      { 2, 5, 3, 4, 1, 6, 0, 7},
-      { 0, 3, 7, 4, 1, 2, 6, 5},
-      { 1, 0, 6, 7, 2, 3, 5, 4},
-      { 2, 1, 5, 6, 3, 0, 4, 7},
-      { 3, 2, 4, 5, 0, 1, 7, 6},
-      { 1, 6, 2, 5, 0, 7, 3, 4},
-      { 0, 1, 3, 2, 7, 6, 4, 5},
-      { 7, 0, 4, 3, 6, 1, 5, 2},
-      { 6, 7, 5, 4, 1, 0, 2, 3},
-      { 5, 2, 6, 1, 4, 3, 7, 0},
-      { 4, 5, 7, 6, 3, 2, 0, 1},
-      { 3, 4, 0, 7, 2, 5, 1, 6},
-      { 2, 3, 1, 0, 5, 4, 6, 7}
-};
 
 int OctantFromDigit[48][8] = {
       { 0, 2, 3, 1, 5, 7, 6, 4},
@@ -319,7 +262,7 @@ void add_boxdot(struct boxdot * BoxDot, struct moonlet * moonlets, int a){
       
       /******** Retrieving the box coordinates ********/
       typ x, y, z, D; //xyz are the coordinates of the corner of octant 0 and D is the sidelength
-      D = BoxDot -> sidelength;
+      D =  BoxDot -> sidelength;
       x = (BoxDot -> corner)[0];
       y = (BoxDot -> corner)[1];
       z = (BoxDot -> corner)[2];
@@ -387,7 +330,7 @@ struct boxdot * root_cell(struct moonlet * moonlets){
       how_many_cells ++;
       
       /******** Adding all moonlets to it ********/
-      for (i = 0; i < IndexPeanoHilbertOrder; i++){ //Adding the bodies in Hilbert order
+      for (i = 0; i < IndexPeanoHilbertOrder; i ++){ //Adding the bodies in Hilbert order
             a = PeanoHilbertOrder[i];  
             if (*(exists + a)){
                   x = (moonlets + a) -> x;
@@ -399,7 +342,7 @@ struct boxdot * root_cell(struct moonlet * moonlets){
                   already_in_tree[a] = 1;
             }
       }
-      for (i = 0; i <= largest_id; i++){ //Adding the few remaining bodies in random order
+      for (i = 0; i <= largest_id; i ++){ //Adding the few remaining bodies in random order
             if (exists[i] && !already_in_tree[i]){
                   x = (moonlets + i) -> x;
                   y = (moonlets + i) -> y;
@@ -436,7 +379,7 @@ void fill_boxdot_int(struct boxdot * BoxDot, struct boxdot * Parent, int octantC
       
       /******** Initializing the integer fields of BoxDot ********/
       BoxDot -> rotation = rotationChild;
-      BoxDot -> level = levelChild;
+      BoxDot -> level    = levelChild;
 }
 
 
@@ -452,7 +395,7 @@ struct node * flattree_init(struct boxdot * BoxDot){
       int octant;
       int rotation;
       int how_many_child = 0;
-      int isFirstChild = 1;
+      int isFirstChild   = 1;
       typ D;
       int how_many_dots;
       int * dots;
@@ -480,18 +423,18 @@ struct node * flattree_init(struct boxdot * BoxDot){
       struct boxdot * child;
       
       while (j > cell_id){ //While there are still nodes to be treated
-            to_be_treated = stack[cell_id];
+            to_be_treated       = stack[cell_id];
             to_be_treated -> id = cell_id; //Initializing the unique id of that cell
-            rotation = to_be_treated -> rotation;
-            D = to_be_treated -> sidelength;
+            rotation            = to_be_treated -> rotation;
+            D                   = to_be_treated -> sidelength;
             
             for (p = 0; p < 8; p ++){ // p is the Hilbert-Peano digit
                   octant = OctantFromDigit[rotation][p];
-                  child = (to_be_treated -> oct)[octant];
+                  child  = (to_be_treated -> oct)[octant];
                   if (child != NULL){
                         stack[j] = child;
                         (FlatTree + j) -> idParent = cell_id; //Initializing the field idParent of all the children
-                        if (isFirstChild){ //Initializing the field idFirstChild 
+                        if (isFirstChild){                    //Initializing the field idFirstChild 
                               (FlatTree + cell_id) -> idFirstChild = j;
                               isFirstChild = 0;
                         }
@@ -500,19 +443,19 @@ struct node * flattree_init(struct boxdot * BoxDot){
                   }
             }
             (FlatTree + cell_id) -> how_many_children = how_many_child;
-            how_many_dots = to_be_treated -> how_many;
+            how_many_dots                             = to_be_treated -> how_many;
             (FlatTree + cell_id) -> how_many_dots     = how_many_dots;
             
             /******** Initializing the field array dots ********/
-            dots = (int *)malloc(how_many_dots * sizeof(int));
+            dots                         = (int *)malloc(how_many_dots * sizeof(int));
             (FlatTree + cell_id) -> dots = dots;
             if (dots == NULL){
                   fprintf(stderr, "Error : Could not allocate memory for %d dots in function flattree_init.\n", how_many_dots);
                   abort();
             }
-            ch = to_be_treated -> dots;                   
+            ch    = to_be_treated -> dots;                   
             index = ch -> how_many - 1;
-            for (p = 0; p < how_many_dots; p++){
+            for (p = 0; p < how_many_dots; p ++){
                   *(dots + p) = (ch -> ids)[index];
                   if (how_many_child == 0){
                         PeanoHilbertOrder[IndexPeanoHilbertOrder] = (ch -> ids)[index];
@@ -526,13 +469,11 @@ struct node * flattree_init(struct boxdot * BoxDot){
                   }
             }
             
-            /******** Initializing the C^(1) ********/
-            ((FlatTree + cell_id) -> C1)[0] = 0.0;  ((FlatTree + cell_id) -> C1)[1] = 0.0;  ((FlatTree + cell_id) -> C1)[2] = 0.0;
-            
-            (FlatTree + cell_id) -> sidelength        = D;
-            ((FlatTree + cell_id) -> center)[0]       = (to_be_treated -> corner)[0] + D/2.0;
-            ((FlatTree + cell_id) -> center)[1]       = (to_be_treated -> corner)[1] + D/2.0;
-            ((FlatTree + cell_id) -> center)[2]       = (to_be_treated -> corner)[2] - D/2.0;
+            /******** Some initialization ********/           
+            (FlatTree  + cell_id) -> sidelength = D;
+            ((FlatTree + cell_id) -> center)[0] = (to_be_treated -> corner)[0] + D/2.0;
+            ((FlatTree + cell_id) -> center)[1] = (to_be_treated -> corner)[1] + D/2.0;
+            ((FlatTree + cell_id) -> center)[2] = (to_be_treated -> corner)[2] - D/2.0;
             if (how_many_child == 0){ //If to_be_treated has no children, then I arbitrarily set the unique id of its first child to -1 
                   (FlatTree + cell_id) -> idFirstChild = -1;
             }
@@ -553,82 +494,71 @@ struct node * flattree_init(struct boxdot * BoxDot){
 }
 
 
-void tensor_initialization(){
+void tensor_initialization(struct node * FlatTree){
 
-      int p;
+      int p, k;
 
-      /******** Allocating and initializing the global FlatTree C^(m) and M^(n) ********/
+      /******** Initializing to zero the multipole and interaction tensors ********/
       for (p = 0; p <= 3*largest_id + 2; p ++){
-            *(C1Moonlets + p) = 0.0;
+            *(C1Moonlets + p) = 0.;
       }
-      if (expansion_order >= 2){
-            C2FlatTree = (typ *)malloc(how_many_cells * 6 * sizeof(typ));
-            for (p = 0; p < 6 * how_many_cells; p ++){
-                  *(C2FlatTree + p) = 0.0;
+      for (p = 0; p < how_many_cells; p ++){
+            for (k = 0; k < 3; k ++){
+                  ((FlatTree + p) -> C1)[k] = 0.;
             }
-            if (expansion_order >= 3){
-                  C3FlatTree = (typ *)malloc(how_many_cells * 10 * sizeof(typ));
-                  M2FlatTree = (typ *)malloc(how_many_cells * 6  * sizeof(typ));
-                  for (p = 0; p < 10 * how_many_cells; p ++){
-                        *(C3FlatTree + p) = 0.0;
+            #if expansion_order >= 2 && mutual_bool
+                  for (k = 0; k < 6; k ++){
+                        ((FlatTree + p) -> C2)[k] = 0.;
                   }
-                  if (expansion_order >= 4){
-                        C4FlatTree = (typ *)malloc(how_many_cells * 15 * sizeof(typ));
-                        M3FlatTree = (typ *)malloc(how_many_cells * 10 * sizeof(typ));
-                        for (p = 0; p < 15 * how_many_cells; p ++){
-                              *(C4FlatTree + p) = 0.0;
+                  #if expansion_order >= 3
+                        for (k = 0; k < 10; k ++){
+                              ((FlatTree + p) -> C3)[k] = 0.;
                         }
-                        if (expansion_order >= 5){
-                              C5FlatTree = (typ *)malloc(how_many_cells * 21 * sizeof(typ));
-                              M4FlatTree = (typ *)malloc(how_many_cells * 15 * sizeof(typ));
-                              for (p = 0; p < 21 * how_many_cells; p ++){
-                                    *(C5FlatTree + p) = 0.0;
+                        for (k = 0; k < 6; k ++){
+                              ((FlatTree + p) -> M2)[k] = 0.;
+                        }
+                        #if expansion_order >= 4
+                              for (k = 0; k < 15; k ++){
+                                    ((FlatTree + p) -> C4)[k] = 0.;
                               }
-                              if (expansion_order >= 6){
-                                    C6FlatTree = (typ *)malloc(how_many_cells * 28 * sizeof(typ));
-                                    M5FlatTree = (typ *)malloc(how_many_cells * 21 * sizeof(typ));
-                                    for (p = 0; p < 28 * how_many_cells; p ++){
-                                          *(C6FlatTree + p) = 0.0;
+                              for (k = 0; k < 10; k ++){
+                                    ((FlatTree + p) -> M3)[k] = 0.;
+                              }
+                              #if expansion_order >= 5
+                                    for (k = 0; k < 21; k ++){
+                                          ((FlatTree + p) -> C5)[k] = 0.;
                                     }
-                              }
-                        }
-                  }
-            }
-      }
-}
-
-
-void tensor_free(){
-
-      /******** Frees the global arrays C^(n) and M^(n) ********/
-
-      if (expansion_order >= 2){
-            free(C2FlatTree);
-            C2FlatTree = NULL;
-            if (expansion_order >= 3){
-                  free(C3FlatTree);
-                  C3FlatTree = NULL;
-                  free(M2FlatTree);
-                  M2FlatTree = NULL;
-                  if (expansion_order >= 4){
-                        free(C4FlatTree);
-                        C4FlatTree = NULL;
-                        free(M3FlatTree);
-                        M3FlatTree = NULL;
-                        if (expansion_order >= 5){
-                              free(C5FlatTree);
-                              C5FlatTree = NULL;
-                              free(M4FlatTree);
-                              M4FlatTree = NULL;
-                              if (expansion_order >= 6){
-                                    free(C6FlatTree);
-                                    C6FlatTree = NULL;
-                                    free(M5FlatTree);
-                                    M5FlatTree = NULL;
-                              }
-                        }
-                  }
-            }
+                                    for (k = 0; k < 15; k ++){
+                                          ((FlatTree + p) -> M4)[k] = 0.;
+                                    }
+                                    #if expansion_order >= 6
+                                          for (k = 0; k < 28; k ++){
+                                                ((FlatTree + p) -> C6)[k] = 0.;
+                                          }
+                                          for (k = 0; k < 21; k ++){
+                                                ((FlatTree + p) -> M5)[k] = 0.;
+                                          }
+                                          #if expansion_order >= 7
+                                                for (k = 0; k < 36; k ++){
+                                                      ((FlatTree + p) -> C7)[k] = 0.;
+                                                }
+                                                for (k = 0; k < 28; k ++){
+                                                      ((FlatTree + p) -> M6)[k] = 0.;
+                                                }
+                                                #if expansion_order >= 8
+                                                      for (k = 0; k < 45; k ++){
+                                                            ((FlatTree + p) -> C8)[k] = 0.;
+                                                      }
+                                                      for (k = 0; k < 36; k ++){
+                                                            ((FlatTree + p) -> M7)[k] = 0.;
+                                                      }
+                                                #endif
+                                          #endif
+                                    #endif
+                              #endif
+                        #endif
+                  #endif
+            #endif
       }
 }
 
@@ -650,7 +580,6 @@ void get_s1_s2_s3(int k, int n, int * s1, int * s2, int * s3){
       *s1 = n - n1;
       *s2 = n1 - n2;
       *s3 = n2;
-
 }
 
 
@@ -662,7 +591,6 @@ void get_s2_s3(int k, int * s2, int * s3){
       int n2 = k - (n1*(n1 + 1))/2;
       *s2 = n1 - n2;
       *s3 = n2;
-
 }
 
 
@@ -671,8 +599,8 @@ void s1s2s3_from_kn_init(){
       /******** In order not to call function get_s1_s2_s3 too many times, I store its return values in a table s1s2s3_from_kn ********/
       
       int k, n, s1, s2, s3;
-      for (k = 0; k < 28; k ++){
-            for (n = 0; n < 7; n ++){
+      for (k = 0; k < ((expansion_order + 1)*(expansion_order + 2))/2; k ++){
+            for (n = 0; n <= expansion_order; n ++){
                   get_s1_s2_s3(k, n, &s1, &s2, &s3);
                   s1s2s3_from_kn[k][n][0] = s1;
                   s1s2s3_from_kn[k][n][1] = s2;
@@ -687,7 +615,7 @@ void s2s3_from_k_init(){
       /******** Same as above but for the function get_s2_s3 ********/
       
       int k, s2, s3;
-      for (k = 0; k < 28; k++){
+      for (k = 0; k < ((expansion_order + 1)*(expansion_order + 2))/2; k ++){
             get_s2_s3(k, &s2, &s3);
             s2s3_from_k[k][0] = s2;
             s2s3_from_k[k][1] = s3;
@@ -711,8 +639,8 @@ void k_from_s2s3_init(){
       int k;
       int i,j;
       
-      for (i = 0; i <= 6; i ++){ // i is the number of 2's
-            for (j = 0; j <= 6; j ++){ // j is the number of 3's
+      for (i = 0; i <= expansion_order; i ++){       // i is the number of 2's
+            for (j = 0; j <= expansion_order; j ++){ // j is the number of 3's
                   get_k(i, j, &k);
                   k_from_s2s3[i][j] = k;
             }
@@ -746,7 +674,7 @@ void indexes_from_kn(int k, int n, int * ijklmn){
             p ++;
             s3 --;
       }
-      while (p < 6){
+      while (p < expansion_order - 1){
             ijklmn[p] = 0;
             p ++;
       }
@@ -757,18 +685,15 @@ void ijklmn_from_kn_init(){
 
       /******** Stores the return value of indexes_from_kn into ijklmn_from_kn ********/
       
-      int ijklmn[6];
-      int k, n;
+      int ijklmn[expansion_order - 1];
+      int k, n, l;
       
-      for (k = 0; k < 28; k++){
-            for (n = 0; n < 7; n++){
+      for (k = 0; k < (expansion_order*(expansion_order + 1))/2; k ++){
+            for (n = 0; n < expansion_order; n ++){
                   indexes_from_kn(k, n, ijklmn);
-                  ijklmn_from_kn[k][n][0] = ijklmn[0];
-                  ijklmn_from_kn[k][n][1] = ijklmn[1];
-                  ijklmn_from_kn[k][n][2] = ijklmn[2];
-                  ijklmn_from_kn[k][n][3] = ijklmn[3];
-                  ijklmn_from_kn[k][n][4] = ijklmn[4];
-                  ijklmn_from_kn[k][n][5] = ijklmn[5];
+                  for (l = 0; l < expansion_order - 1; l ++){
+                        ijklmn_from_kn[k][n][l] = ijklmn[l];
+                  }
             }
       }
 }
@@ -781,12 +706,12 @@ void k_from_indexes(int * k, int * ijklmn){
       
       int i;
       int s2 = 0, s3 = 0;
-      for (i = 0; i < 6; i++){
+      for (i = 0; i < 6; i ++){
             if (ijklmn[i] == 2){
-                  s2++;
+                  s2 ++;
             }
             else if (ijklmn[i] == 3){
-                  s3++;
+                  s3 ++;
             }
       }
       *k = k_from_s2s3[s2][s3];
@@ -797,16 +722,16 @@ void k_from_ijklmn_init(){
 
       /******** Stores the return value of k_from_indexes into k_from_ijklmn ********/
       
-      int i, j, k, l, m, n;
       int p;
       int ijklmn[6];
+      int i, j, k, l, m , n;
       
-      for (i = 0; i < 4; i++){
-            for (j = 0; j < 4; j++){
-                  for (k = 0; k < 4; k++){
-                        for (l = 0; l < 4; l++){
-                              for (m = 0; m < 4; m++){
-                                    for (n = 0; n < 4; n++){
+      for (i = 0; i < 4; i ++){
+            for (j = 0; j < 4; j ++){
+                  for (k = 0; k < 4; k ++){
+                        for (l = 0; l < 4; l ++){
+                              for (m = 0; m < 4; m ++){
+                                    for (n = 0; n < 4; n ++){
                                           ijklmn[0] = i; ijklmn[1] = j; ijklmn[2] = k; ijklmn[3] = l; ijklmn[4] = m; ijklmn[5] = n;
                                           k_from_indexes(&p, ijklmn);
                                           k_from_ijklmn[i][j][k][l][m][n] = p;
@@ -824,6 +749,8 @@ void permutation_from_kn(int k, int n, int * perm){
       /******** Computes how many permutations can be formed from the k^th independant ********/
       /******** component of an order n symmetrical tensor                             ********/
       
+      int factorial[9] = {1, 1, 2, 6, 24, 120, 720, 5040, 40320};
+      
       int s1, s2, s3;
       s1 = s1s2s3_from_kn[k][n][0];
       s2 = s1s2s3_from_kn[k][n][1];
@@ -836,13 +763,13 @@ void permutation_from_kn(int k, int n, int * perm){
 
 void perm_from_kn_init(){
 
-      /******** Stores the return value of perm_from_kn into the array perm_from_kn ********/
+      /******** Stores the return value of permutation_from_kn into the array perm_from_kn ********/
 
       int perm = 0;
       int k, n;
       
-      for (k = 0; k < 28; k ++){
-            for (n = 0; n < 7; n ++){
+      for (k = 0; k < ((expansion_order + 1)*(expansion_order + 2))/2; k ++){
+            for (n = 0; n <= expansion_order; n ++){
                   permutation_from_kn(k, n, &perm);
                   perm_from_kn[k][n] = perm;
             }
@@ -866,7 +793,7 @@ void q1_from_q2q3(int * q1, int q2, int q3){
       s3   = s3_2 + s3_3;
       n1   = s2 + s3;
       n2   = s3;
-      *q1 = (n1*(n1 + 1))/2 + n2;
+      *q1  = (n1*(n1 + 1))/2 + n2;
 }
 
 
@@ -875,8 +802,8 @@ void q1fromq2q3_init(){
       /******** Stores the return value of q1_from_q2q3 into the array q1fromq2q3 ********/
 
       int q1, q2, q3;
-      for (q2 = 0; q2 < 28; q2 ++){
-            for (q3 = 0; q3 < 28; q3 ++){
+      for (q2 = 0; q2 < ((expansion_order + 1)*(expansion_order + 2))/2; q2 ++){
+            for (q3 = 0; q3 < ((expansion_order + 1)*(expansion_order + 2))/2; q3 ++){
                   q1_from_q2q3(&q1, q2, q3);
                   q1fromq2q3[q2][q3] = q1;
             }
@@ -906,7 +833,7 @@ void get_com(struct node * FlatTree, struct moonlet * moonlets, int a){
       typ x, y, z;  //The current body's coordinates
       typ m;        //The current body's mass
       
-      int * dots = (FlatTree + a) -> dots; //All the bodies in that cell
+      int * dots        = (FlatTree + a) -> dots; //All the bodies in that cell
       int how_many_dots = (FlatTree + a) -> how_many_dots;
       int i;
       int j; //Id of the current body
@@ -925,7 +852,7 @@ void get_com(struct node * FlatTree, struct moonlet * moonlets, int a){
       }
       
       /******** Initializing the relevant fields ********/
-      (FlatTree + a)  -> M0      = M0;
+      (FlatTree  + a) -> M0      = M0;
       ((FlatTree + a) -> com)[0] = com[0]/M0;
       ((FlatTree + a) -> com)[1] = com[1]/M0;
       ((FlatTree + a) -> com)[2] = com[2]/M0;
@@ -1078,32 +1005,42 @@ void get_Xn_overwrite(int k, int n, typ * X, typ m, typ * M){
 }
 
 
+#if expansion_order >= 3 && mutual_bool
 void get_Mn(struct node * FlatTree, struct moonlet * moonlets, int a){
 
       /******** Computes the multipole moments of node a of FlatTree, assuming that it has ********/
-      /******** no children. Initializes the corresponding fields of (FlatTree + a)        ********/
+      /******** no children. Initializes the corresponding fields of the FlatTree          ********/
       /******** This function is called only if the expansion order is at least 3          ********/
-      
+
       /******** Retrieving the mass and center of mass of the cell ********/
       typ com[3];
       com[0] = ((FlatTree + a) -> com)[0];  com[1] = ((FlatTree + a) -> com)[1];  com[2] = ((FlatTree + a) -> com)[2];  
-      
-      typ M2[6] =  {0., 0., 0., 0., 0., 0.};                                                             //The 6  distinct components of the quadrupole
+      typ M2[6]  = {0., 0., 0., 0., 0., 0.};                                                             //The 6  distinct components of the quadrupole
+      #if expansion_order >= 4
       typ M3[10] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};                                             //The 10 distinct components of the octupole
+      #endif
+      #if expansion_order >= 5
       typ M4[15] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};                         //The 15 distinct components of the fourth multipole moment
+      #endif
+      #if expansion_order >= 6
       typ M5[21] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}; //The 21 distinct components of the fifth multipole moment
-      
-                                
-      typ m; //The body's mass
-      
-      int * dots = (FlatTree + a) -> dots; //All the bodies in that cell
+      #endif
+      #if expansion_order >= 7
+      typ M6[28] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
+      #endif                                                                                             //The 28 distinct components of the sixth multipole moment
+      #if expansion_order >= 8
+      typ M7[36] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}; 
+      #endif                                                                                             //The 36 distinct components of the seventh multipole moment
+
+      typ m; //The body's mass   
+      int * dots        = (FlatTree + a) -> dots; //All the bodies in that cell
       int how_many_dots = (FlatTree + a) -> how_many_dots;
       int i;
       int p; //Id of the current body
       int k; //Array index
       typ dX[3]; // x_i - com
       
-      for (i = 0; i < how_many_dots; i++){
+      for (i = 0; i < how_many_dots; i ++){
             p     = dots[i];
             m     = (moonlets + p) -> mass;
             dX[0] = (moonlets + p) -> x - com[0];
@@ -1111,49 +1048,70 @@ void get_Mn(struct node * FlatTree, struct moonlet * moonlets, int a){
             dX[2] = (moonlets + p) -> z - com[2];
             
             /******** Accumulating the multipole moments ********/
-            M2[0] += m * dX[0] * dX[0];
-            M2[1] += m * dX[0] * dX[1];
-            M2[2] += m * dX[0] * dX[2];
-            M2[3] += m * dX[1] * dX[1];
-            M2[4] += m * dX[1] * dX[2];
-            M2[5] += m * dX[2] * dX[2];
-            if (expansion_order >= 4){ // M3 need to be computed
-                  for (k = 0; k < 10; k++){
-                        get_Xn(k, 3, dX, m, M3);
-                  }
-                  if (expansion_order >= 5){ // M4 need to be computed
-                        for (k = 0; k < 15; k++){
-                              get_Xn(k, 4, dX, m, M4);
+            #if expansion_order >= 3 //M2 needs to be computed
+                  M2[0] += m * dX[0] * dX[0]; M2[1] += m * dX[0] * dX[1]; M2[2] += m * dX[0] * dX[2];
+                  M2[3] += m * dX[1] * dX[1]; M2[4] += m * dX[1] * dX[2]; M2[5] += m * dX[2] * dX[2];
+                  #if expansion_order >= 4 //M3 needs to be computed
+                        for (k = 0; k < 10; k ++){
+                              get_Xn(k, 3, dX, m, M3);
                         }
-                        if (expansion_order >= 6){ // M5 need to be computed
-                              for (k = 0; k < 21; k++){
-                                    get_Xn(k, 5, dX, m, M5);
+                        #if expansion_order >= 5 //M4 needs to be computed
+                              for (k = 0; k < 15; k ++){
+                                    get_Xn(k, 4, dX, m, M4);
                               }
-                        }
-                  }
-            }
+                              #if expansion_order >= 6 //M5 needs to be computed
+                                    for (k = 0; k < 21; k ++){
+                                          get_Xn(k, 5, dX, m, M5);
+                                    }
+                                    #if expansion_order >= 7 //M6 needs to be computed
+                                          for (k = 0; k < 28; k ++){
+                                                get_Xn(k, 6, dX, m, M6);
+                                          }
+                                          #if expansion_order >= 8 //M7 needs to be computed
+                                                for (k = 0; k < 36; k ++){
+                                                      get_Xn(k, 7, dX, m, M7);
+                                                }
+                                          #endif
+                                    #endif
+                              #endif
+                        #endif
+                  #endif
+            #endif
       }
       
       /******** Initializing the fields M2 to M5 of the FlatTree ********/
-      for (k = 0; k < 6; k++){
-            (M2FlatTree + 6*a)[k] = M2[k];
-      }
-      if (expansion_order >= 4){
-            for (k = 0; k < 10; k++){
-                  (M3FlatTree + 10*a)[k] = M3[k];
+      #if expansion_order >= 3
+            for (k = 0; k < 6; k ++){
+                  ((FlatTree + a) -> M2)[k] = M2[k];
             }
-            if (expansion_order >= 5){
-                  for (k = 0; k < 15; k++){
-                        (M4FlatTree + 15*a)[k] = M4[k];
+            #if expansion_order >= 4
+                  for (k = 0; k < 10; k ++){
+                        ((FlatTree + a) -> M3)[k] = M3[k];
                   }
-                  if (expansion_order >= 6){
-                        for (k = 0; k < 21; k++){
-                              (M5FlatTree + 21*a)[k] = M5[k];
+                  #if expansion_order >= 5
+                        for (k = 0; k < 15; k ++){
+                              ((FlatTree + a) -> M4)[k] = M4[k];
                         }
-                  }
-            }
-      }
+                        #if expansion_order >= 6
+                              for (k = 0; k < 21; k ++){
+                                    ((FlatTree + a) -> M5)[k] = M5[k];
+                              }
+                              #if expansion_order >= 7
+                                    for (k = 0; k < 28; k ++){
+                                          ((FlatTree + a) -> M6)[k] = M6[k];
+                                    }
+                                    #if expansion_order >= 8
+                                          for (k = 0; k < 36; k ++){
+                                                ((FlatTree + a) -> M7)[k] = M7[k];
+                                          }
+                                    #endif
+                              #endif
+                        #endif
+                  #endif
+            #endif
+      #endif
 }
+#endif
 
 
 void get_com_from_children(struct node * FlatTree, int a){
@@ -1171,7 +1129,7 @@ void get_com_from_children(struct node * FlatTree, int a){
       typ * com_child; //Center of mass of a child
       
       for (i = idFirstChild; i < idLastChild; i++){
-            M0_child = (FlatTree + i) -> M0;
+            M0_child  = (FlatTree + i) -> M0;
             com_child = (FlatTree + i) -> com;
             
             M0 += M0_child;
@@ -1182,7 +1140,7 @@ void get_com_from_children(struct node * FlatTree, int a){
       }
 
       /******** Initializing the relevant fields ********/
-      (FlatTree + a) -> M0 = M0;
+      (FlatTree  + a) -> M0 = M0;
       ((FlatTree + a) -> com)[0] = com[0]/M0;
       ((FlatTree + a) -> com)[1] = com[1]/M0;
       ((FlatTree + a) -> com)[2] = com[2]/M0;
@@ -1198,9 +1156,9 @@ void get_rmax_from_children(struct node * FlatTree, int a){
       int idLastChild  = idFirstChild + (FlatTree + a) -> how_many_children;
       int i;
 
-      typ * center = (FlatTree + a) -> center; //The center of the node
-      typ * com = (FlatTree + a) -> com;       //The center of mass of the node
-      typ D = (FlatTree + a) -> sidelength;    //The sidelength of the node
+      typ * center = (FlatTree + a) -> center;     //The center of the node
+      typ * com    = (FlatTree + a) -> com;        //The center of mass of the node
+      typ D        = (FlatTree + a) -> sidelength; //The sidelength of the node
       typ corner[8][3] = {{center[0] - D - com[0], center[1] - D - com[1], center[2] - D - com[2]},
                           {center[0] - D - com[0], center[1] - D - com[1], center[2] + D - com[2]},
                           {center[0] - D - com[0], center[1] + D - com[1], center[2] - D - com[2]},
@@ -1213,7 +1171,7 @@ void get_rmax_from_children(struct node * FlatTree, int a){
       typ distance;
 
       /******** Computing the distance between the center of mass and the most distant corner ********/
-      for (i = 0; i < 8; i++){
+      for (i = 0; i < 8; i ++){
             distance = sqrt(corner[i][0]*corner[i][0] + corner[i][1]*corner[i][1] + corner[i][2]*corner[i][2]);
             if (distance > distance_to_farthest_corner){
                   distance_to_farthest_corner = distance;
@@ -1223,7 +1181,7 @@ void get_rmax_from_children(struct node * FlatTree, int a){
       typ * com_child; //Center of mass of a child
       typ rmax_child;  //Convergence radius of a child
       typ com_difference[3];
-      typ max_ri = 0.0;
+      typ max_ri = 0.;
 
       /******** Eq. (9) of Dehnen (2002) ********/
       for (i = idFirstChild; i < idLastChild; i++){
@@ -1248,59 +1206,90 @@ void get_rmax_from_children(struct node * FlatTree, int a){
 }
 
 
+#if expansion_order >= 3 && mutual_bool
 void get_Mn_from_children(struct node * FlatTree, int a){
 
-      /******** Computes the multipole moments of node a of FlatTree from that of its children      ********/
-      /******** Initializes the corresponding fields of (FlatTree + a)                              ********/
-      /******** This function is called only if the expansion order is at least 3 and if            ********/
-      /******** FlatTree + a has at least child_multipole_threshold times more children than bodies ********/
+      /******** Computes the multipole moments of node a of FlatTree from that of its children ********/
+      /******** Initializes the corresponding fields of the FlatTree                           ********/
+      /******** This function is called only if the expansion order is at least 3              ********/
 
       int idFirstChild = (FlatTree + a) -> idFirstChild;
       int idLastChild  = idFirstChild + (FlatTree + a) -> how_many_children;
       typ * com = (FlatTree + a) -> com;
       typ * com_child;
-      typ * M5_child;
-      typ * M4_child;
-      typ * M3_child;
-      typ * M2_child;
       typ M0_child;
       typ Y[4]; //com - com_child. Index 0 is unused
-      int p, q;
-      int i, j, k, l, m;
-      int * array_of_ijklm;
+      int p;
       
-      typ M2[6] =  {0., 0., 0., 0., 0., 0.};                                                             //The 6 distinct components of the quadrupole
+      #if expansion_order >= 3
+      typ M2[6]  = {0., 0., 0., 0., 0., 0.};                                                             //The 6  distinct components of the quadrupole
+      typ * M2_child;
+      #endif
+      #if expansion_order >= 4
       typ M3[10] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};                                             //The 10 distinct components of the octupole
+      typ * M3_child;
+      int * array_of_ijklm;
+      int q;
+      int i, j, k;
+      #endif
+      #if expansion_order >= 5
       typ M4[15] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};                         //The 15 distinct components of the fourth multipole moment
+      typ * M4_child;
+      int l;
+      #endif
+      #if expansion_order >= 6
       typ M5[21] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}; //The 21 distinct components of the fifth multipole moment
+      typ * M5_child;
+      int m;
+      #endif
+      #if expansion_order >= 7
+      typ * M6_child;
+      int n;
+      typ M6[28] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
+      #endif                                                                                             //The 28 distinct components of the sixth multipole moment
+      #if expansion_order >= 8
+      typ * M7_child;
+      int o;
+      typ M7[36] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
+      #endif                                                                                             //The 36 distinct components of the seventh multipole moment
       
-      for (p = idFirstChild; p < idLastChild; p++){
+      
+      for (p = idFirstChild; p < idLastChild; p ++){
             /******** Retrieving the multipole moments and the center of mass of the child ********/
-            M0_child = (FlatTree + p) -> M0;
+            M0_child  = (FlatTree + p) -> M0;
             com_child = (FlatTree + p) -> com;
-            M2_child = M2FlatTree + 6*p;
-            if (expansion_order >= 4){
-                  M3_child = M3FlatTree + 10*p;
-                  if (expansion_order >= 5){
-                        M4_child = M4FlatTree + 15*p;
-                        if (expansion_order >= 6){
-                              M5_child = M5FlatTree + 21*p;
-                        }
-                  }
-            }
+            #if expansion_order >= 3
+                  M2_child = (FlatTree + p) -> M2;
+                  #if expansion_order >= 4
+                        M3_child = (FlatTree + p) -> M3;
+                        #if expansion_order >= 5
+                              M4_child = (FlatTree + p) -> M4;
+                              #if expansion_order >= 6
+                                    M5_child = (FlatTree + p) -> M5;
+                                    #if expansion_order >= 7
+                                          M6_child = (FlatTree + p) -> M6;
+                                          #if expansion_order >= 8
+                                                M7_child = (FlatTree + p) -> M7;
+                                          #endif
+                                    #endif
+                              #endif
+                        #endif
+                  #endif
+            #endif
             
             /******** Retrieving the difference Y between the expansion centers ********/
             Y[1] = com[0] - com_child[0];  Y[2] = com[1] - com_child[1];  Y[3] = com[2] - com_child[2];  
             
             /******** Computing the multipole moments ********/
-            M2[0] += M2_child[0] + M0_child*Y[1]*Y[1];
-            M2[1] += M2_child[1] + M0_child*Y[1]*Y[2];
-            M2[2] += M2_child[2] + M0_child*Y[1]*Y[3];
-            M2[3] += M2_child[3] + M0_child*Y[2]*Y[2];
-            M2[4] += M2_child[4] + M0_child*Y[2]*Y[3];
-            M2[5] += M2_child[5] + M0_child*Y[3]*Y[3];
-            if (expansion_order >= 4){ //M3 is computed
-                  for (q = 0; q < 10; q++){
+            #if expansion_order >= 3
+                  M2[0] += M2_child[0] + M0_child*Y[1]*Y[1];
+                  M2[1] += M2_child[1] + M0_child*Y[1]*Y[2];
+                  M2[2] += M2_child[2] + M0_child*Y[1]*Y[3];
+                  M2[3] += M2_child[3] + M0_child*Y[2]*Y[2];
+                  M2[4] += M2_child[4] + M0_child*Y[2]*Y[3];
+                  M2[5] += M2_child[5] + M0_child*Y[3]*Y[3];
+            #if expansion_order >= 4 //M3 is computed
+                  for (q = 0; q < 10; q ++){
                         array_of_ijklm = ijklmn_from_kn[q][3];
                         i = array_of_ijklm[0]; j = array_of_ijklm[1]; k = array_of_ijklm[2]; 
                         M3[q] += M3_child[q]; //Term in M^3
@@ -1309,80 +1298,287 @@ void get_Mn_from_children(struct node * FlatTree, int a){
                         M3[q] -= Y[i]*M2_child[k_from_ijklmn[j][k][0][0][0][0]];
                         M3[q] -= Y[j]*M2_child[k_from_ijklmn[i][k][0][0][0][0]];
                   }
-                  if (expansion_order >= 5){ //M4 is computed
-                        for (q = 0; q < 15; q++){
-                              array_of_ijklm = ijklmn_from_kn[q][4];
-                              i = array_of_ijklm[0]; j = array_of_ijklm[1]; k = array_of_ijklm[2]; l = array_of_ijklm[3];
-                              M4[q] += M4_child[q]; //Term in M^4
-                              M4[q] += M0_child*Y[i]*Y[j]*Y[k]*Y[l]; //Term in M^0
-                              M4[q] -= Y[l]*M3_child[k_from_ijklmn[i][j][k][0][0][0]]; //Terms in M^3
-                              M4[q] -= Y[k]*M3_child[k_from_ijklmn[i][j][l][0][0][0]];
-                              M4[q] -= Y[j]*M3_child[k_from_ijklmn[i][k][l][0][0][0]];
-                              M4[q] -= Y[i]*M3_child[k_from_ijklmn[j][k][l][0][0][0]];
-                              M4[q] += Y[k]*Y[l]*M2_child[k_from_ijklmn[i][j][0][0][0][0]]; //Terms in M^2
-                              M4[q] += Y[j]*Y[l]*M2_child[k_from_ijklmn[i][k][0][0][0][0]];
-                              M4[q] += Y[j]*Y[k]*M2_child[k_from_ijklmn[i][l][0][0][0][0]];
-                              M4[q] += Y[i]*Y[l]*M2_child[k_from_ijklmn[j][k][0][0][0][0]];
-                              M4[q] += Y[i]*Y[k]*M2_child[k_from_ijklmn[j][l][0][0][0][0]];
-                              M4[q] += Y[i]*Y[j]*M2_child[k_from_ijklmn[k][l][0][0][0][0]];
-                        }
-                        if (expansion_order >= 6){ //M5 is computed
-                              for (q = 0; q < 21; q++){
-                                    array_of_ijklm = ijklmn_from_kn[q][5];
-                                    i = array_of_ijklm[0]; j = array_of_ijklm[1]; k = array_of_ijklm[2]; l = array_of_ijklm[3]; m = array_of_ijklm[4];
-                                    M5[q] += M5_child[q]; //Term in M^5
-                                    M5[q] -= M0_child*Y[i]*Y[j]*Y[k]*Y[l]*Y[m]; //Term in M^0
-                                    M5[q] -= Y[m]*M4_child[k_from_ijklmn[i][j][k][l][0][0]]; //Terms in M^4
-                                    M5[q] -= Y[l]*M4_child[k_from_ijklmn[i][j][k][m][0][0]];
-                                    M5[q] -= Y[k]*M4_child[k_from_ijklmn[i][j][l][m][0][0]];
-                                    M5[q] -= Y[j]*M4_child[k_from_ijklmn[i][k][l][m][0][0]];
-                                    M5[q] -= Y[i]*M4_child[k_from_ijklmn[j][k][l][m][0][0]];
-                                    M5[q] += Y[l]*Y[m]*M3_child[k_from_ijklmn[i][j][k][0][0][0]]; //Terms in M^3
-                                    M5[q] += Y[k]*Y[m]*M3_child[k_from_ijklmn[i][j][l][0][0][0]];
-                                    M5[q] += Y[k]*Y[l]*M3_child[k_from_ijklmn[i][j][m][0][0][0]];
-                                    M5[q] += Y[j]*Y[m]*M3_child[k_from_ijklmn[i][k][l][0][0][0]];
-                                    M5[q] += Y[j]*Y[l]*M3_child[k_from_ijklmn[i][k][m][0][0][0]];
-                                    M5[q] += Y[j]*Y[k]*M3_child[k_from_ijklmn[i][l][m][0][0][0]];
-                                    M5[q] += Y[i]*Y[m]*M3_child[k_from_ijklmn[j][k][l][0][0][0]];
-                                    M5[q] += Y[i]*Y[l]*M3_child[k_from_ijklmn[j][k][m][0][0][0]];
-                                    M5[q] += Y[i]*Y[k]*M3_child[k_from_ijklmn[j][l][m][0][0][0]];
-                                    M5[q] += Y[i]*Y[j]*M3_child[k_from_ijklmn[k][l][m][0][0][0]];
-                                    M5[q] -= Y[i]*Y[j]*Y[k]*M2_child[k_from_ijklmn[l][m][0][0][0][0]]; //Terms in M^2
-                                    M5[q] -= Y[i]*Y[j]*Y[l]*M2_child[k_from_ijklmn[k][m][0][0][0][0]];
-                                    M5[q] -= Y[i]*Y[j]*Y[m]*M2_child[k_from_ijklmn[k][l][0][0][0][0]];
-                                    M5[q] -= Y[i]*Y[k]*Y[l]*M2_child[k_from_ijklmn[j][m][0][0][0][0]];
-                                    M5[q] -= Y[i]*Y[k]*Y[m]*M2_child[k_from_ijklmn[j][l][0][0][0][0]];
-                                    M5[q] -= Y[i]*Y[l]*Y[m]*M2_child[k_from_ijklmn[j][k][0][0][0][0]];
-                                    M5[q] -= Y[j]*Y[k]*Y[l]*M2_child[k_from_ijklmn[i][m][0][0][0][0]];
-                                    M5[q] -= Y[j]*Y[k]*Y[m]*M2_child[k_from_ijklmn[i][l][0][0][0][0]];
-                                    M5[q] -= Y[j]*Y[l]*Y[m]*M2_child[k_from_ijklmn[i][k][0][0][0][0]];
-                                    M5[q] -= Y[k]*Y[l]*Y[m]*M2_child[k_from_ijklmn[i][j][0][0][0][0]];
-                              }
-                        }
+            #if expansion_order >= 5 //M4 is computed
+                  for (q = 0; q < 15; q ++){
+                        array_of_ijklm = ijklmn_from_kn[q][4];
+                        i = array_of_ijklm[0]; j = array_of_ijklm[1]; k = array_of_ijklm[2]; l = array_of_ijklm[3];
+                        M4[q] += M4_child[q]; //Term in M^4
+                        M4[q] += M0_child*Y[i]*Y[j]*Y[k]*Y[l]; //Term in M^0
+                        M4[q] -= Y[l]*M3_child[k_from_ijklmn[i][j][k][0][0][0]]; //Terms in M^3
+                        M4[q] -= Y[k]*M3_child[k_from_ijklmn[i][j][l][0][0][0]];
+                        M4[q] -= Y[j]*M3_child[k_from_ijklmn[i][k][l][0][0][0]];
+                        M4[q] -= Y[i]*M3_child[k_from_ijklmn[j][k][l][0][0][0]];
+                        M4[q] += Y[k]*Y[l]*M2_child[k_from_ijklmn[i][j][0][0][0][0]]; //Terms in M^2
+                        M4[q] += Y[j]*Y[l]*M2_child[k_from_ijklmn[i][k][0][0][0][0]];
+                        M4[q] += Y[j]*Y[k]*M2_child[k_from_ijklmn[i][l][0][0][0][0]];
+                        M4[q] += Y[i]*Y[l]*M2_child[k_from_ijklmn[j][k][0][0][0][0]];
+                        M4[q] += Y[i]*Y[k]*M2_child[k_from_ijklmn[j][l][0][0][0][0]];
+                        M4[q] += Y[i]*Y[j]*M2_child[k_from_ijklmn[k][l][0][0][0][0]];
                   }
-            }
+            #if expansion_order >= 6 //M5 is computed
+                  for (q = 0; q < 21; q ++){
+                        array_of_ijklm = ijklmn_from_kn[q][5];
+                        i = array_of_ijklm[0]; j = array_of_ijklm[1]; k = array_of_ijklm[2]; l = array_of_ijklm[3]; m = array_of_ijklm[4];
+                        M5[q] += M5_child[q]; //Term in M^5
+                        M5[q] -= M0_child*Y[i]*Y[j]*Y[k]*Y[l]*Y[m]; //Term in M^0
+                        M5[q] -= Y[m]*M4_child[k_from_ijklmn[i][j][k][l][0][0]]; //Terms in M^4
+                        M5[q] -= Y[l]*M4_child[k_from_ijklmn[i][j][k][m][0][0]];
+                        M5[q] -= Y[k]*M4_child[k_from_ijklmn[i][j][l][m][0][0]];
+                        M5[q] -= Y[j]*M4_child[k_from_ijklmn[i][k][l][m][0][0]];
+                        M5[q] -= Y[i]*M4_child[k_from_ijklmn[j][k][l][m][0][0]];
+                        M5[q] += Y[l]*Y[m]*M3_child[k_from_ijklmn[i][j][k][0][0][0]]; //Terms in M^3
+                        M5[q] += Y[k]*Y[m]*M3_child[k_from_ijklmn[i][j][l][0][0][0]];
+                        M5[q] += Y[k]*Y[l]*M3_child[k_from_ijklmn[i][j][m][0][0][0]];
+                        M5[q] += Y[j]*Y[m]*M3_child[k_from_ijklmn[i][k][l][0][0][0]];
+                        M5[q] += Y[j]*Y[l]*M3_child[k_from_ijklmn[i][k][m][0][0][0]];
+                        M5[q] += Y[j]*Y[k]*M3_child[k_from_ijklmn[i][l][m][0][0][0]];
+                        M5[q] += Y[i]*Y[m]*M3_child[k_from_ijklmn[j][k][l][0][0][0]];
+                        M5[q] += Y[i]*Y[l]*M3_child[k_from_ijklmn[j][k][m][0][0][0]];
+                        M5[q] += Y[i]*Y[k]*M3_child[k_from_ijklmn[j][l][m][0][0][0]];
+                        M5[q] += Y[i]*Y[j]*M3_child[k_from_ijklmn[k][l][m][0][0][0]];
+                        M5[q] -= Y[i]*Y[j]*Y[k]*M2_child[k_from_ijklmn[l][m][0][0][0][0]]; //Terms in M^2
+                        M5[q] -= Y[i]*Y[j]*Y[l]*M2_child[k_from_ijklmn[k][m][0][0][0][0]];
+                        M5[q] -= Y[i]*Y[j]*Y[m]*M2_child[k_from_ijklmn[k][l][0][0][0][0]];
+                        M5[q] -= Y[i]*Y[k]*Y[l]*M2_child[k_from_ijklmn[j][m][0][0][0][0]];
+                        M5[q] -= Y[i]*Y[k]*Y[m]*M2_child[k_from_ijklmn[j][l][0][0][0][0]];
+                        M5[q] -= Y[i]*Y[l]*Y[m]*M2_child[k_from_ijklmn[j][k][0][0][0][0]];
+                        M5[q] -= Y[j]*Y[k]*Y[l]*M2_child[k_from_ijklmn[i][m][0][0][0][0]];
+                        M5[q] -= Y[j]*Y[k]*Y[m]*M2_child[k_from_ijklmn[i][l][0][0][0][0]];
+                        M5[q] -= Y[j]*Y[l]*Y[m]*M2_child[k_from_ijklmn[i][k][0][0][0][0]];
+                        M5[q] -= Y[k]*Y[l]*Y[m]*M2_child[k_from_ijklmn[i][j][0][0][0][0]];
+                  }
+            #if expansion_order >= 7 //M6 is computed
+                  for (q = 0; q < 28; q ++){
+                        array_of_ijklm = ijklmn_from_kn[q][6];
+                        i = array_of_ijklm[0]; j = array_of_ijklm[1]; k = array_of_ijklm[2];
+                        l = array_of_ijklm[3]; m = array_of_ijklm[4]; n = array_of_ijklm[5];
+                        M6[q] += M6_child[q]; //Term in M^6
+                        M6[q] -= M5_child[k_from_ijklmn[i][j][k][l][m][0]]*Y[n]; //Terms in M^5
+                        M6[q] -= M5_child[k_from_ijklmn[i][j][k][l][n][0]]*Y[m];
+                        M6[q] -= M5_child[k_from_ijklmn[i][j][k][m][n][0]]*Y[l];
+                        M6[q] -= M5_child[k_from_ijklmn[i][j][l][m][n][0]]*Y[k];
+                        M6[q] -= M5_child[k_from_ijklmn[i][k][l][m][n][0]]*Y[j];
+                        M6[q] -= M5_child[k_from_ijklmn[j][k][l][m][n][0]]*Y[i];
+                        M6[q] += M4_child[k_from_ijklmn[i][j][k][l][0][0]]*Y[m]*Y[n]; //Terms in M^4
+                        M6[q] += M4_child[k_from_ijklmn[i][j][k][m][0][0]]*Y[l]*Y[n];
+                        M6[q] += M4_child[k_from_ijklmn[i][j][k][n][0][0]]*Y[l]*Y[m];
+                        M6[q] += M4_child[k_from_ijklmn[i][j][l][m][0][0]]*Y[k]*Y[n];
+                        M6[q] += M4_child[k_from_ijklmn[i][j][l][n][0][0]]*Y[k]*Y[m];
+                        M6[q] += M4_child[k_from_ijklmn[i][j][m][n][0][0]]*Y[k]*Y[l];
+                        M6[q] += M4_child[k_from_ijklmn[i][k][l][m][0][0]]*Y[j]*Y[n];
+                        M6[q] += M4_child[k_from_ijklmn[i][k][l][n][0][0]]*Y[j]*Y[m];
+                        M6[q] += M4_child[k_from_ijklmn[i][k][m][n][0][0]]*Y[j]*Y[l];
+                        M6[q] += M4_child[k_from_ijklmn[i][l][m][n][0][0]]*Y[j]*Y[k];
+                        M6[q] += M4_child[k_from_ijklmn[j][k][l][m][0][0]]*Y[i]*Y[n];
+                        M6[q] += M4_child[k_from_ijklmn[j][k][l][n][0][0]]*Y[i]*Y[m];
+                        M6[q] += M4_child[k_from_ijklmn[j][k][m][n][0][0]]*Y[i]*Y[l];
+                        M6[q] += M4_child[k_from_ijklmn[j][l][m][n][0][0]]*Y[i]*Y[k];
+                        M6[q] += M4_child[k_from_ijklmn[k][l][m][n][0][0]]*Y[i]*Y[j];
+                        M6[q] -= M3_child[k_from_ijklmn[i][j][k][0][0][0]]*Y[l]*Y[m]*Y[n]; //Terms in M^3
+                        M6[q] -= M3_child[k_from_ijklmn[i][j][l][0][0][0]]*Y[k]*Y[m]*Y[n];
+                        M6[q] -= M3_child[k_from_ijklmn[i][j][m][0][0][0]]*Y[k]*Y[l]*Y[n];
+                        M6[q] -= M3_child[k_from_ijklmn[i][j][n][0][0][0]]*Y[k]*Y[l]*Y[m];
+                        M6[q] -= M3_child[k_from_ijklmn[i][k][l][0][0][0]]*Y[j]*Y[m]*Y[n];
+                        M6[q] -= M3_child[k_from_ijklmn[i][k][m][0][0][0]]*Y[j]*Y[l]*Y[n];
+                        M6[q] -= M3_child[k_from_ijklmn[i][k][n][0][0][0]]*Y[j]*Y[l]*Y[m];
+                        M6[q] -= M3_child[k_from_ijklmn[i][l][m][0][0][0]]*Y[j]*Y[k]*Y[n];
+                        M6[q] -= M3_child[k_from_ijklmn[i][l][n][0][0][0]]*Y[j]*Y[k]*Y[m];
+                        M6[q] -= M3_child[k_from_ijklmn[i][m][n][0][0][0]]*Y[j]*Y[k]*Y[l];
+                        M6[q] -= M3_child[k_from_ijklmn[j][k][l][0][0][0]]*Y[i]*Y[m]*Y[n];
+                        M6[q] -= M3_child[k_from_ijklmn[j][k][m][0][0][0]]*Y[i]*Y[l]*Y[n];
+                        M6[q] -= M3_child[k_from_ijklmn[j][k][n][0][0][0]]*Y[i]*Y[l]*Y[m];
+                        M6[q] -= M3_child[k_from_ijklmn[j][l][m][0][0][0]]*Y[i]*Y[k]*Y[n];
+                        M6[q] -= M3_child[k_from_ijklmn[j][l][n][0][0][0]]*Y[i]*Y[k]*Y[m];
+                        M6[q] -= M3_child[k_from_ijklmn[j][m][n][0][0][0]]*Y[i]*Y[k]*Y[l];
+                        M6[q] -= M3_child[k_from_ijklmn[k][l][m][0][0][0]]*Y[i]*Y[j]*Y[n];
+                        M6[q] -= M3_child[k_from_ijklmn[k][l][n][0][0][0]]*Y[i]*Y[j]*Y[m];
+                        M6[q] -= M3_child[k_from_ijklmn[k][m][n][0][0][0]]*Y[i]*Y[j]*Y[l];
+                        M6[q] -= M3_child[k_from_ijklmn[l][m][n][0][0][0]]*Y[i]*Y[j]*Y[k];
+                        M6[q] += M2_child[k_from_ijklmn[i][j][0][0][0][0]]*Y[k]*Y[l]*Y[m]*Y[n]; //Terms in M^2
+                        M6[q] += M2_child[k_from_ijklmn[i][k][0][0][0][0]]*Y[j]*Y[l]*Y[m]*Y[n];
+                        M6[q] += M2_child[k_from_ijklmn[i][l][0][0][0][0]]*Y[j]*Y[k]*Y[m]*Y[n];
+                        M6[q] += M2_child[k_from_ijklmn[i][m][0][0][0][0]]*Y[j]*Y[k]*Y[l]*Y[n];
+                        M6[q] += M2_child[k_from_ijklmn[i][n][0][0][0][0]]*Y[j]*Y[k]*Y[l]*Y[m];
+                        M6[q] += M2_child[k_from_ijklmn[j][k][0][0][0][0]]*Y[i]*Y[l]*Y[m]*Y[n];
+                        M6[q] += M2_child[k_from_ijklmn[j][l][0][0][0][0]]*Y[i]*Y[k]*Y[m]*Y[n];
+                        M6[q] += M2_child[k_from_ijklmn[j][m][0][0][0][0]]*Y[i]*Y[k]*Y[l]*Y[n];
+                        M6[q] += M2_child[k_from_ijklmn[j][n][0][0][0][0]]*Y[i]*Y[k]*Y[l]*Y[m];
+                        M6[q] += M2_child[k_from_ijklmn[k][l][0][0][0][0]]*Y[i]*Y[j]*Y[m]*Y[n];
+                        M6[q] += M2_child[k_from_ijklmn[k][m][0][0][0][0]]*Y[i]*Y[j]*Y[l]*Y[n];
+                        M6[q] += M2_child[k_from_ijklmn[k][n][0][0][0][0]]*Y[i]*Y[j]*Y[l]*Y[m];
+                        M6[q] += M2_child[k_from_ijklmn[l][m][0][0][0][0]]*Y[i]*Y[j]*Y[k]*Y[n];
+                        M6[q] += M2_child[k_from_ijklmn[l][n][0][0][0][0]]*Y[i]*Y[j]*Y[k]*Y[m];
+                        M6[q] += M2_child[k_from_ijklmn[m][n][0][0][0][0]]*Y[i]*Y[j]*Y[k]*Y[l];
+                        M6[q] += M0_child*Y[i]*Y[j]*Y[k]*Y[l]*Y[m]*Y[n]; //Term in M^0
+                  }
+            #if expansion_order >= 8 //M7 is computed
+                  for (q = 0; q < 36; q ++){
+                        array_of_ijklm = ijklmn_from_kn[q][7];
+                        i = array_of_ijklm[0]; j = array_of_ijklm[1]; k = array_of_ijklm[2];
+                        l = array_of_ijklm[3]; m = array_of_ijklm[4]; n = array_of_ijklm[5]; o = array_of_ijklm[6];
+                        M7[q] += M7_child[q]; //Term in M^7
+                        M7[q] -= M6_child[k_from_ijklmn[i][j][k][l][m][n]]*Y[o]; //Terms in M^6
+                        M7[q] -= M6_child[k_from_ijklmn[i][j][k][l][m][o]]*Y[n];
+                        M7[q] -= M6_child[k_from_ijklmn[i][j][k][l][n][o]]*Y[m];
+                        M7[q] -= M6_child[k_from_ijklmn[i][j][k][m][n][o]]*Y[l];
+                        M7[q] -= M6_child[k_from_ijklmn[i][j][l][m][n][o]]*Y[k];
+                        M7[q] -= M6_child[k_from_ijklmn[i][k][l][m][n][o]]*Y[j];
+                        M7[q] -= M6_child[k_from_ijklmn[j][k][l][m][n][o]]*Y[i];
+                        M7[q] += M5_child[k_from_ijklmn[i][j][k][l][m][0]]*Y[n]*Y[o]; //Terms in M^5
+                        M7[q] += M5_child[k_from_ijklmn[i][j][k][l][n][0]]*Y[m]*Y[o];
+                        M7[q] += M5_child[k_from_ijklmn[i][j][k][l][o][0]]*Y[m]*Y[n];
+                        M7[q] += M5_child[k_from_ijklmn[i][j][k][m][n][0]]*Y[l]*Y[o];
+                        M7[q] += M5_child[k_from_ijklmn[i][j][k][m][o][0]]*Y[l]*Y[n];
+                        M7[q] += M5_child[k_from_ijklmn[i][j][k][n][o][0]]*Y[l]*Y[m];
+                        M7[q] += M5_child[k_from_ijklmn[i][j][l][m][n][0]]*Y[k]*Y[o];
+                        M7[q] += M5_child[k_from_ijklmn[i][j][l][m][o][0]]*Y[k]*Y[n];
+                        M7[q] += M5_child[k_from_ijklmn[i][j][l][n][o][0]]*Y[k]*Y[m];
+                        M7[q] += M5_child[k_from_ijklmn[i][j][m][n][o][0]]*Y[k]*Y[l];
+                        M7[q] += M5_child[k_from_ijklmn[i][k][l][m][n][0]]*Y[j]*Y[o];
+                        M7[q] += M5_child[k_from_ijklmn[i][k][l][m][o][0]]*Y[j]*Y[n];
+                        M7[q] += M5_child[k_from_ijklmn[i][k][l][n][o][0]]*Y[j]*Y[m];
+                        M7[q] += M5_child[k_from_ijklmn[i][k][m][n][o][0]]*Y[j]*Y[l];
+                        M7[q] += M5_child[k_from_ijklmn[i][l][m][n][o][0]]*Y[j]*Y[k];
+                        M7[q] += M5_child[k_from_ijklmn[j][k][l][m][n][0]]*Y[i]*Y[o];
+                        M7[q] += M5_child[k_from_ijklmn[j][k][l][m][o][0]]*Y[i]*Y[n];
+                        M7[q] += M5_child[k_from_ijklmn[j][k][l][n][o][0]]*Y[i]*Y[m];
+                        M7[q] += M5_child[k_from_ijklmn[j][k][m][n][o][0]]*Y[i]*Y[l];
+                        M7[q] += M5_child[k_from_ijklmn[j][l][m][n][o][0]]*Y[i]*Y[k];
+                        M7[q] += M5_child[k_from_ijklmn[k][l][m][n][o][0]]*Y[i]*Y[j];
+                        M7[q] -= M4_child[k_from_ijklmn[i][j][k][l][0][0]]*Y[m]*Y[n]*Y[o]; //Terms in M^4
+                        M7[q] -= M4_child[k_from_ijklmn[i][j][k][m][0][0]]*Y[l]*Y[n]*Y[o];
+                        M7[q] -= M4_child[k_from_ijklmn[i][j][k][n][0][0]]*Y[l]*Y[m]*Y[o];
+                        M7[q] -= M4_child[k_from_ijklmn[i][j][k][o][0][0]]*Y[l]*Y[m]*Y[n];
+                        M7[q] -= M4_child[k_from_ijklmn[i][j][l][m][0][0]]*Y[k]*Y[n]*Y[o];
+                        M7[q] -= M4_child[k_from_ijklmn[i][j][l][n][0][0]]*Y[k]*Y[m]*Y[o];
+                        M7[q] -= M4_child[k_from_ijklmn[i][j][l][o][0][0]]*Y[k]*Y[m]*Y[n];
+                        M7[q] -= M4_child[k_from_ijklmn[i][j][m][n][0][0]]*Y[k]*Y[l]*Y[o];
+                        M7[q] -= M4_child[k_from_ijklmn[i][j][m][o][0][0]]*Y[k]*Y[l]*Y[n];
+                        M7[q] -= M4_child[k_from_ijklmn[i][j][n][o][0][0]]*Y[k]*Y[l]*Y[m];
+                        M7[q] -= M4_child[k_from_ijklmn[i][k][l][m][0][0]]*Y[j]*Y[n]*Y[o];
+                        M7[q] -= M4_child[k_from_ijklmn[i][k][l][n][0][0]]*Y[j]*Y[m]*Y[o];
+                        M7[q] -= M4_child[k_from_ijklmn[i][k][l][o][0][0]]*Y[j]*Y[m]*Y[n];
+                        M7[q] -= M4_child[k_from_ijklmn[i][k][m][n][0][0]]*Y[j]*Y[l]*Y[o];
+                        M7[q] -= M4_child[k_from_ijklmn[i][k][m][o][0][0]]*Y[j]*Y[l]*Y[n];
+                        M7[q] -= M4_child[k_from_ijklmn[i][k][n][o][0][0]]*Y[j]*Y[l]*Y[m];
+                        M7[q] -= M4_child[k_from_ijklmn[i][l][m][n][0][0]]*Y[j]*Y[k]*Y[o];
+                        M7[q] -= M4_child[k_from_ijklmn[i][l][m][o][0][0]]*Y[j]*Y[k]*Y[n];
+                        M7[q] -= M4_child[k_from_ijklmn[i][l][n][o][0][0]]*Y[j]*Y[k]*Y[m];
+                        M7[q] -= M4_child[k_from_ijklmn[i][m][n][o][0][0]]*Y[j]*Y[k]*Y[l];
+                        M7[q] -= M4_child[k_from_ijklmn[j][k][l][m][0][0]]*Y[i]*Y[n]*Y[o];
+                        M7[q] -= M4_child[k_from_ijklmn[j][k][l][n][0][0]]*Y[i]*Y[m]*Y[o];
+                        M7[q] -= M4_child[k_from_ijklmn[j][k][l][o][0][0]]*Y[i]*Y[m]*Y[n];
+                        M7[q] -= M4_child[k_from_ijklmn[j][k][m][n][0][0]]*Y[i]*Y[l]*Y[o];
+                        M7[q] -= M4_child[k_from_ijklmn[j][k][m][o][0][0]]*Y[i]*Y[l]*Y[n];
+                        M7[q] -= M4_child[k_from_ijklmn[j][k][n][o][0][0]]*Y[i]*Y[l]*Y[m];
+                        M7[q] -= M4_child[k_from_ijklmn[j][l][m][n][0][0]]*Y[i]*Y[k]*Y[o];
+                        M7[q] -= M4_child[k_from_ijklmn[j][l][m][o][0][0]]*Y[i]*Y[k]*Y[n];
+                        M7[q] -= M4_child[k_from_ijklmn[j][l][n][o][0][0]]*Y[i]*Y[k]*Y[m];
+                        M7[q] -= M4_child[k_from_ijklmn[j][m][n][o][0][0]]*Y[i]*Y[k]*Y[l];
+                        M7[q] -= M4_child[k_from_ijklmn[k][l][m][n][0][0]]*Y[i]*Y[j]*Y[o];
+                        M7[q] -= M4_child[k_from_ijklmn[k][l][m][o][0][0]]*Y[i]*Y[j]*Y[n];
+                        M7[q] -= M4_child[k_from_ijklmn[k][l][n][o][0][0]]*Y[i]*Y[j]*Y[m];
+                        M7[q] -= M4_child[k_from_ijklmn[k][m][n][o][0][0]]*Y[i]*Y[j]*Y[l];
+                        M7[q] -= M4_child[k_from_ijklmn[l][m][n][o][0][0]]*Y[i]*Y[j]*Y[k];
+                        M7[q] += M3_child[k_from_ijklmn[m][n][o][0][0][0]]*Y[i]*Y[j]*Y[k]*Y[l]; //Terms in M^3
+                        M7[q] += M3_child[k_from_ijklmn[l][n][o][0][0][0]]*Y[i]*Y[j]*Y[k]*Y[m];
+                        M7[q] += M3_child[k_from_ijklmn[l][m][o][0][0][0]]*Y[i]*Y[j]*Y[k]*Y[n];
+                        M7[q] += M3_child[k_from_ijklmn[l][m][n][0][0][0]]*Y[i]*Y[j]*Y[k]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[k][n][o][0][0][0]]*Y[i]*Y[j]*Y[l]*Y[m];
+                        M7[q] += M3_child[k_from_ijklmn[k][m][o][0][0][0]]*Y[i]*Y[j]*Y[l]*Y[n];
+                        M7[q] += M3_child[k_from_ijklmn[k][m][n][0][0][0]]*Y[i]*Y[j]*Y[l]*Y[o];                       
+                        M7[q] += M3_child[k_from_ijklmn[k][l][o][0][0][0]]*Y[i]*Y[j]*Y[m]*Y[n];
+                        M7[q] += M3_child[k_from_ijklmn[k][l][n][0][0][0]]*Y[i]*Y[j]*Y[m]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[k][l][m][0][0][0]]*Y[i]*Y[j]*Y[n]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[j][n][o][0][0][0]]*Y[i]*Y[k]*Y[l]*Y[m];
+                        M7[q] += M3_child[k_from_ijklmn[j][m][o][0][0][0]]*Y[i]*Y[k]*Y[l]*Y[n];
+                        M7[q] += M3_child[k_from_ijklmn[j][m][n][0][0][0]]*Y[i]*Y[k]*Y[l]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[j][l][o][0][0][0]]*Y[i]*Y[k]*Y[m]*Y[n];                       
+                        M7[q] += M3_child[k_from_ijklmn[j][l][n][0][0][0]]*Y[i]*Y[k]*Y[m]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[j][l][m][0][0][0]]*Y[i]*Y[k]*Y[n]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[j][k][o][0][0][0]]*Y[i]*Y[l]*Y[m]*Y[n];
+                        M7[q] += M3_child[k_from_ijklmn[j][k][n][0][0][0]]*Y[i]*Y[l]*Y[m]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[j][k][m][0][0][0]]*Y[i]*Y[l]*Y[n]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[j][k][l][0][0][0]]*Y[i]*Y[m]*Y[n]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[i][n][o][0][0][0]]*Y[j]*Y[k]*Y[l]*Y[m];                      
+                        M7[q] += M3_child[k_from_ijklmn[i][m][o][0][0][0]]*Y[j]*Y[k]*Y[l]*Y[n];
+                        M7[q] += M3_child[k_from_ijklmn[i][m][n][0][0][0]]*Y[j]*Y[k]*Y[l]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[i][l][o][0][0][0]]*Y[j]*Y[k]*Y[m]*Y[n];
+                        M7[q] += M3_child[k_from_ijklmn[i][l][n][0][0][0]]*Y[j]*Y[k]*Y[m]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[i][l][m][0][0][0]]*Y[j]*Y[k]*Y[n]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[i][k][o][0][0][0]]*Y[j]*Y[l]*Y[m]*Y[n];
+                        M7[q] += M3_child[k_from_ijklmn[i][k][n][0][0][0]]*Y[j]*Y[l]*Y[m]*Y[o];                        
+                        M7[q] += M3_child[k_from_ijklmn[i][k][m][0][0][0]]*Y[j]*Y[l]*Y[n]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[i][k][l][0][0][0]]*Y[j]*Y[m]*Y[n]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[i][j][o][0][0][0]]*Y[k]*Y[l]*Y[m]*Y[n];
+                        M7[q] += M3_child[k_from_ijklmn[i][j][n][0][0][0]]*Y[k]*Y[l]*Y[m]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[i][j][m][0][0][0]]*Y[k]*Y[l]*Y[n]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[i][j][l][0][0][0]]*Y[k]*Y[m]*Y[n]*Y[o];
+                        M7[q] += M3_child[k_from_ijklmn[i][j][k][0][0][0]]*Y[l]*Y[m]*Y[n]*Y[o];                       
+                        M7[q] -= M2_child[k_from_ijklmn[n][o][0][0][0][0]]*Y[i]*Y[j]*Y[k]*Y[l]*Y[m]; //Terms in M^2
+                        M7[q] -= M2_child[k_from_ijklmn[m][o][0][0][0][0]]*Y[i]*Y[j]*Y[k]*Y[l]*Y[n];
+                        M7[q] -= M2_child[k_from_ijklmn[m][n][0][0][0][0]]*Y[i]*Y[j]*Y[k]*Y[l]*Y[o];                        
+                        M7[q] -= M2_child[k_from_ijklmn[l][o][0][0][0][0]]*Y[i]*Y[j]*Y[k]*Y[m]*Y[n];
+                        M7[q] -= M2_child[k_from_ijklmn[l][n][0][0][0][0]]*Y[i]*Y[j]*Y[k]*Y[m]*Y[o];
+                        M7[q] -= M2_child[k_from_ijklmn[l][m][0][0][0][0]]*Y[i]*Y[j]*Y[k]*Y[n]*Y[o];                        
+                        M7[q] -= M2_child[k_from_ijklmn[k][o][0][0][0][0]]*Y[i]*Y[j]*Y[l]*Y[m]*Y[n];
+                        M7[q] -= M2_child[k_from_ijklmn[k][n][0][0][0][0]]*Y[i]*Y[j]*Y[l]*Y[m]*Y[o];
+                        M7[q] -= M2_child[k_from_ijklmn[k][m][0][0][0][0]]*Y[i]*Y[j]*Y[l]*Y[n]*Y[o];                    
+                        M7[q] -= M2_child[k_from_ijklmn[k][l][0][0][0][0]]*Y[i]*Y[j]*Y[m]*Y[n]*Y[o];
+                        M7[q] -= M2_child[k_from_ijklmn[j][o][0][0][0][0]]*Y[i]*Y[k]*Y[l]*Y[m]*Y[n];
+                        M7[q] -= M2_child[k_from_ijklmn[j][n][0][0][0][0]]*Y[i]*Y[k]*Y[l]*Y[m]*Y[o];                      
+                        M7[q] -= M2_child[k_from_ijklmn[j][m][0][0][0][0]]*Y[i]*Y[k]*Y[l]*Y[n]*Y[o];
+                        M7[q] -= M2_child[k_from_ijklmn[j][l][0][0][0][0]]*Y[i]*Y[k]*Y[m]*Y[n]*Y[o];
+                        M7[q] -= M2_child[k_from_ijklmn[j][k][0][0][0][0]]*Y[i]*Y[l]*Y[m]*Y[n]*Y[o];                       
+                        M7[q] -= M2_child[k_from_ijklmn[i][o][0][0][0][0]]*Y[j]*Y[k]*Y[l]*Y[m]*Y[n];
+                        M7[q] -= M2_child[k_from_ijklmn[i][n][0][0][0][0]]*Y[j]*Y[k]*Y[l]*Y[m]*Y[o];
+                        M7[q] -= M2_child[k_from_ijklmn[i][m][0][0][0][0]]*Y[j]*Y[k]*Y[l]*Y[n]*Y[o];                        
+                        M7[q] -= M2_child[k_from_ijklmn[i][l][0][0][0][0]]*Y[j]*Y[k]*Y[m]*Y[n]*Y[o];
+                        M7[q] -= M2_child[k_from_ijklmn[i][k][0][0][0][0]]*Y[j]*Y[l]*Y[m]*Y[n]*Y[o];
+                        M7[q] -= M2_child[k_from_ijklmn[i][j][0][0][0][0]]*Y[k]*Y[l]*Y[m]*Y[n]*Y[o];
+                        M7[q] -= M0_child*Y[i]*Y[j]*Y[k]*Y[l]*Y[m]*Y[n]*Y[o]; //Term in M^0
+                  }
+            #endif
+            #endif
+            #endif
+            #endif
+            #endif
+            #endif
       }
       
       /******** Initializing the fields M2 to M5 of the FlatTree ********/
-      for (k = 0; k < 6; k++){
-            (M2FlatTree + 6*a)[k] = M2[k];
-      }
-      if (expansion_order >= 4){
-            for (k = 0; k < 10; k++){
-                  (M3FlatTree + 10*a)[k] = M3[k];
+      #if expansion_order >= 3
+            for (p = 0; p < 6; p ++){
+                  ((FlatTree + a) -> M2)[p] = M2[p];
             }
-            if (expansion_order >= 5){
-                  for (k = 0; k < 15; k++){
-                        (M4FlatTree + 15*a)[k] = M4[k];
+            #if expansion_order >= 4
+                  for (p = 0; p < 10; p ++){
+                        ((FlatTree + a) -> M3)[p] = M3[p];
                   }
-                  if (expansion_order >= 6){
-                        for (k = 0; k < 21; k++){
-                              (M5FlatTree + 21*a)[k] = M5[k];
+                  #if expansion_order >= 5
+                        for (p = 0; p < 15; p ++){
+                              ((FlatTree + a) -> M4)[p] = M4[p];
                         }
-                  }
-            }
-      }
+                        #if expansion_order >= 6
+                              for (p = 0; p < 21; p ++){
+                                    ((FlatTree + a) -> M5)[p] = M5[p];
+                              }
+                              #if expansion_order >= 7
+                                    for (p = 0; p < 28; p ++){
+                                          ((FlatTree + a) -> M6)[p] = M6[p];
+                                    }
+                                    #if expansion_order >= 8
+                                          for (p = 0; p < 36; p ++){
+                                                ((FlatTree + a) -> M7)[p] = M7[p];
+                                          }
+                                    #endif
+                              #endif
+                        #endif
+                  #endif
+            #endif
+      #endif
 }
+#endif
 
 
 void com_flattree(struct node * FlatTree, struct moonlet * moonlets){
@@ -1396,14 +1592,14 @@ void com_flattree(struct node * FlatTree, struct moonlet * moonlets){
       
       /******** I travel the flattree. If a node is childless, I compute its mass and center of mass ********/
       /******** Otherwise, I store it in the stack for future treatment                              ********/
-      for (i = 0; i < cell_id; i++){
+      for (i = 0; i < cell_id; i ++){
             how_many_children = (FlatTree + i) -> how_many_children;
             if (how_many_children == 0){ //If the node has no children
                   get_com(FlatTree, moonlets, i);                  
             }
             else{ //If the node has children
                   stack[j] = i;
-                  j++;
+                  j ++;
             }
       }
       
@@ -1415,7 +1611,7 @@ void com_flattree(struct node * FlatTree, struct moonlet * moonlets){
       
       /******** I now travel the stack from the end to treat nodes that were not treated previously ********/
       while(j > 0){
-            j--;
+            j --;
             i = stack[j];
             get_com_from_children(FlatTree, i);
       }
@@ -1443,7 +1639,7 @@ void rmax_flattree(struct node * FlatTree, struct moonlet * moonlets){
             }
             else{ //If the node has children
                   stack[j] = i;
-                  j++;
+                  j ++;
             }
       }
       
@@ -1455,7 +1651,7 @@ void rmax_flattree(struct node * FlatTree, struct moonlet * moonlets){
       
       /******** I now travel the stack from the end to treat nodes that were not treated previously ********/
       while(j > 0){
-            j--;
+            j --;
             i = stack[j];
             get_rmax_from_children(FlatTree, i);
       }
@@ -1472,12 +1668,13 @@ void rcrit_flattree(struct node * FlatTree){
       int i;
       
       /******** I travel the flattree and compute the tolerance parameter theta and r_crit for each node ********/
-      for (i = 0; i < cell_id; i++){
+      for (i = 0; i < cell_id; i ++){
             get_tolerance_parameter(FlatTree, i, 1.0e-6);
       }
 }
 
 
+#if expansion_order >= 3 && mutual_bool
 void multipole_flattree(struct node * FlatTree, struct moonlet * moonlets){
 
       /******** Computes and initializes the multipole moments of all the nodes of FlatTree ********/
@@ -1488,22 +1685,23 @@ void multipole_flattree(struct node * FlatTree, struct moonlet * moonlets){
       int j = 0; //Index of where to put a node in the stack
       int how_many_children;
       int how_many_dots;
+      int child_multipole_threshold = expansion_order <= 4 ? 1 : 2*expansion_order; //Probably not optimal
       
       /******** I travel the flattree. If a node is childless or contains few bodies, I compute ********/
       /******** its multipole moments. Otherwise, I store it in the stack for future treatment  ********/
-      for (i = 0; i < cell_id; i++){
+      for (i = 0; i < cell_id; i ++){
             how_many_children = (FlatTree + i) -> how_many_children;
             if (how_many_children == 0){ //If the node has no children
                   get_Mn(FlatTree, moonlets, i);
             }
             else{ //If the node has children
                   how_many_dots = (FlatTree + i) -> how_many_dots;
-                  if (how_many_dots / how_many_children < child_multipole_threshold){
+                  if (how_many_dots / how_many_children <= child_multipole_threshold){
                         get_Mn(FlatTree, moonlets, i);
                   }
                   else{
                         stack[j] = i;
-                        j++;
+                        j ++;
                   }
             }
       }
@@ -1516,13 +1714,14 @@ void multipole_flattree(struct node * FlatTree, struct moonlet * moonlets){
       
       /******** I now travel the stack from the end to treat nodes that were not treated previously ********/
       while(j > 0){
-            j--;
+            j --;
             i = stack[j];
             get_Mn_from_children(FlatTree, i);
       } 
       free(stack);
       stack = NULL;
 }
+#endif
 
 
 /*************************************************************************************/
@@ -1531,171 +1730,224 @@ void multipole_flattree(struct node * FlatTree, struct moonlet * moonlets){
 /*************************************************************************************/
 
 
-void gradR(typ * R, typ * grad, int p){
+void gradR(typ * R, typ * grad){
 
-      /******** This function computes the p^th gradient of G/R, for p >= 0, and stores it into grad ********/
-      /******** The vector R has three components and is of the form R = {Rx, Ry, Rz}                ********/
-      /******** It is assumed that the array grad is indexed from 0 to (p+1)(p+2)/2 - 1,             ********/
-      /******** corresponding to the (p+1)(p+2)/2 independent components of the tensor grad^(p)(G/R) ********/
+      /******** This function computes the n^th gradient of G/R, for 1 <= n <= expansion_order, and stores them   ********/
+      /******** into grad. The vector R has three components and is of the form R = {Rx, Ry, Rz}. It is assumed   ********/
+      /******** that the array grad is indexed from 0 to (p + 1)(p(2p + 10)/12 + 1)-2, where p = expansion_order, ********/
+      /******** so it can hold all the independant components of the p first gradients of G/R                     ********/
 
       typ R1 = R[0], R2 = R[1], R3 = R[2];
-      typ R12, R13, R14, R15, R22, R23, R24, R25, R32, R33, R34, R35;
-      typ R1_R2, R1_R3, R2_R3;
-      typ normR  = sqrt(R1*R1 + R2*R2 + R3*R3); // |R|
-      typ normR3; // |R|^3
-      typ normR5; // |R|^5
-      typ normR7; // |R|^7
-      typ normR9; // |R|^9
-      typ normR11;// |R|^11
-      typ normR13;// |R|^13
-      typ D1;
-      typ D2;
-      typ D3;
-      typ D4;
-      typ D5;
-      typ D6;
-
-      if (p == 0){
-            *grad = G/normR;
-      }
-      else if (p == 1){
-            normR3  = normR*normR*normR;
-            D1      = -1.0*G/normR3;
-            grad[0] = D1*R1;
-            grad[1] = D1*R2;
-            grad[2] = D1*R3;
-      }
-      else if (p == 2){
-            normR3  = normR*normR*normR;
-            normR5  = normR3*normR*normR;
-            D1      = -1.0*G/normR3;
-            D2      =  3.0*G/normR5;
-            grad[0] = D2*R1*R1 + D1;
-            grad[1] = D2*R1*R2;
-            grad[2] = D2*R1*R3;
-            grad[3] = D2*R2*R2 + D1;
-            grad[4] = D2*R2*R3;
-            grad[5] = D2*R3*R3 + D1;
-      }
-      else if (p == 3){
-            normR5  = normR*normR*normR*normR*normR;
-            normR7  = normR5*normR*normR;
-            D2      =   3.0*G/normR5;
-            D3      = -15.0*G/normR7;
-            R12     = R1*R1;  R22 = R2*R2;  R32 = R3*R3;
-            grad[0] = D3*R12*R1 + 3.0*D2*R1;
-            grad[1] = D3*R12*R2 +     D2*R2;
-            grad[2] = D3*R12*R3 +     D2*R3;
-            grad[3] = D3*R22*R1 +     D2*R1;
-            grad[4] = D3*R1*R2*R3;
-            grad[5] = D3*R32*R1 +     D2*R1;
-            grad[6] = D3*R22*R2 + 3.0*D2*R2;
-            grad[7] = D3*R22*R3 +     D2*R3;
-            grad[8] = D3*R32*R2 +     D2*R2;
-            grad[9] = D3*R32*R3 + 3.0*D2*R3;
-      }
-      else if (p == 4){
-            normR5   = normR*normR*normR*normR*normR;
-            normR7   = normR5*normR*normR;
-            normR9   = normR7*normR*normR;
-            D2       =   3.0*G/normR5;
-            D3       = -15.0*G/normR7;
-            D4       = 105.0*G/normR9;
-            R12      = R1*R1;   R22 = R2*R2;   R32 = R3*R3;
-            R13      = R12*R1;  R23 = R22*R2;  R33 = R32*R3;
-            R1_R2    = R1*R2; R1_R3 = R1*R3; R2_R3 = R2*R3;
-            grad[0]  = D4*R12*R12 + 6.0*D3*R12 +   3.0*D2;
-            grad[1]  = D4*R13*R2  + 3.0*D3*R1_R2;
-            grad[2]  = D4*R13*R3  + 3.0*D3*R1_R3;
-            grad[3]  = D4*R12*R22 +     D3*(R12+R22) + D2;
-            grad[4]  = D4*R12*R2_R3 +   D3*R2_R3;
-            grad[5]  = D4*R12*R32 +     D3*(R12+R32) + D2;
-            grad[6]  = D4*R23*R1  + 3.0*D3*R1_R2;
-            grad[7]  = D4*R22*R1_R3 +   D3*R1_R3;
-            grad[8]  = D4*R1_R2*R32 +   D3*R1_R2;
-            grad[9]  = D4*R33*R1  + 3.0*D3*R1_R3;
-            grad[10] = D4*R22*R22 + 6.0*D3*R22 +   3.0*D2;
-            grad[11] = D4*R23*R3  + 3.0*D3*R2_R3;
-            grad[12] = D4*R22*R32 +     D3*(R22+R32) + D2;
-            grad[13] = D4*R33*R2  + 3.0*D3*R2_R3;
-            grad[14] = D4*R32*R32 + 6.0*D3*R32 +   3.0*D2;
-      }
-      else if (p == 5){
-            normR7   = normR*normR*normR*normR*normR*normR*normR;
-            normR9   = normR7*normR*normR;
-            normR11  = normR9*normR*normR;
-            D3       =  -15.0*G/normR7;
-            D4       =  105.0*G/normR9;
-            D5       = -945.0*G/normR11;
-            R12      = R1*R1;    R22 = R2*R2;    R32 = R3*R3;
-            R13      = R12*R1;   R23 = R22*R2;   R33 = R32*R3;
-            R14      = R12*R12;  R24 = R22*R22;  R34 = R32*R32;
-            R1_R2    = R1*R2; R1_R3 = R1*R3; R2_R3 = R2*R3;
-            grad[0]  = D5*R13*R12 +  10.0*D4*R13 +             15.0*D3*R1;
-            grad[1]  = D5*R14*R2  +   6.0*D4*R12*R2 +           3.0*D3*R2;
-            grad[2]  = D5*R14*R3  +   6.0*D4*R12*R3 +           3.0*D3*R3;
-            grad[3]  = D5*R13*R22 +       D4*R1*(R12+3.0*R22) + 3.0*D3*R1;
-            grad[4]  = D5*R13*R2_R3 + 3.0*D4*R1_R2*R3;
-            grad[5]  = D5*R13*R32 +       D4*R1*(R12+3.0*R32) + 3.0*D3*R1;
-            grad[6]  = D5*R23*R12 +       D4*R2*(R22+3.0*R12) + 3.0*D3*R2;
-            grad[7]  = D5*R12*R22*R3 +    D4*R3*(R12+R22) +         D3*R3;
-            grad[8]  = D5*R12*R2*R32 +    D4*R2*(R12+R32) +         D3*R2;
-            grad[9]  = D5*R33*R12 +       D4*R3*(R32+3.0*R12) + 3.0*D3*R3;
-            grad[10] = D5*R24*R1  +   6.0*D4*R22*R1 +           3.0*D3*R1;
-            grad[11] = D5*R23*R1_R3 + 3.0*D4*R1_R2*R3;
-            grad[12] = D5*R1*R22*R32 +    D4*R1*(R32+R22) +         D3*R1;
-            grad[13] = D5*R1_R2*R33 + 3.0*D4*R1_R2*R3;
-            grad[14] = D5*R34*R1  +   6.0*D4*R32*R1 +           3.0*D3*R1;
-            grad[15] = D5*R23*R22 +  10.0*D4*R23 +             15.0*D3*R2;
-            grad[16] = D5*R24*R3  +   6.0*D4*R22*R3 +           3.0*D3*R3;
-            grad[17] = D5*R23*R32 +       D4*R2*(R22+3.0*R32) + 3.0*D3*R2;
-            grad[18] = D5*R33*R22 +       D4*R3*(R32+3.0*R22) + 3.0*D3*R3;
-            grad[19] = D5*R34*R2  +   6.0*D4*R32*R2 +           3.0*D3*R2;
-            grad[20] = D5*R33*R32 +  10.0*D4*R33 +             15.0*D3*R3;
-      }
-      else if (p == 6){
-            normR7   = normR*normR*normR*normR*normR*normR*normR;
-            normR9   = normR7*normR*normR;
-            normR11  = normR9*normR*normR;
-            normR13  = normR11*normR*normR;
-            D3       =   -15.0*G/normR7;
-            D4       =   105.0*G/normR9;
-            D5       =  -945.0*G/normR11;
-            D6       = 10395.0*G/normR13;
-            R12      = R1*R1;    R22 = R2*R2;    R32 = R3*R3;
-            R13      = R12*R1;   R23 = R22*R2;   R33 = R32*R3;
-            R14      = R12*R12;  R24 = R22*R22;  R34 = R32*R32;
-            R15      = R13*R12;  R25 = R23*R22;  R35 = R33*R32;
-            R1_R2    = R1*R2;  R1_R3 = R1*R3;  R2_R3 = R2*R3;
-            grad[0]  = D6*R13*R13 +  15.0*D5*R14 +                  45.0*D4*R12 +          15.0*D3;
-            grad[1]  = D6*R15*R2 +   10.0*D5*R13*R2 +               15.0*D4*R1_R2;
-            grad[2]  = D6*R15*R3 +   10.0*D5*R13*R3 +               15.0*D4*R1_R3;
-            grad[3]  = D6*R14*R22 +       D5*R12*(R12+6.0*R22) +     3.0*D4*(R22+2.0*R12) + 3.0*D3;
-            grad[4]  = D6*R14*R2_R3 + 6.0*D5*R12*R2_R3 +             3.0*D4*R2_R3;
-            grad[5]  = D6*R14*R32 +       D5*R12*(R12+6.0*R32) +     3.0*D4*(R32+2.0*R12) + 3.0*D3;
-            grad[6]  = D6*R13*R23 +   3.0*D5*R1_R2*(R12+R22) +       9.0*D4*R1_R2;
-            grad[7]  = D6*R13*R22*R3 +    D5*R1_R3*(R12+3.0*R22) +   3.0*D4*R1_R3;
-            grad[8]  = D6*R13*R32*R2 +    D5*R1_R2*(R12+3.0*R32) +   3.0*D4*R1_R2;
-            grad[9]  = D6*R13*R33 +   3.0*D5*R1_R3*(R12+R32) +       9.0*D4*R1_R3;
-            grad[10] = D6*R24*R12 +       D5*R22*(R22+6.0*R12) +     3.0*D4*(R12+2.0*R22) + 3.0*D3;
-            grad[11] = D6*R23*R12*R3 +    D5*R2_R3*(R22+3.0*R12) +   3.0*D4*R2_R3;
-            grad[12] = D6*R12*R22*R32 +   D5*(R12*R22+R12*R32+R22*R32) + D4*(R12+R22+R32) +     D3;
-            grad[13] = D6*R33*R12*R2 +    D5*R2_R3*(R32+3.0*R12) +   3.0*D4*R2_R3;
-            grad[14] = D6*R34*R12 +       D5*R32*(R32+6.0*R12) +     3.0*D4*(R12+2.0*R32) + 3.0*D3;
-            grad[15] = D6*R25*R1 +   10.0*D5*R23*R1 +               15.0*D4*R1_R2;
-            grad[16] = D6*R24*R1_R3 + 6.0*D5*R22*R1_R3 +             3.0*D4*R1_R3; 
-            grad[17] = D6*R23*R32*R1 +    D5*R1_R2*(R22+3.0*R32) +   3.0*D4*R1_R2;
-            grad[18] = D6*R33*R22*R1 +    D5*R1_R3*(R32+3.0*R22) +   3.0*D4*R1_R3;
-            grad[19] = D6*R34*R1_R2 + 6.0*D5*R32*R1_R2 +             3.0*D4*R1_R2;
-            grad[20] = D6*R35*R1 +   10.0*D5*R33*R1 +               15.0*D4*R1_R3;
-            grad[21] = D6*R23*R23 +  15.0*D5*R24 +                  45.0*D4*R22 +          15.0*D3;
-            grad[22] = D6*R25*R3 +   10.0*D5*R23*R3 +               15.0*D4*R2_R3;
-            grad[23] = D6*R24*R32 +       D5*R22*(R22+6.0*R32) +     3.0*D4*(R32+2.0*R22) + 3.0*D3;
-            grad[24] = D6*R33*R23 +   3.0*D5*R2_R3*(R32+R22) +       9.0*D4*R2_R3;
-            grad[25] = D6*R34*R22 +       D5*R32*(R32+6.0*R22) +     3.0*D4*(R22+2.0*R32) + 3.0*D3;
-            grad[26] = D6*R35*R2 +   10.0*D5*R33*R2 +               15.0*D4*R2_R3;
-            grad[27] = D6*R33*R33 +  15.0*D5*R34 +                  45.0*D4*R32 +          15.0*D3;
-      }
+      typ normR2 = R1*R1 + R2*R2 + R3*R3;
+      typ normR  = sqrt(normR2);
+      typ D1     = -G/(normR2*normR);
+      #if expansion_order >= 2
+            typ D2 = -3.*D1/normR2;
+            #if expansion_order >= 3
+                  typ D3  = -5.*D2/normR2;
+                  typ R12 = R1*R1, R22 = R2*R2, R32 = R3*R3;
+                  #if expansion_order >= 4
+                        typ D4    = -7.*D3/normR2;
+                        typ R1_R2 = R1*R2,  R1_R3 = R1*R3,  R2_R3 = R2*R3;
+                        typ R13   = R12*R1, R23   = R22*R2, R33   = R32*R3;
+                        #if expansion_order >= 5
+                              typ D5  = -9.*D4/normR2;
+                              typ R14 = R12*R12, R24 = R22*R22, R34 = R32*R32;
+                              #if expansion_order >= 6
+                                    typ D6  = -11.*D5/normR2;
+                                    typ R15 = R13*R12, R25 = R23*R22, R35 = R33*R32;
+                                    #if expansion_order >= 7
+                                          typ D7  = -13.*D6/normR2;
+                                          typ R16 = R13*R13, R26 = R23*R23, R36 = R33*R33;
+                                          #if expansion_order >= 8
+                                                typ D8  = -15.*D7/normR2;
+                                                typ R17 = R14*R13, R27 = R24*R23, R37 = R34*R33;
+                                          #endif
+                                    #endif
+                              #endif
+                        #endif
+                  #endif
+            #endif
+      #endif
+      
+      grad[0]   = D1*R1;       //Computing the first gradient
+      grad[1]   = D1*R2;
+      grad[2]   = D1*R3;
+      #if expansion_order >= 2 //Computing the second gradient
+      grad[3]   = D2*R1*R1 + D1;
+      grad[4]   = D2*R1*R2;
+      grad[5]   = D2*R1*R3;
+      grad[6]   = D2*R2*R2 + D1;
+      grad[7]   = D2*R2*R3;
+      grad[8]   = D2*R3*R3 + D1;
+      #if expansion_order >= 3 //Computing the third gradient
+      grad[9]   = D3*R12*R1 + 3.0*D2*R1;
+      grad[10]  = D3*R12*R2 +     D2*R2;
+      grad[11]  = D3*R12*R3 +     D2*R3;
+      grad[12]  = D3*R22*R1 +     D2*R1;
+      grad[13]  = D3*R1*R2*R3;
+      grad[14]  = D3*R32*R1 +     D2*R1;
+      grad[15]  = D3*R22*R2 + 3.0*D2*R2;
+      grad[16]  = D3*R22*R3 +     D2*R3;
+      grad[17]  = D3*R32*R2 +     D2*R2;
+      grad[18]  = D3*R32*R3 + 3.0*D2*R3;
+      #if expansion_order >= 4 //Computing the fourth gradient
+      grad[19]  = D4*R12*R12 + 6.0*D3*R12 +   3.0*D2;
+      grad[20]  = D4*R13*R2  + 3.0*D3*R1_R2;
+      grad[21]  = D4*R13*R3  + 3.0*D3*R1_R3;
+      grad[22]  = D4*R12*R22 +     D3*(R12+R22) + D2;
+      grad[23]  = D4*R12*R2_R3 +   D3*R2_R3;
+      grad[24]  = D4*R12*R32 +     D3*(R12+R32) + D2;
+      grad[25]  = D4*R23*R1  + 3.0*D3*R1_R2;
+      grad[26]  = D4*R22*R1_R3 +   D3*R1_R3;
+      grad[27]  = D4*R1_R2*R32 +   D3*R1_R2;
+      grad[28]  = D4*R33*R1  + 3.0*D3*R1_R3;
+      grad[29]  = D4*R22*R22 + 6.0*D3*R22 +   3.0*D2;
+      grad[30]  = D4*R23*R3  + 3.0*D3*R2_R3;
+      grad[31]  = D4*R22*R32 +     D3*(R22+R32) + D2;
+      grad[32]  = D4*R33*R2  + 3.0*D3*R2_R3;
+      grad[33]  = D4*R32*R32 + 6.0*D3*R32 +   3.0*D2;
+      #if expansion_order >= 5 //Computing the fifth gradient
+      grad[34]  = D5*R13*R12 +  10.0*D4*R13 +             15.0*D3*R1;
+      grad[35]  = D5*R14*R2  +   6.0*D4*R12*R2 +           3.0*D3*R2;
+      grad[36]  = D5*R14*R3  +   6.0*D4*R12*R3 +           3.0*D3*R3;
+      grad[37]  = D5*R13*R22 +       D4*R1*(R12+3.0*R22) + 3.0*D3*R1;
+      grad[38]  = D5*R13*R2_R3 + 3.0*D4*R1_R2*R3;
+      grad[39]  = D5*R13*R32 +       D4*R1*(R12+3.0*R32) + 3.0*D3*R1;
+      grad[40]  = D5*R23*R12 +       D4*R2*(R22+3.0*R12) + 3.0*D3*R2;
+      grad[41]  = D5*R12*R22*R3 +    D4*R3*(R12+R22) +         D3*R3;
+      grad[42]  = D5*R12*R2*R32 +    D4*R2*(R12+R32) +         D3*R2;
+      grad[43]  = D5*R33*R12 +       D4*R3*(R32+3.0*R12) + 3.0*D3*R3;
+      grad[44]  = D5*R24*R1  +   6.0*D4*R22*R1 +           3.0*D3*R1;
+      grad[45]  = D5*R23*R1_R3 + 3.0*D4*R1_R2*R3;
+      grad[46]  = D5*R1*R22*R32 +    D4*R1*(R32+R22) +         D3*R1;
+      grad[47]  = D5*R1_R2*R33 + 3.0*D4*R1_R2*R3;
+      grad[48]  = D5*R34*R1  +   6.0*D4*R32*R1 +           3.0*D3*R1;
+      grad[49]  = D5*R23*R22 +  10.0*D4*R23 +             15.0*D3*R2;
+      grad[50]  = D5*R24*R3  +   6.0*D4*R22*R3 +           3.0*D3*R3;
+      grad[51]  = D5*R23*R32 +       D4*R2*(R22+3.0*R32) + 3.0*D3*R2;
+      grad[52]  = D5*R33*R22 +       D4*R3*(R32+3.0*R22) + 3.0*D3*R3;
+      grad[53]  = D5*R34*R2  +   6.0*D4*R32*R2 +           3.0*D3*R2;
+      grad[54]  = D5*R33*R32 +  10.0*D4*R33 +             15.0*D3*R3;
+      #if expansion_order >= 6 //Computing the sixth gradient
+      grad[55]  = D6*R13*R13 +  15.0*D5*R14 +                  45.0*D4*R12 +          15.0*D3;
+      grad[56]  = D6*R15*R2 +   10.0*D5*R13*R2 +               15.0*D4*R1_R2;
+      grad[57]  = D6*R15*R3 +   10.0*D5*R13*R3 +               15.0*D4*R1_R3;
+      grad[58]  = D6*R14*R22 +       D5*R12*(R12+6.0*R22) +     3.0*D4*(R22+2.0*R12) + 3.0*D3;
+      grad[59]  = D6*R14*R2_R3 + 6.0*D5*R12*R2_R3 +             3.0*D4*R2_R3;
+      grad[60]  = D6*R14*R32 +       D5*R12*(R12+6.0*R32) +     3.0*D4*(R32+2.0*R12) + 3.0*D3;
+      grad[61]  = D6*R13*R23 +   3.0*D5*R1_R2*(R12+R22) +       9.0*D4*R1_R2;
+      grad[62]  = D6*R13*R22*R3 +    D5*R1_R3*(R12+3.0*R22) +   3.0*D4*R1_R3;
+      grad[63]  = D6*R13*R32*R2 +    D5*R1_R2*(R12+3.0*R32) +   3.0*D4*R1_R2;
+      grad[64]  = D6*R13*R33 +   3.0*D5*R1_R3*(R12+R32) +       9.0*D4*R1_R3;
+      grad[65]  = D6*R24*R12 +       D5*R22*(R22+6.0*R12) +     3.0*D4*(R12+2.0*R22) + 3.0*D3;
+      grad[66]  = D6*R23*R12*R3 +    D5*R2_R3*(R22+3.0*R12) +   3.0*D4*R2_R3;
+      grad[67]  = D6*R12*R22*R32 +   D5*(R12*R22+R12*R32+R22*R32) + D4*(R12+R22+R32) +     D3;
+      grad[68]  = D6*R33*R12*R2 +    D5*R2_R3*(R32+3.0*R12) +   3.0*D4*R2_R3;
+      grad[69]  = D6*R34*R12 +       D5*R32*(R32+6.0*R12) +     3.0*D4*(R12+2.0*R32) + 3.0*D3;
+      grad[70]  = D6*R25*R1 +   10.0*D5*R23*R1 +               15.0*D4*R1_R2;
+      grad[71]  = D6*R24*R1_R3 + 6.0*D5*R22*R1_R3 +             3.0*D4*R1_R3; 
+      grad[72]  = D6*R23*R32*R1 +    D5*R1_R2*(R22+3.0*R32) +   3.0*D4*R1_R2;
+      grad[73]  = D6*R33*R22*R1 +    D5*R1_R3*(R32+3.0*R22) +   3.0*D4*R1_R3;
+      grad[74]  = D6*R34*R1_R2 + 6.0*D5*R32*R1_R2 +             3.0*D4*R1_R2;
+      grad[75]  = D6*R35*R1 +   10.0*D5*R33*R1 +               15.0*D4*R1_R3;
+      grad[76]  = D6*R23*R23 +  15.0*D5*R24 +                  45.0*D4*R22 +          15.0*D3;
+      grad[77]  = D6*R25*R3 +   10.0*D5*R23*R3 +               15.0*D4*R2_R3;
+      grad[78]  = D6*R24*R32 +       D5*R22*(R22+6.0*R32) +     3.0*D4*(R32+2.0*R22) + 3.0*D3;
+      grad[79]  = D6*R33*R23 +   3.0*D5*R2_R3*(R32+R22) +       9.0*D4*R2_R3;
+      grad[80]  = D6*R34*R22 +       D5*R32*(R32+6.0*R22) +     3.0*D4*(R22+2.0*R32) + 3.0*D3;
+      grad[81]  = D6*R35*R2 +   10.0*D5*R33*R2 +               15.0*D4*R2_R3;
+      grad[82]  = D6*R33*R33 +  15.0*D5*R34 +                  45.0*D4*R32 +          15.0*D3;
+      #if expansion_order >= 7 //Computing the seventh gradient
+      grad[83]  = D7*R14*R13   + 21.*D6*R15                        + 105.*D5*R13                     + 105.*D4*R1;
+      grad[84]  = D7*R16*R2    + 15.*D6*R14*R2                      + 45.*D5*R12*R2                   + 15.*D4*R2;
+      grad[85]  = D7*R16*R3    + 15.*D6*R14*R3                      + 45.*D5*R12*R3                   + 15.*D4*R3;
+      grad[86]  = D7*R15*R22       + D6*(10.*R13*R22+R15)               + D5*(15.*R1*R22+10.*R13)     + 15.*D4*R1;
+      grad[87]  = D7*R15*R2_R3 + 10.*D6*R13*R2_R3                   + 15.*D5*R1_R2*R3;
+      grad[88]  = D7*R15*R32       + D6*(10.*R13*R32+R15)               + D5*(15.*R1*R32+10.*R13)     + 15.*D4*R1;
+      grad[89]  = D7*R14*R23       + D6*(6.*R12*R23+3.*R14*R2)          + D5*(3.*R23+18.*R12*R2)       + 9.*D4*R2;
+      grad[90]  = D7*R14*R22*R3    + D6*(6.*R12*R22*R3+R14*R3)          + D5*(3.*R22*R3+6.*R12*R3)     + 3.*D4*R3;
+      grad[91]  = D7*R14*R2*R32    + D6*(6.*R12*R2*R32+R14*R2)          + D5*(3.*R2*R32+6.*R12*R2)     + 3.*D4*R2;
+      grad[92]  = D7*R14*R33       + D6*(6.*R12*R33+3.*R14*R3)          + D5*(3.*R33+18.*R12*R3)       + 9.*D4*R3;
+      grad[93]  = D7*R13*R24       + D6*(3.*R1*R24+6.*R13*R22)          + D5*(18.*R1*R22+3.*R13)       + 9.*D4*R1;
+      grad[94]  = D7*R13*R23*R3 + 3.*D6*(R1_R3*R23+R13*R2_R3)        + 9.*D5*R1_R2*R3;
+      grad[95]  = D7*R13*R22*R32   + D6*(3.*R1*R22*R32+R13*R32+R13*R22) + D5*(3.*R1*R32+3.*R1*R22+R13) + 3.*D4*R1;
+      grad[96]  = D7*R13*R2*R33 + 3.*D6*(R1_R2*R33+R13*R2_R3)        + 9.*D5*R1_R2*R3;
+      grad[97]  = D7*R13*R34       + D6*(3.*R1*R34+6.*R13*R32)          + D5*(18.*R1*R32+3.*R13)       + 9.*D4*R1;
+      grad[98]  = D7*R12*R25       + D6*(R25+10.*R12*R23)               + D5*(10.*R23+15.*R12*R2)     + 15.*D4*R2;
+      grad[99]  = D7*R12*R24*R3    + D6*(R24*R3+6.*R12*R22*R3)          + D5*(6.*R22*R3+3.*R12*R3)     + 3.*D4*R3;
+      grad[100] = D7*R12*R23*R32   + D6*(R23*R32+3.*R12*R2*R32+R12*R23) + D5*(3.*R2*R32+R23+3.*R12*R2) + 3.*D4*R2;
+      grad[101] = D7*R12*R22*R33   + D6*(R22*R33+R12*R33+3.*R12*R22*R3) + D5*(R33+3.*R22*R3+3.*R12*R3) + 3.*D4*R3;
+      grad[102] = D7*R12*R2*R34    + D6*(R2*R34+6.*R12*R2*R32)          + D5*(6.*R2*R32+3.*R12*R2)     + 3.*D4*R2;
+      grad[103] = D7*R12*R35       + D6*(R35+10.*R12*R33)               + D5*(10.*R33+15.*R12*R3)     + 15.*D4*R3;
+      grad[104] = D7*R1*R26    + 15.*D6*R1*R24                      + 45.*D5*R1*R22                   + 15.*D4*R1;
+      grad[105] = D7*R1_R3*R25 + 10.*D6*R1_R3*R23                   + 15.*D5*R1_R2*R3;
+      grad[106] = D7*R1*R24*R32    + D6*(6.*R1*R22*R32+R1*R24)          + D5*(3.*R1*R32+6.*R1*R22)     + 3.*D4*R1;
+      grad[107] = D7*R1*R23*R33    + D6*(3.*R1_R2*R33+3.*R1_R3*R23)  + 9.*D5*R1_R2*R3;
+      grad[108] = D7*R1*R22*R34    + D6*(R1*R34+6.*R1*R22*R32)          + D5*(6.*R1*R32+3.*R1*R22)     + 3.*D4*R1;
+      grad[109] = D7*R1_R2*R35 + 10.*D6*R1_R2*R33                   + 15.*D5*R1_R2*R3;
+      grad[110] = D7*R1*R36    + 15.*D6*R1*R34                      + 45.*D5*R1*R32                   + 15.*D4*R1;
+      grad[111] = D7*R24*R23   + 21.*D6*R25                        + 105.*D5*R23                     + 105.*D4*R2;
+      grad[112] = D7*R26*R3    + 15.*D6*R24*R3                      + 45.*D5*R22*R3                   + 15.*D4*R3;
+      grad[113] = D7*R25*R32       + D6*(10.*R23*R32+R25)               + D5*(15.*R2*R32+10.*R23)     + 15.*D4*R2;
+      grad[114] = D7*R24*R33       + D6*(6.*R22*R33+3.*R24*R3)          + D5*(3.*R33+18.*R22*R3)       + 9.*D4*R3;
+      grad[115] = D7*R23*R34       + D6*(3.*R2*R34+6.*R23*R32)          + D5*(18.*R2*R32+3.*R23)       + 9.*D4*R2;
+      grad[116] = D7*R22*R35       + D6*(R35+10.*R22*R33)               + D5*(10.*R33+15.*R22*R3)     + 15.*D4*R3;
+      grad[117] = D7*R2*R36    + 15.*D6*R2*R34                      + 45.*D5*R2*R32                   + 15.*D4*R2;
+      grad[118] = D7*R34*R33   + 21.*D6*R35                        + 105.*D5*R33                     + 105.*D4*R3;
+      #if expansion_order >= 8 //Computing the eighth gradient
+      grad[119] = D8*R14*R14   +28.*D7*R16                              +210.*D6*R14                               +420.*D5*R12                  +105.*D4;
+      grad[120] = D8*R17*R2    +21.*D7*R15*R2                           +105.*D6*R13*R2                            +105.*D5*R1_R2;
+      grad[121] = D8*R17*R3    +21.*D7*R15*R3                           +105.*D6*R13*R3                            +105.*D5*R1_R3;
+      grad[122] = D8*R16*R22       +D7*(15.*R14*R22+R16)                     +D6*(45.*R12*R22+15.*R14)                  +D5*(15.*R22+45.*R12)     +15.*D4;
+      grad[123] = D8*R16*R2_R3 +15.*D7*R14*R2_R3                         +45.*D6*R12*R2_R3                          +15.*D5*R2_R3;
+      grad[124] = D8*R16*R32       +D7*(15.*R14*R32+R16)                     +D6*(45.*R12*R32+15.*R14)                  +D5*(15.*R32+45.*R12)     +15.*D4;
+      grad[125] = D8*R15*R23       +D7*(10.*R13*R23+3.*R15*R2)               +D6*(15.*R1*R23+30.*R13*R2)            +45.*D5*R1_R2;
+      grad[126] = D8*R15*R22*R3    +D7*(10.*R13*R22*R3+R15*R3)               +D6*(15.*R1*R22*R3+10.*R13*R3)         +15.*D5*R1_R3;
+      grad[127] = D8*R15*R2*R32    +D7*(10.*R13*R2*R32+R15*R2)               +D6*(15.*R1*R2*R32+10.*R13*R2)         +15.*D5*R1_R2;
+      grad[128] = D8*R15*R33       +D7*(10.*R13*R33+3.*R15*R3)               +D6*(15.*R1*R33+30.*R13*R3)            +45.*D5*R1_R3;
+      grad[129] = D8*R14*R24    +6.*D7*(R12*R24+R14*R22)                  +3.*D6*(R24+12.*R12*R22+R14)              +18.*D5*(R22+R12)              +9.*D4;
+      grad[130] = D8*R14*R23*R3    +D7*(6.*R12*R23*R3+3.*R14*R2_R3)          +D6*(3.*R23*R3+18.*R12*R2_R3)           +9.*D5*R2_R3;
+      grad[131] = D8*R14*R22*R32   +D7*(6.*R12*R22*R32+R14*R32+R14*R22)      +D6*(3.*R22*R32+6.*R12*R32+6.*R12*R22+R14) +D5*(3.*R32+3.*R22+6.*R12) +3.*D4;
+      grad[132] = D8*R14*R2*R33    +D7*(6.*R12*R2*R33+3.*R14*R2_R3)          +D6*(3.*R2*R33+18.*R12*R2_R3)           +9.*D5*R2_R3;
+      grad[133] = D8*R14*R34       +D7*(6.*R12*R34+6.*R14*R32)               +D6*(3.*R34+36.*R12*R32+3.*R14)        +18.*D5*(R32+R12)              +9.*D4;
+      grad[134] = D8*R13*R25       +D7*(3.*R1*R25+10.*R13*R23)               +D6*(30.*R1*R23+15.*R13*R2)            +45.*D5*R1_R2;
+      grad[135] = D8*R13*R24*R3    +D7*(3.*R1_R3*R24+6.*R13*R22*R3)          +D6*(18.*R1_R3*R22+3.*R13*R3)           +9.*D5*R1_R3;
+      grad[136] = D8*R13*R23*R32   +D7*(3.*R1*R23*R32+3.*R13*R2*R32+R13*R23) +D6*(9.*R1_R2*R32+3.*R1*R23+3.*R13*R2)  +9.*D5*R1_R2;
+      grad[137] = D8*R13*R22*R33   +D7*(3.*R1*R22*R33+R13*R33+3.*R13*R22*R3) +D6*(3.*R1*R33+9.*R1_R3*R22+3.*R13*R3)  +9.*D5*R1_R3;
+      grad[138] = D8*R13*R2*R34    +D7*(3.*R1_R2*R34+6.*R13*R2*R32)          +D6*(18.*R1_R2*R32+3.*R13*R2)           +9.*D5*R1_R2;
+      grad[139] = D8*R13*R35       +D7*(3.*R1*R35+10.*R13*R33)               +D6*(30.*R1*R33+15.*R13*R3)            +45.*D5*R1_R3;
+      grad[140] = D8*R12*R26       +D7*(R26+15.*R12*R24)                     +D6*(15.*R24+45.*R12*R22)                  +D5*(45.*R22+15.*R12)     +15.*D4;
+      grad[141] = D8*R12*R25*R3    +D7*(R25*R3+10.*R12*R23*R3)               +D6*(10.*R23*R3+15.*R12*R2_R3)         +15.*D5*R2_R3;
+      grad[142] = D8*R12*R24*R32   +D7*(R24*R32+6.*R12*R22*R32+R12*R24)      +D6*(6.*R22*R32+3.*R12*R32+R24+6.*R12*R22) +D5*(3.*R32+6.*R22+3.*R12) +3.*D4;
+      grad[143] = D8*R12*R23*R33   +D7*(R23*R33+3.*R12*R2*R33+3.*R12*R23*R3) +D6*(3.*R2*R33+3.*R23*R3+9.*R12*R2_R3)  +9.*D5*R2_R3;
+      grad[144] = D8*R12*R22*R34   +D7*(R22*R34+R12*R34+6.*R12*R22*R32)      +D6*(R34+6.*R22*R32+6.*R12*R32+3.*R12*R22) +D5*(6.*R32+3.*R22+3.*R12) +3.*D4;
+      grad[145] = D8*R12*R2*R35    +D7*(R2*R35+10.*R12*R2*R33)               +D6*(10.*R2*R33+15.*R12*R2_R3)         +15.*D5*R2_R3;
+      grad[146] = D8*R12*R36       +D7*(R36+15.*R12*R34)                     +D6*(15.*R34+45.*R12*R32)                  +D5*(45.*R32+15.*R12)     +15.*D4;
+      grad[147] = D8*R1*R27    +21.*D7*R1*R25                           +105.*D6*R1*R23                            +105.*D5*R1_R2;
+      grad[148] = D8*R1_R3*R26 +15.*D7*R1_R3*R24                         +45.*D6*R1*R22*R3                          +15.*D5*R1_R3;
+      grad[149] = D8*R1*R25*R32    +D7*(10.*R1*R23*R32+R1*R25)               +D6*(15.*R1_R2*R32+10.*R1*R23)         +15.*D5*R1_R2;
+      grad[150] = D8*R1*R24*R33    +D7*(6.*R1*R22*R33+3.*R1_R3*R24)          +D6*(3.*R1*R33+18.*R1_R3*R22)           +9.*D5*R1_R3;
+      grad[151] = D8*R1*R23*R34    +D7*(3.*R1_R2*R34+6.*R1*R23*R32)          +D6*(18.*R1_R2*R32+3.*R1*R23)           +9.*D5*R1_R2;
+      grad[152] = D8*R1*R22*R35    +D7*(R1*R35+10.*R1*R22*R33)               +D6*(10.*R1*R33+15.*R1_R3*R22)         +15.*D5*R1_R3;
+      grad[153] = D8*R1_R2*R36 +15.*D7*R1_R2*R34                         +45.*D6*R1_R2*R32                          +15.*D5*R1_R2;
+      grad[154] = D8*R1*R37    +21.*D7*R1*R35                           +105.*D6*R1*R33                            +105.*D5*R1_R3;
+      grad[155] = D8*R24*R24   +28.*D7*R26                              +210.*D6*R24                               +420.*D5*R22                  +105.*D4;
+      grad[156] = D8*R27*R3    +21.*D7*R25*R3                           +105.*D6*R23*R3                            +105.*D5*R2_R3;
+      grad[157] = D8*R26*R32       +D7*(15.*R24*R32+R26)                     +D6*(45.*R22*R32+15.*R24)                  +D5*(15.*R32+45.*R22)     +15.*D4;
+      grad[158] = D8*R25*R33       +D7*(10.*R23*R33+3.*R25*R3)               +D6*(15.*R2*R33+30.*R23*R3)            +45.*D5*R2_R3;
+      grad[159] = D8*R24*R34    +6.*D7*(R22*R34+R24*R32)                  +3.*D6*(R34+12.*R22*R32+R24)              +18.*D5*(R32+R22)              +9.*D4;
+      grad[160] = D8*R23*R35       +D7*(3.*R2*R35+10.*R23*R33)               +D6*(30.*R2*R33+15.*R23*R3)            +45.*D5*R2_R3;
+      grad[161] = D8*R22*R36       +D7*(R36+15.*R22*R34)                     +D6*(15.*R34+45.*R22*R32)                  +D5*(45.*R32+15.*R22)     +15.*D4;
+      grad[162] = D8*R2*R37    +21.*D7*R2*R35                           +105.*D6*R2*R33                            +105.*D5*R2_R3;
+      grad[163] = D8*R34*R34   +28.*D7*R36                              +210.*D6*R34                               +420.*D5*R32                  +105.*D4;
+      #endif
+      #endif
+      #endif
+      #endif
+      #endif
+      #endif
+      #endif
 }
 
 
@@ -1712,10 +1964,31 @@ void inner_product(typ * T1, typ * T2, typ * T3, int p, int q, typ factor){
       int perm; //Number of tensor index permutations
       
       for (q3 = 0; q3 < T3_size; q3 ++){ //Looping over the components of the tensor to be computed
-            for (q2 = 0; q2 < T2_size; q2++){  //Looping over the components of T2, in order to accumulate T3[q3]
-                  perm = perm_from_kn[q2][p];  //Number of permutations that can be done with the indexes of T2
-                  q1 = q1fromq2q3[q2][q3];     //Retrieving the array index of T1
+            for (q2 = 0; q2 < T2_size; q2 ++){   //Looping over the components of T2, in order to accumulate T3[q3]
+                  perm    = perm_from_kn[q2][p]; //Number of permutations that can be done with the indexes of T2
+                  q1      = q1fromq2q3[q2][q3];  //Retrieving the array index of T1
                   T3[q3] += T1[q1] * T2[q2] * (typ) perm * factor; //Accumulating into tensor T3 with a factor factor
+            }
+      }
+}
+
+
+void double_IP(typ * T1, typ * T2, typ * TT2, typ * T3, typ * TT3, int p, int q, typ factor1, typ factor2){
+
+      /******** Same as above but computes two inner products at the same time ********/
+      /******** Accumulates T1 X T2 into T3 and T1 X TT2 into TT3              ********/
+
+      int q1, q2, q3; //Indexes into the arrays T1, T2 and T3
+      int T2_size = ((p + 1)*(p + 2))/2;
+      int T3_size = ((q + 1)*(q + 2))/2;
+      int perm; //Number of tensor index permutations
+      
+      for (q3 = 0; q3 < T3_size; q3 ++){ //Looping over the components of the tensors to be computed
+            for (q2 = 0; q2 < T2_size; q2 ++){    //Looping over the components of T2, in order to accumulate T3[q3]
+                  perm     = perm_from_kn[q2][p]; //Number of permutations that can be done with the indexes of T2
+                  q1       = q1fromq2q3[q2][q3];  //Retrieving the array index of T1
+                  T3[q3]  += T1[q1] * T2[q2]  * (typ) perm * factor1; //Accumulating into tensor T3  with a factor factor1
+                  TT3[q3] += T1[q1] * TT2[q2] * (typ) perm * factor2; //Accumulating into tensor TT3 with a factor factor2
             }
       }
 }
@@ -1727,6 +2000,7 @@ void inner_product(typ * T1, typ * T2, typ * T3, int p, int q, typ factor){
 /***************************************************************************/
 
 
+#if mutual_bool
 void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
 
       /******** Performs the tree walk of Dehnen's algorithm, called the interaction phase      ********/
@@ -1736,11 +2010,10 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
       /******** 3*a to 3*a + 2 contain the acceleration of body a, is given initialized to 0.0  ********/
       /******** Similarly, it is assumed that the C^(m) are 0.0 upon calling this function      ********/
       
-      
       /******** It is hard to tell in advance how many pairs will be treated by the tree walk   ********/
       /******** I expect it will be at most factor * cell_id, but that might have to be changed ********/
       int factor = (int) floor(350.0 * 0.5 / theta_min);
-      struct pair * stack = (struct pair *)malloc(factor * cell_id * sizeof(struct pair)); //Stack of pairs of ids of nodes that have to be treated
+      struct pair * stack = (struct pair *)malloc(factor * cell_id * sizeof(struct pair)); //Stack of pairs of nodes' id that have to be treated
       if (stack == NULL){
             fprintf(stderr, "Error : Cannot allocate memory for the stack in function Cm_flattree.\n");
             abort();
@@ -1759,12 +2032,69 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
       int idLastChild;  //Id of last child
       typ M0_a, M0_b;   //Nodes' masses
       typ * com_a, * com_b; //Nodes' centers of mass
-      typ * M2_a, * M3_a, * M4_a, * M5_a; //Node a's multipole moments
-      typ * M2_b, * M3_b, * M4_b, * M5_b; //Node b's multipole moments
+      #if expansion_order   == 1
+      typ Grad[3]; //Independant components of all the gradients of G/R from order 1 to expansion_order
+      #elif expansion_order == 2
+      typ Grad[9];
+      #elif expansion_order == 3
+      typ Grad[19];
+      #elif expansion_order == 4
+      typ Grad[34];
+      #elif expansion_order == 5
+      typ Grad[55];
+      #elif expansion_order == 6
+      typ Grad[83];
+      #elif expansion_order == 7
+      typ Grad[119];
+      #elif expansion_order == 8
+      typ Grad[164];
+      #endif
+      typ C1_a[3];
+      typ C1_b[3];
       typ R[3];  //com_a - com_b
-      typ grad[3], grad2[6], grad3[10], grad4[15], grad5[21], grad6[28]; //p^th gradient of G/R
-      typ C1_a[3],  C2_a[6],  C3_a[10],  C4_a[15],  C5_a[21],  C6_a[28]; //p^th order interaction tensor of node a
-      typ C1_b[3],  C2_b[6],  C3_b[10],  C4_b[15],  C5_b[21],  C6_b[28]; //p^th order interaction tensor of node b
+      
+      #if expansion_order >= 2
+            typ * grad2;
+            typ C2_a[6];
+            typ C2_b[6];
+            #if expansion_order >= 3
+                  typ * grad3;
+                  typ C3_a[10];       //interaction tensor of node a
+                  typ C3_b[10];       //interaction tensor of node b
+                  typ * M2_a, * M2_b; //Node's multipole moments
+                  #if expansion_order >= 4
+                        typ * grad4;
+                        typ C4_a[15];
+                        typ C4_b[15];
+                        typ * M3_a, * M3_b;
+                        #if expansion_order >= 5
+                              typ * grad5;
+                              typ C5_a[21];
+                              typ C5_b[21];
+                              typ * M4_a, * M4_b;
+                              #if expansion_order >= 6
+                                    typ * grad6;
+                                    typ C6_a[28];
+                                    typ C6_b[28];
+                                    typ * M5_a, * M5_b;
+                                    #if expansion_order >= 7
+                                          typ * grad7;
+                                          typ C7_a[36];
+                                          typ C7_b[36];
+                                          typ * M6_a, * M6_b;
+                                          #if expansion_order >= 8
+                                                typ * grad8;
+                                                typ C8_a[45];
+                                                typ C8_b[45];
+                                                typ * M7_a, * M7_b;
+                                          #endif
+                                    #endif
+                              #endif
+                        #endif
+                  #endif
+            #endif
+      #endif
+
       typ r_crit_a, r_crit_b; // Critical radii of node a and b
       typ ms, Rs, xs, ys, zs, mu, Ru, xu, yu, zu, dx, dy, dz, r, r3, softening; //Body coordinates
       typ omega2_x, omega2_y, omega2_z;
@@ -1789,8 +2119,8 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                   how_many_children_a = (FlatTree + a) -> how_many_children;
                   if (Na < N_cs || how_many_children_a == 0){ //Direct interaction
                         dots_a = (FlatTree + a) -> dots;
-                        for (p = 0; p < Na; p++){
-                              for (q = p + 1; q < Na; q++){
+                        for (p = 0; p < Na; p ++){
+                              for (q = p + 1; q < Na; q ++){
                                     s = dots_a[p]; //Id of first  moonlet
                                     u = dots_a[q]; //Id of second monnlet 
                                     xs = (moonlets + s) -> x;
@@ -1842,8 +2172,8 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                   if (!(Na > N_cc_pre && Nb > N_cc_pre) && Na*Nb < N_cc_pre){ //Direct interaction
                         dots_a = (FlatTree + a) -> dots;
                         dots_b = (FlatTree + b) -> dots;
-                        for (p = 0; p < Na; p++){
-                              for (q = 0; q < Nb; q++){
+                        for (p = 0; p < Na; p ++){
+                              for (q = 0; q < Nb; q ++){
                                     s = dots_a[p]; //Id of first  body
                                     u = dots_b[q]; //Id of second body
                                     xs = (moonlets + s) -> x;
@@ -1887,21 +2217,21 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                               /******** Computing the tensors of interaction C^(m) ********/
                               M0_a = (FlatTree + a) -> M0;
                               M0_b = (FlatTree + b) -> M0;
-                              gradR(R, grad, 1);  //Computing the first gradient of G/R
-                              C1_a[0] =  M0_b * grad[0];  C1_a[1] =  M0_b * grad[1];  C1_a[2] =  M0_b * grad[2];
-                              C1_b[0] = -M0_a * grad[0];  C1_b[1] = -M0_a * grad[1];  C1_b[2] = -M0_a * grad[2];
+                              gradR(R, Grad);  //Computing all the gradients of G/R
+                              C1_a[0] =  M0_b * Grad[0];  C1_a[1] =  M0_b * Grad[1];  C1_a[2] =  M0_b * Grad[2];
+                              C1_b[0] = -M0_a * Grad[0];  C1_b[1] = -M0_a * Grad[1];  C1_b[2] = -M0_a * Grad[2];
                               
-                              if (expansion_order >= 2){
-                                    gradR(R, grad2, 2);  //Computing the second gradient
+                              #if expansion_order >= 2
+                                    grad2 = Grad + 3;
                                     for (p = 0; p < 6; p ++){
                                           C2_a[p] = M0_b * grad2[p];
                                           C2_b[p] = M0_a * grad2[p];
                                     }
                                     
-                                    if (expansion_order >= 3){
-                                          M2_a = M2FlatTree + 6*a;
-                                          M2_b = M2FlatTree + 6*b;
-                                          gradR(R, grad3, 3);  //Computing the third gradient
+                                    #if expansion_order >= 3
+                                          M2_a  = (FlatTree + a) -> M2;
+                                          M2_b  = (FlatTree + b) -> M2;
+                                          grad3 = Grad + 9;
                                           for (p = 0; p < 10; p ++){
                                                 C3_a[p] =  M0_b * grad3[p];
                                                 C3_b[p] = -M0_a * grad3[p];
@@ -1913,83 +2243,113 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
                                           C1_b[1] -= 0.5*(M2_a[0]*grad3[1]+2.0*M2_a[1]*grad3[3]+2.0*M2_a[2]*grad3[4]+M2_a[3]*grad3[6]+2.0*M2_a[4]*grad3[7]+M2_a[5]*grad3[8]);
                                           C1_b[2] -= 0.5*(M2_a[0]*grad3[2]+2.0*M2_a[1]*grad3[4]+2.0*M2_a[2]*grad3[5]+M2_a[3]*grad3[7]+2.0*M2_a[4]*grad3[8]+M2_a[5]*grad3[9]);
                                           
-                                          if (expansion_order >= 4){
-                                                M3_a = M3FlatTree + 10*a;
-                                                M3_b = M3FlatTree + 10*b;
-                                                gradR(R, grad4, 4);  //Computing the fourth gradient
+                                          #if expansion_order >= 4
+                                                M3_a  = (FlatTree + a) -> M3;
+                                                M3_b  = (FlatTree + b) -> M3;
+                                                grad4 = Grad + 19;
                                                 for (p = 0; p < 15; p ++){
                                                       C4_a[p] = M0_b * grad4[p];
                                                       C4_b[p] = M0_a * grad4[p];
                                                 }
-                                                inner_product(grad4, M3_b, C1_a, 3, 1, -0.166666666666666666666666667);
-                                                inner_product(grad4, M3_a, C1_b, 3, 1, -0.166666666666666666666666667);
-                                                inner_product(grad4, M2_b, C2_a, 2, 2, 0.5);
-                                                inner_product(grad4, M2_a, C2_b, 2, 2, 0.5);
+                                                double_IP(grad4, M3_b, M3_a, C1_a, C1_b, 3, 1, -0.166666666666666666666666667, -0.166666666666666666666666667);
+                                                double_IP(grad4, M2_b, M2_a, C2_a, C2_b, 2, 2, 0.5, 0.5);
                                                 
-                                                if (expansion_order >= 5){
-                                                      M4_a = M4FlatTree + 15*a;
-                                                      M4_b = M4FlatTree + 15*b;
-                                                      gradR(R, grad5, 5);  //Computing the fifth gradient
+                                                #if expansion_order >= 5
+                                                      M4_a  = (FlatTree + a) -> M4;
+                                                      M4_b  = (FlatTree + b) -> M4;
+                                                      grad5 = Grad + 34;
                                                       for (p = 0; p < 21; p ++){
                                                             C5_a[p] =  M0_b * grad5[p];
                                                             C5_b[p] = -M0_a * grad5[p];
                                                       }
-                                                      inner_product(grad5, M4_b, C1_a, 4, 1,  0.041666666666666666666666667);
-                                                      inner_product(grad5, M4_a, C1_b, 4, 1, -0.041666666666666666666666667);
-                                                      inner_product(grad5, M3_b, C2_a, 3, 2, -0.166666666666666666666666667);
-                                                      inner_product(grad5, M3_a, C2_b, 3, 2,  0.166666666666666666666666667);
-                                                      inner_product(grad5, M2_b, C3_a, 2, 3,  0.5);
-                                                      inner_product(grad5, M2_a, C3_b, 2, 3, -0.5);
+                                                      double_IP(grad5, M4_b, M4_a, C1_a, C1_b, 4, 1, 0.041666666666666666666666667, -0.041666666666666666666666667);
+                                                      double_IP(grad5, M3_b, M3_a, C2_a, C2_b, 3, 2, -0.166666666666666666666666667, 0.166666666666666666666666667);
+                                                      double_IP(grad5, M2_b, M2_a, C3_a, C3_b, 2, 3, 0.5, -0.5);
                                                       
-                                                      if (expansion_order >= 6){
-                                                            M5_a = M5FlatTree + 21*a;
-                                                            M5_b = M5FlatTree + 21*b;
-                                                            gradR(R, grad6, 6);  //Computing the sixth gradient
+                                                      #if expansion_order >= 6
+                                                            M5_a  = (FlatTree + a) -> M5;
+                                                            M5_b  = (FlatTree + b) -> M5;
+                                                            grad6 = Grad + 55;
                                                             for (p = 0; p < 28; p ++){
                                                                   C6_a[p] = M0_b * grad6[p];
                                                                   C6_b[p] = M0_a * grad6[p];
                                                             }
-                                                            inner_product(grad6, M5_b, C1_a, 5, 1, -0.008333333333333333333333333);
-                                                            inner_product(grad6, M5_a, C1_b, 5, 1, -0.008333333333333333333333333);
-                                                            inner_product(grad6, M4_b, C2_a, 4, 2,  0.041666666666666666666666667);
-                                                            inner_product(grad6, M4_a, C2_b, 4, 2,  0.041666666666666666666666667);
-                                                            inner_product(grad6, M3_b, C3_a, 3, 3, -0.166666666666666666666666667);
-                                                            inner_product(grad6, M3_a, C3_b, 3, 3, -0.166666666666666666666666667);
-                                                            inner_product(grad6, M2_b, C4_a, 2, 4,  0.5);
-                                                            inner_product(grad6, M2_a, C4_b, 2, 4,  0.5);
-                                                      }
-                                                }
-                                          }
-                                    }
-                              }
+                                                            double_IP(grad6, M5_b, M5_a, C1_a, C1_b, 5, 1, -0.008333333333333333333333333, -0.008333333333333333333333333);
+                                                            double_IP(grad6, M4_b, M4_a, C2_a, C2_b, 4, 2, 0.041666666666666666666666667, 0.041666666666666666666666667);
+                                                            double_IP(grad6, M3_b, M3_a, C3_a, C3_b, 3, 3, -0.166666666666666666666666667, -0.166666666666666666666666667);
+                                                            double_IP(grad6, M2_b, M2_a, C4_a, C4_b, 2, 4, 0.5, 0.5);
+                                                            #if expansion_order >= 7
+                                                                  M6_a  = (FlatTree + a) -> M6;
+                                                                  M6_b  = (FlatTree + b) -> M6;
+                                                                  grad7 = Grad + 83;
+                                                                  for (p = 0; p < 36; p ++){
+                                                                        C7_a[p] =  M0_b * grad7[p];
+                                                                        C7_b[p] = -M0_a * grad7[p];
+                                                                  }
+                                                                  double_IP(grad7, M6_b, M6_a, C1_a, C1_b, 6, 1, 0.0013888888888888888888889, -0.0013888888888888888888889);
+                                                                  double_IP(grad7, M5_b, M5_a, C2_a, C2_b, 5, 2, -0.0083333333333333333333333, 0.0083333333333333333333333);
+                                                                  double_IP(grad7, M4_b, M4_a, C3_a, C3_b, 4, 3, 0.0416666666666666666666667, -0.0416666666666666666666667);
+                                                                  double_IP(grad7, M3_b, M3_a, C4_a, C4_b, 3, 4, -0.1666666666666666666666667, 0.1666666666666666666666667);
+                                                                  double_IP(grad7, M2_b, M2_a, C5_a, C5_b, 2, 5, 0.5, -0.5);
+                                                                  #if expansion_order >= 8
+                                                                        M7_a  = (FlatTree + a) -> M7;
+                                                                        M7_b  = (FlatTree + b) -> M7;
+                                                                        grad8 = Grad + 119;
+                                                                        for (p = 0; p < 45; p ++){
+                                                                              C8_a[p] = M0_b * grad8[p];
+                                                                              C8_b[p] = M0_a * grad8[p];
+                                                                        }
+                                                                        double_IP(grad8, M7_b, M7_a, C1_a, C1_b, 7, 1, -0.0001984126984126984126984, -0.0001984126984126984126984);
+                                                                        double_IP(grad8, M6_b, M6_a, C2_a, C2_b, 6, 2, 0.0013888888888888888888889, 0.0013888888888888888888889);
+                                                                        double_IP(grad8, M5_b, M5_a, C3_a, C3_b, 5, 3, -0.0083333333333333333333333, -0.0083333333333333333333333);
+                                                                        double_IP(grad8, M4_b, M4_a, C4_a, C4_b, 4, 4, 0.0416666666666666666666667, 0.0416666666666666666666667);
+                                                                        double_IP(grad8, M3_b, M3_a, C5_a, C5_b, 3, 5, -0.1666666666666666666666667, -0.1666666666666666666666667);
+                                                                        double_IP(grad8, M2_b, M2_a, C6_a, C6_b, 2, 6, 0.5, 0.5);
+                                                                  #endif
+                                                            #endif
+                                                      #endif
+                                                #endif
+                                          #endif
+                                    #endif
+                              #endif
                               /******** Actualizing the FlatTrees C^(m) ********/
                               ((FlatTree + a) -> C1)[0] += C1_a[0];  ((FlatTree + a) -> C1)[1] += C1_a[1];  ((FlatTree + a) -> C1)[2] += C1_a[2];
                               ((FlatTree + b) -> C1)[0] += C1_b[0];  ((FlatTree + b) -> C1)[1] += C1_b[1];  ((FlatTree + b) -> C1)[2] += C1_b[2];
-                              if(expansion_order >= 2){
+                              #if expansion_order >= 2
                                     for (p = 0; p < 6; p ++){
-                                          C2FlatTree[6*a + p] += C2_a[p];  C2FlatTree[6*b + p] += C2_b[p];
+                                          ((FlatTree + a) -> C2)[p] += C2_a[p];  ((FlatTree + b) -> C2)[p] += C2_b[p];
                                     }
-                                    if(expansion_order >= 3){
+                                    #if expansion_order >= 3
                                           for (p = 0; p < 10; p ++){
-                                                C3FlatTree[10*a + p] += C3_a[p];  C3FlatTree[10*b + p] += C3_b[p];
+                                                ((FlatTree + a) -> C3)[p] += C3_a[p];  ((FlatTree + b) -> C3)[p] += C3_b[p];
                                           }
-                                          if(expansion_order >= 4){
+                                          #if expansion_order >= 4
                                                 for (p = 0; p < 15; p ++){
-                                                      C4FlatTree[15*a + p] += C4_a[p];  C4FlatTree[15*b + p] += C4_b[p];
+                                                      ((FlatTree + a) -> C4)[p] += C4_a[p];  ((FlatTree + b) -> C4)[p] += C4_b[p];
                                                 }
-                                                if(expansion_order >= 5){
+                                                #if expansion_order >= 5
                                                       for (p = 0; p < 21; p ++){
-                                                            C5FlatTree[21*a + p] += C5_a[p];  C5FlatTree[21*b + p] += C5_b[p];
+                                                            ((FlatTree + a) -> C5)[p] += C5_a[p];  ((FlatTree + b) -> C5)[p] += C5_b[p];
                                                       }
-                                                      if(expansion_order >= 6){
+                                                      #if expansion_order >= 6
                                                             for (p = 0; p < 28; p ++){
-                                                                  C6FlatTree[28*a + p] += C6_a[p];  C6FlatTree[28*b + p] += C6_b[p];
+                                                                  ((FlatTree + a) -> C6)[p] += C6_a[p];  ((FlatTree + b) -> C6)[p] += C6_b[p];
                                                             }
-                                                      }
-                                                }
-                                          }
-                                    }
-                              }
+                                                            #if expansion_order >= 7
+                                                                  for (p = 0; p < 36; p ++){
+                                                                        ((FlatTree + a) -> C7)[p] += C7_a[p];  ((FlatTree + b) -> C7)[p] += C7_b[p];
+                                                                  }
+                                                                  #if expansion_order >= 8
+                                                                        for (p = 0; p < 45; p ++){
+                                                                              ((FlatTree + a) -> C8)[p] += C8_a[p];  ((FlatTree + b) -> C8)[p] += C8_b[p];
+                                                                        }
+                                                                  #endif
+                                                            #endif
+                                                      #endif
+                                                #endif
+                                          #endif
+                                    #endif
+                              #endif
                         }
                         else{ //The nodes are not well-separated
                               how_many_children_a = (FlatTree + a) -> how_many_children;
@@ -2082,6 +2442,7 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
       free(stack);
       stack = NULL;
 }
+#endif
 
 
 /***********************************************************************/
@@ -2090,6 +2451,7 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
 /***********************************************************************/
 
 
+#if mutual_bool
 void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
 
       /******** Performs the third stage of Dehnen's algorithm, called the evaluation phase, ********/
@@ -2100,7 +2462,7 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
       int i = 0; //Index in the stack of the current id
       int j = 0; //Index of where to put an id in the stack
       int a;     //Id of the current node
-      int p, q;  //Loop indexes
+      int p;     //Loop index
       int b;     //Body index
       int * dots;//All the bodies in the current cell
       int Na;    //Number of bodies in cells a and b
@@ -2108,11 +2470,38 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
       int idFirstChild; //Id of first child 
       int idLastChild;  //Id of last child
       int idParent;
-      typ * com, * com_parent; //centers of mass of the cell and of its parent
-      typ R[3];  //com - com_parent
-      typ X2[6], X3[10], X4[15], X5[21];
-      typ * C1, * C2, * C3, * C4, * C5, * C6; //p^th order interaction tensor of the current node
-      typ * C1p, * C2p, * C3p, * C4p, * C5p, * C6p; //p^th order interaction tensor of the parent of the current node
+      typ * C1, * C1p; //interaction tensor of the current node and of its parent
+      
+      #if expansion_order >= 2
+            typ * com, * com_parent; //centers of mass of the cell and of its parent
+            typ * C2, * C2p;
+            typ R[3];                //com - com_parent
+            #if expansion_order >= 3
+                  typ * C3, * C3p;
+                  typ X2[6];
+                  #if expansion_order >= 4
+                        int q;  //Loop index
+                        typ * C4, * C4p;
+                        typ X3[10];
+                        #if expansion_order >= 5
+                              typ * C5, * C5p;
+                              typ X4[15];
+                              #if expansion_order >= 6
+                                    typ * C6, * C6p;
+                                    typ X5[21];
+                                    #if expansion_order >= 7
+                                          typ * C7, * C7p;
+                                          typ X6[28];
+                                          #if expansion_order >= 8
+                                                typ * C8, * C8p;
+                                                typ X7[36];
+                                          #endif
+                                    #endif
+                              #endif
+                        #endif
+                  #endif
+            #endif
+      #endif
 
       /******** Putting the root cell in the stack ********/
       stack[j] = 0;
@@ -2125,25 +2514,25 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
             idParent = (FlatTree + a) -> idParent;
             if (idParent != -1){
                   C1  = (FlatTree + a)        -> C1;
-                  C1p = (FlatTree + idParent) -> C1;  
+                  C1p = (FlatTree + idParent) -> C1;
                   C1[0] += C1p[0]; C1[1] += C1p[1]; C1[2] += C1p[2];
                   
-                  if (expansion_order >= 2){
+                  #if expansion_order >= 2
                         com        = (FlatTree + a) -> com;
                         com_parent = (FlatTree + idParent) -> com;
                         R[0] = com[0] - com_parent[0];
                         R[1] = com[1] - com_parent[1];
                         R[2] = com[2] - com_parent[2];
-                        C2  = C2FlatTree + 6*a;
-                        C2p = C2FlatTree + 6*idParent;
+                        C2   = (FlatTree + a)        -> C2;
+                        C2p  = (FlatTree + idParent) -> C2;
                         C2[0] += C2p[0]; C2[1] += C2p[1]; C2[2] += C2p[2]; C2[3] += C2p[3]; C2[4] += C2p[4]; C2[5] += C2p[5];
                         C1[0] += R[0]*C2p[0] + R[1]*C2p[1] + R[2]*C2p[2];
                         C1[1] += R[0]*C2p[1] + R[1]*C2p[3] + R[2]*C2p[4];
                         C1[2] += R[0]*C2p[2] + R[1]*C2p[4] + R[2]*C2p[5];
 
-                        if (expansion_order >= 3){
-                              C3  = C3FlatTree + 10*a;
-                              C3p = C3FlatTree + 10*idParent;
+                        #if expansion_order >= 3
+                              C3  = (FlatTree + a)        -> C3;
+                              C3p = (FlatTree + idParent) -> C3;
                               for (p = 0; p < 10; p ++){
                                     C3[p] += C3p[p];
                               }
@@ -2158,9 +2547,9 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
                               C2[4] += R[0]*C3p[4] + R[1]*C3p[7] + R[2]*C3p[8];
                               C2[5] += R[0]*C3p[5] + R[1]*C3p[8] + R[2]*C3p[9];
 
-                              if (expansion_order >= 4){
-                                    C4  = C4FlatTree + 15*a;
-                                    C4p = C4FlatTree + 15*idParent;
+                              #if expansion_order >= 4
+                                    C4  = (FlatTree + a)        -> C4;
+                                    C4p = (FlatTree + idParent) -> C4;
                                     for (p = 0; p < 15; p ++){
                                           C4[p] += C4p[p];
                                     }
@@ -2171,9 +2560,9 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
                                     inner_product(C4p, X2, C2, 2, 2, 0.5);
                                     inner_product(C4p,  R, C3, 1, 3, 1.0);
 
-                                    if (expansion_order >= 5){
-                                          C5  = C5FlatTree + 21*a;
-                                          C5p = C5FlatTree + 21*idParent;
+                                    #if expansion_order >= 5
+                                          C5  = (FlatTree + a)        -> C5;
+                                          C5p = (FlatTree + idParent) -> C5;
                                           for (p = 0; p < 21; p ++){
                                                 C5[p] += C5p[p];
                                           }
@@ -2185,9 +2574,9 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
                                           inner_product(C5p, X2, C3, 2, 3, 0.5);
                                           inner_product(C5p,  R, C4, 1, 4, 1.0);
 
-                                          if (expansion_order >= 6){
-                                                C6  = C6FlatTree + 28*a;
-                                                C6p = C6FlatTree + 28*idParent;
+                                          #if expansion_order >= 6
+                                                C6  = (FlatTree + a)        -> C6;
+                                                C6p = (FlatTree + idParent) -> C6;
                                                 for (p = 0; p < 28; p ++){
                                                       C6[p] += C6p[p];
                                                 }
@@ -2199,11 +2588,44 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
                                                 inner_product(C6p, X3, C3, 3, 3, 0.1666666666666666666666666667);
                                                 inner_product(C6p, X2, C4, 2, 4, 0.5);
                                                 inner_product(C6p,  R, C5, 1, 5, 1.0);
-                                          }
-                                    }
-                              }
-                        }
-                  }
+                                                #if expansion_order >= 7
+                                                      C7  = (FlatTree + a)        -> C7;
+                                                      C7p = (FlatTree + idParent) -> C7;
+                                                      for (p = 0; p < 36; p ++){
+                                                            C7[p] += C7p[p];
+                                                      }
+                                                      for (p = 0; p < 28; p ++){
+                                                            get_Xn_overwrite(p, 6, R, 1.0, X6);
+                                                      }
+                                                      inner_product(C7p, X6, C1, 6, 1, 0.0013888888888888888888889);
+                                                      inner_product(C7p, X5, C2, 5, 2, 0.0083333333333333333333333);
+                                                      inner_product(C7p, X4, C3, 4, 3, 0.0416666666666666666666667);
+                                                      inner_product(C7p, X3, C4, 3, 4, 0.1666666666666666666666667);
+                                                      inner_product(C7p, X2, C5, 2, 5, 0.5);
+                                                      inner_product(C7p,  R, C6, 1, 6, 1.0);
+                                                      #if expansion_order >= 8
+                                                            C8  = (FlatTree + a)        -> C8;
+                                                            C8p = (FlatTree + idParent) -> C8;
+                                                            for (p = 0; p < 45; p ++){
+                                                                  C8[p] += C8p[p];
+                                                            }
+                                                            for (p = 0; p < 36; p ++){
+                                                                  get_Xn_overwrite(p, 7, R, 1.0, X7);
+                                                            }
+                                                            inner_product(C8p, X7, C1, 7, 1, 0.0001984126984126984126984);
+                                                            inner_product(C8p, X6, C2, 6, 2, 0.0013888888888888888888889);
+                                                            inner_product(C8p, X5, C3, 5, 3, 0.0083333333333333333333333);
+                                                            inner_product(C8p, X4, C4, 4, 4, 0.0416666666666666666666667);
+                                                            inner_product(C8p, X3, C5, 3, 5, 0.1666666666666666666666667);
+                                                            inner_product(C8p, X2, C6, 2, 6, 0.5);
+                                                            inner_product(C8p,  R, C7, 1, 7, 1.0);
+                                                      #endif
+                                                #endif
+                                          #endif
+                                    #endif
+                              #endif
+                        #endif
+                  #endif
             }
             
             /******** If the node has children, I put them in the stack ********/
@@ -2221,59 +2643,74 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
             else{
                   Na   = (FlatTree + a) -> how_many_dots;
                   dots = (FlatTree + a) -> dots;
-                  com  = (FlatTree + a) -> com;
                   for (p = 0; p < Na; p ++){
                         b  = dots[p];
-                        C1 = (FlatTree + a) -> C1;                       
+                        C1 = (FlatTree + a) -> C1;
                         C1Moonlets[3*b] += C1[0];  C1Moonlets[3*b + 1] += C1[1];  C1Moonlets[3*b + 2] += C1[2];
                         
-                        if (expansion_order >= 2){
-                              C2 = C2FlatTree + 6*a;
+                        #if expansion_order >= 2
+                              com  = (FlatTree + a) -> com;
+                              C2   = (FlatTree + a) -> C2;
                               R[0] = (moonlets + b) -> x - com[0];
                               R[1] = (moonlets + b) -> y - com[1];
                               R[2] = (moonlets + b) -> z - com[2];
-                              C1Moonlets[3*b]   += R[0]*C2[0] + R[1]*C2[1] + R[2]*C2[2];
-                              C1Moonlets[3*b+1] += R[0]*C2[1] + R[1]*C2[3] + R[2]*C2[4];
-                              C1Moonlets[3*b+2] += R[0]*C2[2] + R[1]*C2[4] + R[2]*C2[5];
+                              C1Moonlets[3*b]     += R[0]*C2[0] + R[1]*C2[1] + R[2]*C2[2];
+                              C1Moonlets[3*b + 1] += R[0]*C2[1] + R[1]*C2[3] + R[2]*C2[4];
+                              C1Moonlets[3*b + 2] += R[0]*C2[2] + R[1]*C2[4] + R[2]*C2[5];
                               
-                              if (expansion_order >= 3){
-                                    C3 = C3FlatTree + 10*a;
+                              #if expansion_order >= 3
+                                    C3 = (FlatTree + a) -> C3;
                                     X2[0]  = R[0]*R[0]; X2[1] = R[0]*R[1]; X2[2] = R[0]*R[2]; X2[3] = R[1]*R[1]; X2[4] = R[1]*R[2]; X2[5] = R[2]*R[2];
-                                    C1Moonlets[3*b]   += 0.5*(X2[0]*C3[0] + 2.0*X2[1]*C3[1] + 2.0*X2[2]*C3[2] + X2[3]*C3[3] + 2.0*X2[4]*C3[4] + X2[5]*C3[5]);
-                                    C1Moonlets[3*b+1] += 0.5*(X2[0]*C3[1] + 2.0*X2[1]*C3[3] + 2.0*X2[2]*C3[4] + X2[3]*C3[6] + 2.0*X2[4]*C3[7] + X2[5]*C3[8]);
-                                    C1Moonlets[3*b+2] += 0.5*(X2[0]*C3[2] + 2.0*X2[1]*C3[4] + 2.0*X2[2]*C3[5] + X2[3]*C3[7] + 2.0*X2[4]*C3[8] + X2[5]*C3[9]);
-                                    if (expansion_order >= 4){
-                                          C4 = C4FlatTree + 15*a;
-                                          for (q = 0; q < 10; q++){
+                                    C1Moonlets[3*b]     += 0.5*(X2[0]*C3[0] + 2.0*X2[1]*C3[1] + 2.0*X2[2]*C3[2] + X2[3]*C3[3] + 2.0*X2[4]*C3[4] + X2[5]*C3[5]);
+                                    C1Moonlets[3*b + 1] += 0.5*(X2[0]*C3[1] + 2.0*X2[1]*C3[3] + 2.0*X2[2]*C3[4] + X2[3]*C3[6] + 2.0*X2[4]*C3[7] + X2[5]*C3[8]);
+                                    C1Moonlets[3*b + 2] += 0.5*(X2[0]*C3[2] + 2.0*X2[1]*C3[4] + 2.0*X2[2]*C3[5] + X2[3]*C3[7] + 2.0*X2[4]*C3[8] + X2[5]*C3[9]);
+                                    #if expansion_order >= 4
+                                          C4 = (FlatTree + a) -> C4;
+                                          for (q = 0; q < 10; q ++){
                                                 get_Xn_overwrite(q, 3, R, 1.0, X3);
                                           }
                                           inner_product(C4, X3, C1Moonlets + 3*b, 3, 1, 0.1666666666666666666666666667);
                                           
-                                          if (expansion_order >= 5){
-                                                C5 = C5FlatTree + 21*a;
-                                                for (q = 0; q < 15; q++){
+                                          #if expansion_order >= 5
+                                                C5 = (FlatTree + a) -> C5;
+                                                for (q = 0; q < 15; q ++){
                                                       get_Xn_overwrite(q, 4, R, 1.0, X4);
                                                 }
                                                 inner_product(C5, X4, C1Moonlets + 3*b, 4, 1, 0.0416666666666666666666666667);
                                                 
-                                                if (expansion_order >= 6){
-                                                      C6 = C6FlatTree + 28*a;
-                                                      for (q = 0; q < 21; q++){
+                                                #if expansion_order >= 6
+                                                      C6 = (FlatTree + a) -> C6;
+                                                      for (q = 0; q < 21; q ++){
                                                             get_Xn_overwrite(q, 5, R, 1.0, X5);
                                                       }
                                                       inner_product(C6, X5, C1Moonlets + 3*b, 5, 1, 0.0083333333333333333333333333);
-                                                }
-                                          }
-                                    }
-                              }
-                        }
+                                                      #if expansion_order >= 7
+                                                            C7 = (FlatTree + a) -> C7;
+                                                            for (q = 0; q < 28; q ++){
+                                                                  get_Xn_overwrite(q, 6, R, 1.0, X6);
+                                                            }
+                                                            inner_product(C7, X6, C1Moonlets + 3*b, 6, 1, 0.0013888888888888888888889);
+                                                            #if expansion_order >= 8
+                                                                  C8 = (FlatTree + a) -> C8;
+                                                                  for (q = 0; q < 36; q ++){
+                                                                        get_Xn_overwrite(q, 7, R, 1.0, X7);
+                                                                  }
+                                                                  inner_product(C8, X7, C1Moonlets + 3*b, 7, 1, 0.0001984126984126984126984);
+                                                            #endif
+                                                      #endif
+                                                #endif
+                                          #endif
+                                    #endif
+                              #endif
+                        #endif
                   }
             }
-            i++;
+            i ++;
       }
       free(stack);
       stack = NULL;
 }
+#endif
 
 
 /******************************************************************************************/
@@ -2283,7 +2720,7 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets){
 /******************************************************************************************/
 
 
-
+#if mutual_bool
 void standard_tree_acceleration(struct node * FlatTree, struct moonlet * moonlets, int b){
 
       /******** Computes the acceleration of body b from the multipole moments of the          ********/
@@ -2302,10 +2739,6 @@ void standard_tree_acceleration(struct node * FlatTree, struct moonlet * moonlet
       
       typ M0;    //Node's mass
       typ * com; //Node's center of mass
-      typ * M2;  //Node's multipole moments
-      typ * M3;
-      typ * M4;
-      typ * M5;
       typ R[3];  //bodies's position - center of mass
       typ distance; // |R|
       typ r_crit; // Critical distance for well-separation
@@ -2321,6 +2754,41 @@ void standard_tree_acceleration(struct node * FlatTree, struct moonlet * moonlet
       int * dots; //All the bodies in that cell
       int index; //Index of a body in dots
       typ m, Rad, x, y, z, dx, dy, dz, r, r3, softening;
+      #if expansion_order >= 3
+            typ * M2;  //Node's multipole moments
+            #if expansion_order >= 4
+                  typ * M3;
+                  #if expansion_order >= 5
+                        typ * M4;
+                        #if expansion_order >= 6
+                              typ * M5;
+                              #if expansion_order >= 7
+                                    typ * M6;
+                                    #if expansion_order >= 8
+                                          typ * M7;
+                                    #endif
+                              #endif
+                        #endif
+                  #endif
+            #endif
+      #endif
+      #if expansion_order   == 1
+      typ Grad[3]; //Independant components of all the gradients of G/R from order 1 to expansion_order
+      #elif expansion_order == 2
+      typ Grad[9];
+      #elif expansion_order == 3
+      typ Grad[19];
+      #elif expansion_order == 4
+      typ Grad[34];
+      #elif expansion_order == 5
+      typ Grad[55];
+      #elif expansion_order == 6
+      typ Grad[83];
+      #elif expansion_order == 7
+      typ Grad[119];
+      #elif expansion_order == 8
+      typ Grad[164];
+      #endif
       
       stack[j] = 0;
       j++;
@@ -2361,40 +2829,39 @@ void standard_tree_acceleration(struct node * FlatTree, struct moonlet * moonlet
                   R[2] = Z - com[2];
                   distance = sqrt(R[0]*R[0] + R[1]*R[1] + R[2]*R[2]);
                   if (distance >= r_crit){ //Multipole expansion
-                        typ grad[3];
-                        gradR(R, grad, 1);
+                        gradR(R, Grad);
                         M0 = (FlatTree + a) -> M0;
-                        inner_product(grad, &M0, acc, 0, 1, 1.0);
-                        if (expansion_order >= 3){
-                              typ grad3[10];
-                              gradR(R, grad3, 3);
-                              M2 = M2FlatTree + 6*a;
-                              inner_product(grad3, M2, acc, 2, 1, 0.5);
-                              if (expansion_order >= 4){
-                                    typ grad4[15];
-                                    gradR(R, grad4, 4);
-                                    M3 = M3FlatTree + 10*a;
-                                    inner_product(grad4, M3, acc, 3, 1, -0.166666666666666666666666666666666666666);
-                                    if (expansion_order >= 5){
-                                          typ grad5[21];
-                                          gradR(R, grad5, 5);
-                                          M4 = M4FlatTree + 15*a;
-                                          inner_product(grad5, M4, acc, 4, 1, 0.0416666666666666666666666666666666666666);
-                                          if (expansion_order >= 6){
-                                                typ grad6[28];
-                                                gradR(R, grad6, 6);
-                                                M5 = M5FlatTree + 21*a;
-                                                inner_product(grad6, M5, acc, 5, 1, -0.008333333333333333333333333333333333333);
-                                          }
-                                    }
-                              }
-                        }
+                        inner_product(Grad, &M0, acc, 0, 1, 1.0);
+                        #if expansion_order >= 3
+                              M2 = (FlatTree + a) -> M2;
+                              inner_product(Grad + 9, M2, acc, 2, 1, 0.5);
+                              #if expansion_order >= 4
+                                    M3 = (FlatTree + a) -> M3;
+                                    inner_product(Grad + 19, M3, acc, 3, 1, -0.1666666666666666666666667);
+                                    #if expansion_order >= 5
+                                          M4 = (FlatTree + a) -> M4;
+                                          inner_product(Grad + 34, M4, acc, 4, 1, 0.0416666666666666666666667);
+                                          #if expansion_order >= 6
+                                                M5 = (FlatTree + a) -> M5;
+                                                inner_product(Grad + 55, M5, acc, 5, 1, -0.0083333333333333333333333);
+                                                #if expansion_order >= 7
+                                                      M6 = (FlatTree + a) -> M6;
+                                                      inner_product(Grad + 83, M6, acc, 6, 1, 0.0013888888888888888888889);
+                                                      #if expansion_order >= 8
+                                                            M7 = (FlatTree + a) -> M7;
+                                                            inner_product(Grad + 119, M7, acc, 7, 1, -0.0001984126984126984126984);
+                                                      #endif
+                                                #endif
+                                          #endif
+                                    #endif
+                              #endif
+                        #endif
                   }
                   else{
                         how_many_children = (FlatTree + a) -> how_many_children;
                         if (how_many_dots < N_cb_post || how_many_children == 0){ //Direct summation
                               dots = (FlatTree + a) -> dots;
-                              for (index = 0; index < how_many_dots; index++){
+                              for (index = 0; index < how_many_dots; index ++){
                                     k = dots[index];
                                     if (k != b){ //If the body is different from body b, I accumulate its contribution to the acceleration
                                           m   = (moonlets + k) -> mass;
@@ -2440,7 +2907,7 @@ void standard_tree_acceleration(struct node * FlatTree, struct moonlet * moonlet
       C1Moonlets[3*b + 1] = acc[1];
       C1Moonlets[3*b + 2] = acc[2];
 }
-
+#endif
 
 
 /*********************************************************/
@@ -2490,7 +2957,7 @@ void clear_boxdot(struct boxdot ** BoxDot){
       int i = 0, j = 0; // i is the index of the next node to be treated. j is the index of where to store a node to be treated
       
       stack[j] = *BoxDot;
-      j++;
+      j ++;
       
       struct boxdot * to_be_deleted;
       struct boxdot * octant;
@@ -2499,11 +2966,11 @@ void clear_boxdot(struct boxdot ** BoxDot){
             
             to_be_deleted = stack[i];
             clear_chain(&(to_be_deleted -> dots)); //Clearing the chain of dots
-            for (p = 0; p < 8; p++){ //Adding to the stack the children of the current node
+            for (p = 0; p < 8; p ++){ //Adding to the stack the children of the current node
                   octant = (to_be_deleted -> oct)[p];
                   if (octant != NULL){
                         stack[j] = octant;
-                        j++;
+                        j ++;
                   }
             }
             free(to_be_deleted);
@@ -2523,49 +2990,47 @@ void clear_boxdot(struct boxdot ** BoxDot){
 
 int get_octant(typ x, typ y, typ z, typ xa, typ ya, typ za, typ D){
 
-      /******** Returns the octant in which a body with coordinates xyz_a      ********/
+      /******** Returns the octant in which a body with coordinates (xa,ya,za) ********/
       /******** should go, given the corner coordinates xyz of the parent cell ********/
       /******** D is half the parent sidelength                                ********/
-      
-      int octant;
+
       
       if (xa < x + D){             //Body is in octant 0, 2, 4 or 6
             if (ya < y + D){       //Body is in octant 0 or 2
                   if (za > z - D){ //Body is in octant 0
-                        octant = 0;
+                        return 0;
                   }
                   else{            //Body is in octant 2
-                        octant = 2;
+                        return 2;
                   }
             }
             else{                  //Body is in octant 4 or 6
                   if (za > z - D){ //Body is in octant 4
-                        octant = 4;
+                        return 4;
                   }
                   else{            //Body is in octant 6
-                        octant = 6;
+                        return 6;
                   }
             }
       }
       else {                       //Body is in octant 1, 3, 5 or 7
             if (ya < y + D){       //Body is in octant 1 or 3
                   if (za > z - D){ //Body is in octant 1
-                        octant = 1;
+                        return 1;
                   }
                   else{            //Body is in octant 3
-                        octant = 3;
+                        return 3;
                   }
             }
             else{                  //Body is in octant 5 or 7
                   if (za > z - D){ //Body is in octant 5
-                        octant = 5;
+                        return 5;
                   }
                   else{            //Body is in octant 7
-                        octant = 7;
+                        return 7;
                   }
             }
       }
-      return octant;
 }
 
 
@@ -2612,6 +3077,7 @@ void print_boxdot(struct boxdot * BoxDot){
 
       /******** Prints in terminal the boxdot BoxDot  ********/
       /******** This function is not used for the FFM ********/
+      /******** To be removed eventually              ********/
 
       int p;
       typ * corner;

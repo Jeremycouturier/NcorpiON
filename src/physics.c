@@ -149,10 +149,10 @@ void vector_field(struct moonlet * moonlets){
                   
                   
                   /******** Mutual gravitational interactions with the brute-force O(N^2) algorithm ********/
-                  if (mutual_bool && (brute_force_bool || force_naive_bool) && 0){
+                  if (mutual_bool && (brute_force_bool || force_naive_bool)){
                         for (p = 0; p < k; p ++){
                               if (*(exists + p)){
-                              
+                                    
                                     /******** Getting the positions, masses and radii ********/
                                     mp = (moonlets + p) -> mass;
                                     Xp = (moonlets + p) -> x;
@@ -248,6 +248,7 @@ void vector_field(struct moonlet * moonlets){
       
       
       /******** Mutual gravitational interactions with a tree algorithm (falcON or the standard tree code) ********/
+      #if mutual_bool
       if (mutual_bool && (falcON_bool || standard_tree_bool) && !force_naive_bool){
             if (falcON_bool){
                   Cm_flattree(FlatTree, moonlets);              
@@ -268,7 +269,7 @@ void vector_field(struct moonlet * moonlets){
                   }
             }
       }
-
+      #endif
       
       /******** Mutual gravitational interactions with the mesh O(N) algorithm ********/
       #if mesh_bool

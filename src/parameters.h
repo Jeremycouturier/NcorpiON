@@ -80,10 +80,10 @@
                                      //been created by a previous simulation where resume_simulation_bool was set to 1.
 
 /******** Booleans relative to interactions with the central mass or a distant object. Set to 0 if central_mass_bool is 0 ********/
-#define J2_bool                  1   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
+#define J2_bool                  0   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
 #define Sun_bool                 0   //Determines if the perturbations from a distant object that the system orbits (or is orbited by) are taken into account in the simulation
-#define central_tides_bool       1   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
-#define inner_fluid_disk_bool    1   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which bodies spawn). See Salmon & Canup 2012
+#define central_tides_bool       0   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
+#define inner_fluid_disk_bool    0   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which bodies spawn). See Salmon & Canup 2012
                                      //If set to 1, its mass is added to that of the central body when computing gravitational interactions and when preserving the total momemtum
 
 /******** Booleans relative to mutual interactions between the bodies ********/
@@ -149,7 +149,7 @@
 #define N_max 9000                   //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
 #define N_0 1000                     //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
 #define t_init 0.                    //Time at the beginning of the simulation (in simulation's units)
-#define t_end 1024.                  //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
+#define t_end 256.                   //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
 #define time_step 0.015625           //Timestep of the simulation (in simulation's units)
 #define output_step 32               //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define high_dumping_threshold 230.95//Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
@@ -165,11 +165,11 @@
 #define radius_max 0.05              //Maximal radius                   of a body at initial time
 #define density_min 0.1048           //Minimal density                  of a body at initial time
 #define density_max 0.1848           //Maximal density                  of a body at initial time
-#define eccentricity_min 0.0         //Minimal eccentricity             of a body at initial time
+#define eccentricity_min 0.          //Minimal eccentricity             of a body at initial time
 #define eccentricity_max 0.2         //Maximal eccentricity             of a body at initial time
 #define sma_min 2.9                  //Minimal semi-major axis          of a body at initial time
-#define sma_max 14.0                 //Maximal semi-major axis          of a body at initial time
-#define inclination_min 0.0          //Minimal inclination (in radians) of a body at initial time
+#define sma_max 14.                  //Maximal semi-major axis          of a body at initial time
+#define inclination_min 0.           //Minimal inclination (in radians) of a body at initial time
 #define inclination_max 0.174533     //Maximal inclination (in radians) of a body at initial time
                                      //The true longitude, argument of pericenter and longitude of the ascending node are drawn uniformly at random between 0 and 2*M_PI
                                      //These bounds must be defined in the simulation's units
@@ -230,24 +230,23 @@
 /******** to compute mutual gravity and to detect collisions. In theses cases, these parameters must be defined   ********/
 /*************************************************************************************************************************/
 
-#define expansion_order 3            //The order p of the Taylor expansions. This is p = 3 in Dehnen (2002). NcorpiON allows up to p = 6. Minimum is 1 as order 0 yields no acceleration
-#define theta_min 0.5                //Minimal value of the tolerance parameter theta. Must be strictly less than 1. Sensible values are 0.2 < theta_min < 0.8
+#define expansion_order 3            //The order p of the multipole expansions. NcorpiON allows up to p = 8. Minimum is 1 as order 0 yields no acceleration
+#define theta_min 0.40               //Minimal value of the opening angle theta. Must be strictly less than 1. Advised values are 0.25 < theta_min < 0.75
+                                     //Larger expansion orders p or smaller opening angles theta_min yield a better precision on the gravity computation.
                                      //The precision (and computational time) of the mutual gravity computed by Ncorpion increases with increasing p and decreasing theta_min.
-#define subdivision_threshold 24     //A cubic cell is not divided as long as it contains at most that many bodies. Called s in Dehnen (2002). Must be > 0. The precision does not depend
-                                     //on this threshold, but the computational time does. Suggested values are 5 < s < 200 but must be tweaked by the user to obtain the best performances
+#define subdivision_threshold 17     //A cubic cell is not divided as long as it contains at most that many bodies. Called s in Dehnen (2002). Must be > 0. The precision does not depend
+                                     //on this threshold, but the computational time does. Suggested values are s = (10, 10, 15, 30, 50, 50, 75, 110) for p = (1, 2, 3, 4, 5, 6, 7, 8)
 #define root_sidelength 462.0        //Sidelength of the root cell (in simulation's units). Should be machine representable. Particles outside of the root cell don't feel others.
 #define level_max 25                 //The maximum allowed number of levels in the tree. Root is at level 0 and a cell at level level_max - 1 is never divided.
-#define child_multipole_threshold 1  //If number of bodies/number of children is at most this threshold then the multipole moments of a cell are computed directly from the bodies.
-                                     //Otherwise, they are computed from that of the children. Choose 1 for p < 5, and a small integer otherwise.
 
 /******** Parameters specifically relative to mutual gravity computation with falcON algorithm ********/
 #define N_cc_pre 8                   //For two cells with N1 and N2 bodies, if N1N2 < N_cc_pre, then the interaction is computed brute-forcely, regardless of their well-separation
 #define N_cc_post 64                 //For two cells with N1 and N2 bodies, if N1N2 < N_cc_post and they are not well-separated, then the interaction is computed brute-forcely
 #define N_cs 64                      //If N1 < N_cs, then the self-interaction of a cell containing N1 bodies is computed brute-forcely
                                      //See TreeWalk algorithm in the paper for details about these thresholds. The precision does not depend on these thresholds, but the computational
-                                     //time slightly does. However, note that the computational cost depends much more on the subdivision threshold s that on these thresholds. Suggested
-                                     //values are (s, N_cc_pre, N_cc_post, N_cs) = (26, 8, 64, 64) for p = 3 and (s, N_cc_pre, N_cc_post, N_cs) = (80, 256, 1024, 128) for p = 6 but this
-                                     //depends on the architecture and should be tweaked. N_cc_post must be larger that N_cc_pre.
+                                     //time slightly does. However, note that the computational cost depends much more on the subdivision threshold s that on these thresholds. Possible
+                                     //values are (N_cc_pre, N_cc_post, N_cs) = (8, 64, 64) for p <= 4 and (N_cc_pre, N_cc_post, N_cs) = (256, 1024, 128) for p >= 5 but this depends
+                                     //on the architecture and should be tweaked. N_cc_post must be larger that N_cc_pre.
 
 /******** Parameters specifically relative to mutual gravity computation with the standard tree code ********/
 #define N_cb_pre 6                   //If N1 < N_cb_pre, the interaction between a body and a cell with N1 bodies is performed brute-forcely, regardless of their well-separation
@@ -289,7 +288,7 @@
 #define C1_parameter 1.5             //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
 #define k_parameter 0.2              //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
 #define merging_threshold 0.0002     //Threshold on the total ejected mass. If (total ejected mass)/(m1 + m2) is less than that, then the collision results in a merger.
-#define fragment_threshold 1.5e-8    //Threshold on the mass of the fragments. If the fragments of the ejecta tail have a mass smaller than that and if the tail is less massive than
+#define fragment_threshold 1.0e-8    //Threshold on the mass of the fragments. If the fragments of the ejecta tail have a mass smaller than that and if the tail is less massive than
                                      //the largest fragment and if the collision is not a merger, then the tail is reunited into a single body instead of being fragmented into
                                      //N_tilde fragments. These two threshold prevent the number of bodies to grow uncontrollably
 

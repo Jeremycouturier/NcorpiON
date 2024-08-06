@@ -103,7 +103,9 @@ void precision(struct moonlet * viscoelastic){
                         acc[3*j + 1] += aY*mi;
                         acc[3*j + 2] += aZ*mi;
                   }
-                  printf("%d/%d\n", i, N_0);
+                  if (!(i%100)){
+                        printf("%d/%d\n", i, N_0);
+                  }
             }
             t1 = clock();
             printf("Brute-force = %.3lf seconds\n", ((typ) (t1 - t0))/(typ) CLOCKS_PER_SEC);
@@ -115,9 +117,7 @@ void precision(struct moonlet * viscoelastic){
       else{
             fclose(file);
             readFromFile(path, acc, 3*N_0);
-            clock_t t0, t1;
-            
-            t0 = clock();
+
             root     = root_cell(viscoelastic);
             FlatTree = flattree_init(root);
             clear_boxdot(&root);
@@ -125,40 +125,79 @@ void precision(struct moonlet * viscoelastic){
             Mtot     = FlatTree -> M0;
             rmax_flattree(FlatTree, viscoelastic);
             rcrit_flattree(FlatTree);
-            tensor_initialization();
-            if (expansion_order >= 3){
+            tensor_initialization(FlatTree);
+            #if expansion_order >= 3 && mutual_bool
                   multipole_flattree(FlatTree, viscoelastic);
-            }
-            Cm_flattree(FlatTree, viscoelastic);              
-            Cm_downtree(FlatTree, viscoelastic);
-            t1 = clock();
-            printf("FalcON (random order)  = %.3lf seconds\n", ((typ) (t1 - t0))/(typ) CLOCKS_PER_SEC);
+            #endif
             for (j = 0; j < cell_id; j ++){
                   free((FlatTree + j) -> dots);
                   (FlatTree + j) -> dots = NULL;
             }
             free(FlatTree);
-            FlatTree = NULL;
+            FlatTree       = NULL;
             how_many_cells = 0;
-            cell_id = 0;
-            tensor_free();
+            cell_id        = 0;
             
-            t0 = clock();
-            root     = root_cell(viscoelastic);
-            FlatTree = flattree_init(root);
-            clear_boxdot(&root);
-            com_flattree(FlatTree, viscoelastic);
-            Mtot     = FlatTree -> M0;
-            rmax_flattree(FlatTree, viscoelastic);
-            rcrit_flattree(FlatTree);
-            tensor_initialization();
-            if (expansion_order >= 3){
-                  multipole_flattree(FlatTree, viscoelastic);
+            int n_timestep = 8;
+            typ force[n_timestep];
+            typ colli[n_timestep];
+            clock_t t0, t1, t2;
+            int J;
+            for (J = 0; J < n_timestep; J ++){
+                  t0       = clock();
+                  root     = root_cell(viscoelastic);
+                  FlatTree = flattree_init(root);
+                  clear_boxdot(&root);
+                  com_flattree(FlatTree, viscoelastic);
+                  Mtot     = FlatTree -> M0;
+                  rmax_flattree(FlatTree, viscoelastic);
+                  rcrit_flattree(FlatTree);
+                  tensor_initialization(FlatTree);
+                  #if expansion_order >= 3 && mutual_bool
+                        multipole_flattree(FlatTree, viscoelastic);
+                  #endif
+                  #if mutual_bool
+                  Cm_flattree(FlatTree, viscoelastic);              
+                  Cm_downtree(FlatTree, viscoelastic);
+                  #endif
+                  t1 = clock();
+                  
+                  center_and_maxR_flattree(FlatTree, viscoelastic);
+                  rmax_and_rcrit_flattree (FlatTree, viscoelastic);
+                  collision_flattree      (FlatTree, viscoelastic);
+
+                  for (j = 0; j < cell_id; j ++){
+                        free((FlatTree + j) -> dots);
+                        (FlatTree + j) -> dots = NULL;
+                  }
+                  free(FlatTree);
+                  FlatTree       = NULL;
+                  how_many_cells = 0;
+                  cell_id        = 0;
+                  t2 = clock();
+                  
+                  force[J] = ((typ) (t1 - t0))/(typ) CLOCKS_PER_SEC;
+                  colli[J] = ((typ) (t2 - t1))/(typ) CLOCKS_PER_SEC;
+                  
+                  printf("%d/%d\n", J + 1, n_timestep);
+                  
+                  if (J == 0){
+                        for (i = 0; i < 3*N_0; i ++){
+                              acc[i] = C1Moonlets[i];
+                        }
+                  }
             }
-            Cm_flattree(FlatTree, viscoelastic);              
-            Cm_downtree(FlatTree, viscoelastic);
-            t1 = clock();
-            printf("FalcON (Hilbert order) = %.3lf seconds\n", ((typ) (t1 - t0))/(typ) CLOCKS_PER_SEC);
+            typ force_calc   = 0.;
+            typ colli_search = 0.;
+            for (J = 0; J < n_timestep; J ++){
+                  force_calc   += force[J];
+                  colli_search += colli[J];
+            }
+            force_calc   /= (typ) n_timestep;
+            colli_search /= (typ) n_timestep;
+            printf("Force calculation   = %.3lf seconds\n", force_calc);
+            printf("Collision treatment = %.3lf seconds\n", colli_search);
+            printf("Total               = %.3lf seconds\n", force_calc + colli_search);
 
             char path_falcON[800];
             strcpy(path_falcON, pth);
@@ -166,7 +205,7 @@ void precision(struct moonlet * viscoelastic){
             char expansion[20];
             char Theta_min[20];
             sprintf(expansion, "%d", expansion_order);
-            sprintf(Theta_min, "%.1lf", theta_min);
+            sprintf(Theta_min, "%.2lf", theta_min);
             strcat(path_falcON, "_p=");
             strcat(path_falcON, expansion);
             strcat(path_falcON, "_theta_min=");
@@ -178,19 +217,9 @@ void precision(struct moonlet * viscoelastic){
                   abort();
             }
             for (i = 0; i < N_0; i ++){
-                  fprintf(file_falcON, "%.14lf %.14lf %.14lf\n", C1Moonlets[3*i], C1Moonlets[3*i + 1], C1Moonlets[3*i + 2]);
+                  fprintf(file_falcON, "%.14lf %.14lf %.14lf\n", acc[3*i], acc[3*i + 1], acc[3*i + 2]);
             }
             fclose(file_falcON);
-            
-            for (j = 0; j < cell_id; j ++){
-                  free((FlatTree + j) -> dots);
-                  (FlatTree + j) -> dots = NULL;
-            }
-            free(FlatTree);
-            FlatTree = NULL;
-            how_many_cells = 0;
-            cell_id = 0;
-            tensor_free();
       }
       free(acc);  acc = NULL;
 }

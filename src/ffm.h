@@ -39,15 +39,6 @@ extern int how_many_cells;                  //Total number of cells in the boxdo
 extern int cell_id;                         //The current unique id of a cell
 extern int * already_in_tree;               //Takes care of bodies no yet put in the tree in Hilbert order
 extern typ * C1Moonlets;                    //The array of acceleration of the bodies due to their mutual gravity. This is the output of the ffm algorithm
-extern typ * C2FlatTree;                    //Second order tensor field of interactions of the cells of the FlatTree
-extern typ * C3FlatTree;                    //Third  order tensor field of interactions of the cells of the FlatTree
-extern typ * C4FlatTree;                    //Fourth order tensor field of interactions of the cells of the FlatTree
-extern typ * C5FlatTree;                    //Fifth  order tensor field of interactions of the cells of the FlatTree
-extern typ * C6FlatTree;                    //Sixth  order tensor field of interactions of the cells of the FlatTree
-extern typ * M2FlatTree;                    //Quadrupole of the cells of the FlatTree
-extern typ * M3FlatTree;                    //Octupole of the cells of the FlatTree
-extern typ * M4FlatTree;                    //Fourth order multipole moment of the cells of the FlatTree
-extern typ * M5FlatTree;                    //Fifth  order multipole moment of the cells of the FlatTree
 
 
 /******** A tree structure employed prior to the three stages of Dehnen's algorithm ********/
@@ -64,11 +55,38 @@ struct boxdot {
 
 /******** The three phases of Dehnen's algorithm are performed on an array of nodes, defined as follow ********/
 struct node {
+      #if expansion_order >= 8 && mutual_bool
+      typ C8[45];            //Eighth  order tensor field of interactions
+      typ M7[36];            //Seventh order multipole moment
+      #endif
+      #if expansion_order >= 7 && mutual_bool
+      typ C7[36];            //Seventh order tensor field of interactions
+      typ M6[28];            //Sixth   order multipole moment
+      #endif
+      #if expansion_order >= 6 && mutual_bool
+      typ C6[28];            //Sixth order tensor field of interactions
+      typ M5[21];            //Fifth order multipole moment
+      #endif
+      #if expansion_order >= 5 && mutual_bool
+      typ C5[21];            //Fifth  order tensor field of interactions
+      typ M4[15];            //Fourth order multipole moment
+      #endif
+      #if expansion_order >= 4 && mutual_bool
+      typ C4[15];            //Fourth order tensor field of interactions
+      typ M3[10];            //Octupole
+      #endif
+      #if expansion_order >= 3 && mutual_bool
+      typ C3[10];            //Third order tensor field of interactions
+      typ M2[6];             //Quadrupole
+      #endif
+      #if expansion_order >= 2 && mutual_bool
+      typ C2[6];             //Second order tensor field of interactions (tidal tensor)
+      #endif
       typ com[3];            //When treating self-gravity : Center of mass and expansion center. When treating collisions : Average position of the bodies in the node
-      typ C1[3];             //Acceleration, or first order tensor field of interactions
+      typ C1[3];             //First order tensor field of interactions (acceleration)
       typ center[3];         //Center of the node
       typ sidelength;        //Sidelength of the node
-      typ M0;                //When treating self-gravity : Mass of the cell or zeroth multipole moment. When treating collisions : max(R_i + v_i*timestep)
+      typ M0;                //When treating self-gravity : Mass of the cell or zeroth-order multipole moment. When treating collisions : max(R_i + v_i*timestep)
       typ r_max;             //Convergence radius of the Taylor expansion
       typ r_crit;            //When treating self-gravity : r_max/theta. When treating collisions : r_max + M0
       int * dots;            //Array of ids of bodies contained in that node
@@ -97,10 +115,7 @@ void fill_boxdot_int(struct boxdot * BoxDot, struct boxdot * Parent, int octantC
 struct node * flattree_init(struct boxdot * BoxDot);
 
 
-void tensor_initialization();
-
-
-void tensor_free();
+void tensor_initialization(struct node * FlatTree);
 
 
 void get_s1_s2_s3(int k, int n, int * s1, int * s2, int * s3);
@@ -160,7 +175,9 @@ void get_Xn(int k, int n, typ * X, typ m, typ * M);
 void get_Xn_overwrite(int k, int n, typ * X, typ m, typ * M);
 
 
+#if expansion_order >= 3
 void get_Mn(struct node * FlatTree, struct moonlet * moonlets, int a);
+#endif
 
 
 void get_com_from_children(struct node * FlatTree, int a);
@@ -169,7 +186,9 @@ void get_com_from_children(struct node * FlatTree, int a);
 void get_rmax_from_children(struct node * FlatTree, int a);
 
 
+#if expansion_order >= 3
 void get_Mn_from_children(struct node * FlatTree, int a);
+#endif
 
 
 void com_flattree(struct node * FlatTree, struct moonlet * moonlets);
@@ -181,15 +200,21 @@ void rmax_flattree(struct node * FlatTree, struct moonlet * moonlets);
 void rcrit_flattree(struct node * FlatTree);
 
 
+#if expansion_order >= 3
 void multipole_flattree(struct node * FlatTree, struct moonlet * moonlets);
+#endif
 
 
-void gradR(typ * R, typ * grad, int p);
+void gradR(typ * R, typ * grad);
 
 
 void inner_product(typ * T1, typ * T2, typ * T3, int p, int q, typ factor);
 
 
+void double_IP(typ * T1, typ * T2, typ * TT2, typ * T3, typ * TT3, int p, int q, typ factor1, typ factor2);
+
+
+#if mutual_bool
 void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets);
 
 
@@ -197,6 +222,7 @@ void Cm_downtree(struct node * FlatTree, struct moonlet * moonlets);
 
 
 void standard_tree_acceleration(struct node * FlatTree, struct moonlet * moonlets, int a);
+#endif
 
 
 void create_boxdot(struct boxdot ** BoxDot, typ * corner_coordinates, typ D);
@@ -222,15 +248,13 @@ extern int * PeanoHilbertOrder;
 extern int IndexPeanoHilbertOrder;
 
 /******** Material to take advantage of the symmetry of the manipulated tensors ********/
-extern int k_from_s2s3[7][7];
-extern int s1s2s3_from_kn[28][7][3];
-extern int s2s3_from_k[28][2];
-extern int ijklmn_from_kn[28][7][6];
+extern int k_from_s2s3[expansion_order + 1][expansion_order + 1];
+extern int s1s2s3_from_kn[((expansion_order + 1)*(expansion_order + 2))/2][expansion_order + 1][3];
+extern int s2s3_from_k[((expansion_order + 1)*(expansion_order + 2))/2][2];
+extern int ijklmn_from_kn[(expansion_order*(expansion_order + 1))/2][expansion_order][expansion_order - 1];
+extern int perm_from_kn[((expansion_order + 1)*(expansion_order + 2))/2][expansion_order + 1];
+extern int q1fromq2q3[((expansion_order + 1)*(expansion_order + 2))/2][((expansion_order + 1)*(expansion_order + 2))/2];
 extern int k_from_ijklmn[4][4][4][4][4][4];
-extern int factorial[7];
-extern int perm_from_kn[28][7];
-extern int q1fromq2q3[28][28];
-
 
 
 #endif

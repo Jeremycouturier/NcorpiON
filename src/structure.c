@@ -271,6 +271,7 @@ void cart2aei(struct moonlet * moonlets, int id, typ * aei){
 
       /******** Modifies the array [a,e,i] of the semimajor axis, the eccentricity and the inclination ********/
       /******** of the body whose id is id. Stores these three quantities in the array aei.            ********/
+      /******** This function is currently not used by NcorpiON. To be removed eventually              ********/
       
       
       typ r,v2,r_cross_v,r_cross_v_square,X,Y,Z,vX,vY,vZ,a,e,i,cosi,r_cross_v_1,r_cross_v_2,r_cross_v_3,mu;
@@ -1362,7 +1363,6 @@ void verify(){
       if(!type_check(typeof(expansion_order),           int)){fprintf(stderr, "Error : expansion_order must be given as an integer.\n");                    abort();}
       if(!type_check(typeof(subdivision_threshold),     int)){fprintf(stderr, "Error : subdivision_threshold must be given as an integer.\n");              abort();}
       if(!type_check(typeof(level_max),                 int)){fprintf(stderr, "Error : level_max must be given as an integer.\n");                          abort();}
-      if(!type_check(typeof(child_multipole_threshold), int)){fprintf(stderr, "Error : child_multipole_threshold must be given as an integer.\n");          abort();}
       if(!type_check(typeof(N_cc_pre),                  int)){fprintf(stderr, "Error : N_cc_pre must be given as an integer.\n");                           abort();}
       if(!type_check(typeof(N_cc_post),                 int)){fprintf(stderr, "Error : N_cc_post must be given as an integer.\n");                          abort();}
       if(!type_check(typeof(N_cs),                      int)){fprintf(stderr, "Error : N_cs must be given as an integer.\n");                               abort();}
@@ -1379,8 +1379,8 @@ void verify(){
             fprintf(stderr, "Error : N_max cannot be smaller than N_0.\n");
             abort();
       }
-      if (mutual_bool && (falcON_bool || standard_tree_bool) && (expansion_order < 1 || expansion_order > 6)){
-            fprintf(stderr, "Error : The expansion order in the multipole expansion must be between 1 and 6 included.\n");
+      if (mutual_bool && (falcON_bool || standard_tree_bool) && (expansion_order < 1 || expansion_order > 8)){
+            fprintf(stderr, "Error : The expansion order in the multipole expansion must be between 1 and 8 included.\n");
             abort();
       }
       if (collision_bool && fragmentation_bool && N_max < N_tilde*N_0/2){
@@ -1430,7 +1430,7 @@ void verify(){
 
 void Lyapunov(struct moonlet * moonlets){
 
-      /******** To be removed ********/
+      /******** To be removed eventually ********/
       
       time_t t;
       time(&t);

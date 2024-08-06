@@ -271,10 +271,9 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   (FlatTree + j) -> dots = NULL;
             }
             free(FlatTree);
-            FlatTree = NULL;
+            FlatTree       = NULL;
             how_many_cells = 0;
-            cell_id = 0;
-            tensor_free();
+            cell_id        = 0;
       }
       
       /******** Reinitializing the array did_collide ********/
@@ -478,9 +477,9 @@ void integration_tree(typ t){
                         (FlatTree + j) -> dots = NULL;
                   }
                   free(FlatTree);
-                  FlatTree = NULL;
+                  FlatTree       = NULL;
                   how_many_cells = 0;
-                  cell_id = 0;
+                  cell_id        = 0;
                   /******** Reinitializing the array did_collide ********/
                   if (one_collision_only_bool){
                         for (j = 0; j <= largest_id; j ++){
@@ -521,10 +520,10 @@ void integration_tree(typ t){
                   Mtot     = FlatTree -> M0;
                   rmax_flattree(FlatTree, moonlets);
                   rcrit_flattree(FlatTree);
-                  tensor_initialization();
-                  if (expansion_order >= 3){
+                  tensor_initialization(FlatTree);
+                  #if expansion_order > 2
                         multipole_flattree(FlatTree, moonlets);
-                  }
+                  #endif
             }        
             kick(moonlets, &CM, vector_field);
             time_elapsed += 0.5*timestep;
@@ -543,7 +542,7 @@ void integration_tree(typ t){
                         center_and_maxR_flattree(FlatTree, moonlets);
                         rmax_and_rcrit_flattree (FlatTree, moonlets);
                         if (falcON_bool){ //Finding and resolving collisions and going backward with falcON                        
-                              collision_flattree(FlatTree, moonlets);   
+                              collision_flattree(FlatTree, moonlets);
                         }
                         else if (standard_tree_bool){ //Finding and resolving collisions and going backward with the standard tree code
                               for (j = 0; j <= largest_id; j ++){
@@ -812,6 +811,9 @@ void integration_brute_force_SABA1(typ t){
       /******** Performing half a drift ********/
       if (t > 0.0){
             timestep /= 2.0;
+            if (collision_bool){
+                  brute_force(moonlets);  //Resolving collisions and going backward
+            }
             drift(moonlets, &CM);
             timestep *= 2.0;
       }
