@@ -135,7 +135,7 @@
 #define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
 #define f_tilde 0.3                  //A parameter controlling the mass of bodies spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
 #define R_roche 2.9                  //The initial outer radius of the inner fluid disk where bodies spawn (in simulation's units). Must be larger than disruption_threshold and R_unit.
-#define disruption_threshold 2.      //Threshold (in simulation's units) below which bodies are tidally disrupted by the central mass. If inner_fluid_disk_bool is 0, then the mass of
+#define disruption_threshold 1.      //Threshold (in simulation's units) below which bodies are tidally disrupted by the central mass. If inner_fluid_disk_bool is 0, then the mass of
                                      //the dumped body is added to the central body. Otherwise, the mass of the dumped body is added to the inner fluid disk if the body's periapsis is
                                      //above the surface or if it will cross the xy plane before hitting the surface, and to the central mass else.
 
@@ -231,8 +231,8 @@
 /*************************************************************************************************************************/
 
 #define expansion_order 3            //The order p of the multipole expansions. NcorpiON allows up to p = 8. Minimum is 1 as order 0 yields no acceleration
-#define theta_min 0.40               //Minimal value of the opening angle theta. Must be strictly less than 1. Advised values are 0.25 < theta_min < 0.75
-                                     //Larger expansion orders p or smaller opening angles theta_min yield a better precision on the gravity computation.
+#define theta_min 0.45               //Minimal value of the opening angle theta. Must be strictly less than 1. Advised values are 0.25 < theta_min < 0.75
+                                     //Larger expansion orders or smaller theta_min yield a better precision on the gravity computation. See Table 
                                      //The precision (and computational time) of the mutual gravity computed by Ncorpion increases with increasing p and decreasing theta_min.
 #define subdivision_threshold 17     //A cubic cell is not divided as long as it contains at most that many bodies. Called s in Dehnen (2002). Must be > 0. The precision does not depend
                                      //on this threshold, but the computational time does. Suggested values are s = (10, 10, 15, 30, 50, 50, 75, 110) for p = (1, 2, 3, 4, 5, 6, 7, 8)
@@ -288,7 +288,7 @@
 #define C1_parameter 1.5             //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
 #define k_parameter 0.2              //A dimensionless parameter of impact theories. See Table 3 of Housen & Holsapple (2011)
 #define merging_threshold 0.0002     //Threshold on the total ejected mass. If (total ejected mass)/(m1 + m2) is less than that, then the collision results in a merger.
-#define fragment_threshold 1.0e-8    //Threshold on the mass of the fragments. If the fragments of the ejecta tail have a mass smaller than that and if the tail is less massive than
+#define fragment_threshold 1.5e-8    //Threshold on the mass of the fragments. If the fragments of the ejecta tail have a mass smaller than that and if the tail is less massive than
                                      //the largest fragment and if the collision is not a merger, then the tail is reunited into a single body instead of being fragmented into
                                      //N_tilde fragments. These two threshold prevent the number of bodies to grow uncontrollably
 

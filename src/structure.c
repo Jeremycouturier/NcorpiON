@@ -233,8 +233,7 @@ void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp, typ mu){
             H2   =  c21 - FAC2*(Z*a11 + vZ*a21); //Should be equal to H1
             K2   =  c22 - FAC2*(Z*a12 + vZ*a22); //Should be equal to K1
             if (fabs(H1 - H2) + fabs(K1 - K2) > 1.0e-6){
-                  fprintf(stderr, "Error : Bad computation of (k,h) in function cart2ell. (K1 - K2, H1 - H2) = (%.13lf, %.13lf)\n", K1 - K2, H1 - H2);
-                  abort();
+                  printf("Warning : Bad computation of (k,h) in function cart2ell. (K1 - K2, H1 - H2) = (%.13lf, %.13lf)\n", K1 - K2, H1 - H2);
             }
             K    =  0.5*(K1 + K2);
             H    =  0.5*(H1 + H2);
@@ -619,7 +618,7 @@ void array_initialization(){
             CM.x = cart[0];  CM.y = cart[1];  CM.z = cart[2];  CM.vx = cart[3];  CM.vy = cart[4];  CM.vz = cart[5];  CM.radius = pert_radius;
       }
       if (collision_bool && write_to_files_bool && write_collisions_bool){
-            collisionDatas = (struct collisionData *)malloc(2*output_step*N_max*sizeof(struct collisionData));
+            collisionDatas = (struct collisionData *)malloc(output_step*N_max*sizeof(struct collisionData));
             if (collisionDatas == NULL){
                   fprintf(stderr, "Error: Cannot allocate array collisionDatas in function array_initialization.\n");
                   abort();

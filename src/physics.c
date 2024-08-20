@@ -1185,6 +1185,6 @@ void innerFluidDiskAngularMomentum(typ m, typ a, typ e, typ cosi, typ g1, typ m1
       }
       
       Rout = X*X;
-      Rout = Rout < 1.1*disruption_threshold ? 1.1*disruption_threshold : Rout;
+      Rout = Rout < R_roche ? R_roche : Rout;
       fluid_disk_Sigma = (m + m1)/(M_PI*(Rout*Rout - R_unit*R_unit));
 }
