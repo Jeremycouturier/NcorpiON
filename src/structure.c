@@ -57,7 +57,6 @@ typ * tam_loss;
 typ * approach;
 int * did_collide;
 int * already_in_tree;
-typ * sun_vector;
 typ CM_acc[3] = {0., 0., 0.};
 typ * sending_buffer;
 
@@ -173,12 +172,12 @@ void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp, typ mu){
       vX = (moonlets + id) -> vx;
       vY = (moonlets + id) -> vy;
       vZ = (moonlets + id) -> vz;
-      X  -= central_mass_bool ? CM.x  : 0.;
-      Y  -= central_mass_bool ? CM.y  : 0.;
-      Z  -= central_mass_bool ? CM.z  : 0.;
-      vX -= central_mass_bool ? CM.vx : 0.;
-      vY -= central_mass_bool ? CM.vy : 0.;
-      vZ -= central_mass_bool ? CM.vz : 0.;
+      X  -= central_mass_bool ? CM_buffer.x  : 0.;
+      Y  -= central_mass_bool ? CM_buffer.y  : 0.;
+      Z  -= central_mass_bool ? CM_buffer.z  : 0.;
+      vX -= central_mass_bool ? CM_buffer.vx : 0.;
+      vY -= central_mass_bool ? CM_buffer.vy : 0.;
+      vZ -= central_mass_bool ? CM_buffer.vz : 0.;
 
       /******** Computing the semi-major axis ********/
       R   = sqrt(X*X + Y*Y + Z*Z);
@@ -186,7 +185,7 @@ void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp, typ mu){
       AA  = R*mu/(2.0*mu - R*V2); //Division by zero if the trajectory is perfectly parabolic.
       if (J2_bool && AA > 0.0 && central_mass_bool){  //If the Earth is oblate and the trajectory is elliptic, correcting Kepler third law (See Greenberg, 1981)
             mu *= 1.0 + 1.5*J2*R_unit*R_unit/(AA*AA);
-            AA = R*mu/(2.0*mu - R*V2);
+            AA  = R*mu/(2.0*mu - R*V2);
       }
       *alkhqp = AA;
 
@@ -474,13 +473,7 @@ struct moonlet * populate(){
 void variable_initialization(){
 
       /******** Defines and initializes external variables ********/
-      
-      if (J2_value == 0.0){
-            J2 = 0.5/(Tearth*Tearth); //Earth's equatorial bulge parameter. This equation is valid only if central body is fluid and Tearth^2 >> 1
-      }
-      else{
-            J2 = J2_value;
-      }
+
       timestep                = time_step;
       largest_id              = N_0 - 1;
       first_passage           = 1;
@@ -489,11 +482,11 @@ void variable_initialization(){
       how_many_moonlets       = N_0;
       how_many_cells          = 0;
       cell_id                 = 0;
-      force_naive_bool        = N_0 < switch_to_brute_force - 10 ? 1 : 0;
+      force_naive_bool        = N_0 < switch_to_brute_force ? 1 : 0;
       IndexPeanoHilbertOrder  = N_0;
-      SideralOmega            = 2.0*M_PI/Tearth;
-      star_mean_motion        = sqrt(G*(M_unit + star_mass)/(star_semi_major*star_semi_major*star_semi_major));
-      evection_resonance      = pow(1.5*sqrt(M_unit/star_mass)*J2, 2.0/7.0)*pow(star_semi_major/R_unit, 3.0/7.0)*R_unit;
+      SideralOmega            = 2.*M_PI/Tearth;
+      J2                      = J2_value == 0. ? 0.5*SideralOmega*SideralOmega*R_unit*R_unit*R_unit/(G*CM.mass) : J2_value;
+      evection_resonance      = pow(1.5*sqrt(M_unit/pert_mass)*J2, 2./7.)*pow(pert_sma/R_unit, 3./7.)*R_unit;
       need_to_reduce_COM_bool = 0;
       indexCollision          = 0;
       Rout                    = R_roche;
@@ -501,8 +494,8 @@ void variable_initialization(){
       flowed_since_last_spawn = 0.;
       if(!brute_force_bool){
             typ sinsigma = sin(inclination_max);
-            gam = pow(sma_max*sma_max*sma_max-sma_min*sma_min*sma_min,1.0/3.0)*pow(4.0*M_PI*how_many_neighbours*sinsigma/(((typ) N_0)*81.0),1.0/3.0); //The mesh-size for the O(N) 
-                                                                                                                                                      //collision detection algorithm
+            gam = pow(sma_max*sma_max*sma_max-sma_min*sma_min*sma_min, 1./3.)*pow(4.*M_PI*how_many_neighbours*sinsigma/(((typ) N_0)*81.), 1./3.); //The mesh-size for the O(N) 
+                                                                                                                                                  //collision detection algorithm
             gam_min = collision_cube_min/((typ) collision_cube_cells);
             if (gam < gam_min){
                   gam = gam_min;
@@ -513,7 +506,7 @@ void variable_initialization(){
             how_many_modified  = 0;
             total_neighbours   = 0;
             collision_cube     = gam*((typ) collision_cube_cells);
-            average_neighbours = 0.0;
+            average_neighbours = 0.;
       }
       collision_count = 0;
       if (collision_bool && fragmentation_bool){
@@ -583,13 +576,7 @@ void array_initialization(){
                   abort();
             }
       }     
-      three_largest_indexes      = (int *)malloc(3*sizeof(int)); //Array of the indexes of the three largest bodies
-      if (Sun_bool && central_mass_bool){
-            sun_vector        = (typ *)malloc(3*sizeof(typ));
-            *sun_vector       = star_semi_major;
-            *(sun_vector + 1) = 0.0;
-            *(sun_vector + 2) = 0.0;
-      }  
+      three_largest_indexes      = (int *)malloc(3*sizeof(int)); //Array of the indexes of the three largest bodies 
       if (collision_bool){
             approach    = (typ *)malloc(6    *sizeof(typ));
             did_collide = (int *)malloc(N_max*sizeof(int));
@@ -653,10 +640,6 @@ void deallocation(){
             modified_cells = NULL;
             free(pairs);
             pairs = NULL;
-      }
-      if (Sun_bool && central_mass_bool){
-            free(sun_vector);
-            sun_vector = NULL;
       }
       free(three_largest_indexes);
       three_largest_indexes = NULL;
@@ -1231,7 +1214,6 @@ void verify(){
       if(!type_check(typeof(resume_simulation_bool),   int)){fprintf(stderr, "Error : resume_simulation_bool must be given as an integer (0 or 1).\n");  abort();}
       if(!type_check(typeof(viscoelastic_bool),        int)){fprintf(stderr, "Error : viscoelastic_bool must be given as an integer (0 or 1).\n");       abort();}
       if(!type_check(typeof(J2_bool),                  int)){fprintf(stderr, "Error : J2_bool must be given as an integer (0 or 1).\n");                 abort();}
-      if(!type_check(typeof(Sun_bool),                 int)){fprintf(stderr, "Error : Sun_bool must be given as an integer (0 or 1).\n");                abort();}
       if(!type_check(typeof(inner_fluid_disk_bool),    int)){fprintf(stderr, "Error : inner_fluid_disk_bool must be given as an integer (0 or 1).\n");   abort();}
       if(!type_check(typeof(central_tides_bool),       int)){fprintf(stderr, "Error : central_tides_bool must be given as an integer (0 or 1).\n");      abort();}
       if(!type_check(typeof(collision_bool),           int)){fprintf(stderr, "Error : collision_bool must be given as an integer (0 or 1).\n");          abort();}
@@ -1261,7 +1243,6 @@ void verify(){
       if (resume_simulation_bool   != 0 && resume_simulation_bool   != 1){OK = 0;}
       if (viscoelastic_bool        != 0 && viscoelastic_bool        != 1){OK = 0;}
       if (J2_bool                  != 0 && J2_bool                  != 1){OK = 0;}
-      if (Sun_bool                 != 0 && Sun_bool                 != 1){OK = 0;}
       if (inner_fluid_disk_bool    != 0 && inner_fluid_disk_bool    != 1){OK = 0;}
       if (central_tides_bool       != 0 && central_tides_bool       != 1){OK = 0;}
       if (collision_bool           != 0 && collision_bool           != 1){OK = 0;}
@@ -1298,14 +1279,19 @@ void verify(){
       if(!type_check(typeof(k2),                        typ)){fprintf(stderr, "Error : k2 must be given as a floating-point number.\n");                    abort();}
       if(!type_check(typeof(Delta_t),                   typ)){fprintf(stderr, "Error : Delta_t must be given as a floating-point number.\n");               abort();}
       if(!type_check(typeof(dimensionless_moi),         typ)){fprintf(stderr, "Error : dimensionless_moi must be given as a floating-point number.\n");     abort();}
-      if(!type_check(typeof(star_semi_major),           typ)){fprintf(stderr, "Error : star_semi_major must be given as a floating-point number.\n");       abort();}
-      if(!type_check(typeof(star_mass),                 typ)){fprintf(stderr, "Error : star_mass must be given as a floating-point number.\n");             abort();}
-      if(!type_check(typeof(obliquity),                 typ)){fprintf(stderr, "Error : obliquity must be given as a floating-point number.\n");             abort();}
       if(!type_check(typeof(inner_mass),                typ)){fprintf(stderr, "Error : inner_mass must be given as a floating-point number.\n");            abort();}
       if(!type_check(typeof(spawned_density),           typ)){fprintf(stderr, "Error : spawned_density must be given as a floating-point number.\n");       abort();}
       if(!type_check(typeof(f_tilde),                   typ)){fprintf(stderr, "Error : f_tilde must be given as a floating-point number.\n");               abort();}
       if(!type_check(typeof(R_roche),                   typ)){fprintf(stderr, "Error : R_roche must be given as a floating-point number.\n");               abort();}
       if(!type_check(typeof(disruption_threshold),      typ)){fprintf(stderr, "Error : disruption_threshold must be given as a floating-point number.\n");  abort();}
+      if(!type_check(typeof(pert_sma),                  typ)){fprintf(stderr, "Error : pert_sma must be given as a floating-point number.\n");              abort();}
+      if(!type_check(typeof(pert_ecc),                  typ)){fprintf(stderr, "Error : pert_ecc must be given as a floating-point number.\n");              abort();}
+      if(!type_check(typeof(pert_inc),                  typ)){fprintf(stderr, "Error : pert_inc must be given as a floating-point number.\n");              abort();}
+      if(!type_check(typeof(pert_tra),                  typ)){fprintf(stderr, "Error : pert_tra must be given as a floating-point number.\n");              abort();}
+      if(!type_check(typeof(pert_aop),                  typ)){fprintf(stderr, "Error : pert_aop must be given as a floating-point number.\n");              abort();}
+      if(!type_check(typeof(pert_lan),                  typ)){fprintf(stderr, "Error : pert_lan must be given as a floating-point number.\n");              abort();}
+      if(!type_check(typeof(pert_mass),                 typ)){fprintf(stderr, "Error : pert_mass must be given as a floating-point number.\n");             abort();}
+      if(!type_check(typeof(pert_radius),               typ)){fprintf(stderr, "Error : pert_radius must be given as a floating-point number.\n");           abort();}
       if(!type_check(typeof(t_end),                     typ)){fprintf(stderr, "Error : t_end must be given as a floating-point number.\n");                 abort();}
       if(!type_check(typeof(time_step),                 typ)){fprintf(stderr, "Error : time_step must be given as a floating-point number.\n");             abort();}
       if(!type_check(typeof(high_dumping_threshold),    typ)){fprintf(stderr, "Error : high_dumping_threshold must be given as a floating-point number.\n");abort();}
@@ -1326,14 +1312,6 @@ void verify(){
       if(!type_check(typeof(connections_per_node),      typ)){fprintf(stderr, "Error : connections_per_node must be given as a floating-point number.\n");  abort();}
       if(!type_check(typeof(nodes_radius),              typ)){fprintf(stderr, "Error : nodes_radius must be given as a floating-point number.\n");          abort();}
       if(!type_check(typeof(minimal_distance),          typ)){fprintf(stderr, "Error : minimal_distance must be given as a floating-point number.\n");      abort();}
-      if(!type_check(typeof(pert_sma),                  typ)){fprintf(stderr, "Error : pert_sma must be given as a floating-point number.\n");              abort();}
-      if(!type_check(typeof(pert_ecc),                  typ)){fprintf(stderr, "Error : pert_ecc must be given as a floating-point number.\n");              abort();}
-      if(!type_check(typeof(pert_inc),                  typ)){fprintf(stderr, "Error : pert_inc must be given as a floating-point number.\n");              abort();}
-      if(!type_check(typeof(pert_tra),                  typ)){fprintf(stderr, "Error : pert_tra must be given as a floating-point number.\n");              abort();}
-      if(!type_check(typeof(pert_aop),                  typ)){fprintf(stderr, "Error : pert_aop must be given as a floating-point number.\n");              abort();}
-      if(!type_check(typeof(pert_lan),                  typ)){fprintf(stderr, "Error : pert_lan must be given as a floating-point number.\n");              abort();}
-      if(!type_check(typeof(pert_mass),                 typ)){fprintf(stderr, "Error : pert_mass must be given as a floating-point number.\n");             abort();}
-      if(!type_check(typeof(pert_radius),               typ)){fprintf(stderr, "Error : pert_radius must be given as a floating-point number.\n");           abort();}
       if(!type_check(typeof(OmegaX),                    typ)){fprintf(stderr, "Error : OmegaX must be given as a floating-point number.\n");                abort();}
       if(!type_check(typeof(OmegaY),                    typ)){fprintf(stderr, "Error : OmegaY must be given as a floating-point number.\n");                abort();}
       if(!type_check(typeof(OmegaZ),                    typ)){fprintf(stderr, "Error : OmegaZ must be given as a floating-point number.\n");                abort();}
@@ -1393,12 +1371,12 @@ void verify(){
             fprintf(stderr, "Error : N_cb_post cannot be smaller than N_cb_pre.\n");
             abort();
       }
-      if (!central_mass_bool && (J2_bool || Sun_bool || inner_fluid_disk_bool || central_tides_bool)){
-            fprintf(stderr, "Error : If central_mass_bool is 0, then none of these booleans can be 1 : (J2_bool, Sun_bool, inner_fluid_disk_bool, central_tides_bool).\n");
+      if (!central_mass_bool && (J2_bool || inner_fluid_disk_bool || central_tides_bool)){
+            fprintf(stderr, "Error : If central_mass_bool is 0, then none of these booleans can be 1 : (J2_bool, inner_fluid_disk_bool, central_tides_bool).\n");
             abort();
       }
-      if (Sun_bool && !reduce_to_COM_bool){
-            fprintf(stderr, "Error : Perturbation from a distant object can only be taken into account if reduce_to_COM_bool is 1.\n");
+      if (pert_mass > 0. && !reduce_to_COM_bool){
+            fprintf(stderr, "Error : Perturbation from a point-mass perturbator can only be taken into account if reduce_to_COM_bool is 1.\n");
             abort();
       }
       if (make_animation_bool && !write_to_files_bool){

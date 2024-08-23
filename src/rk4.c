@@ -310,21 +310,21 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       
             /******** Reinitializing some global variables ********/
             how_many_modified = 0; //It is unnecessary to reinitialize the array modified_cells
-            how_many_big = 0;
-            how_many_small = 0;
-            total_neighbours = 0;
+            how_many_big      = 0;
+            how_many_small    = 0;
+            total_neighbours  = 0;
       }
       
       /******** If there are very few bodies, I switch to the brute-force algorithm ********/
-      if (!brute_force_bool && !force_naive_bool && how_many_moonlets < switch_to_brute_force - 10){
+      if      (!brute_force_bool && !force_naive_bool && how_many_moonlets < switch_to_brute_force){ //Switching to the brute-force algorithm for mutual interactions
             force_naive_bool = 1;
       }
-      else if (!brute_force_bool && force_naive_bool && how_many_moonlets > switch_to_brute_force + 10){
-            force_naive_bool = 1;
+      else if (!brute_force_bool &&  force_naive_bool && how_many_moonlets > switch_to_brute_force){ //Switching back to a more efficient algorithm
+            force_naive_bool = 0;
       }
       
       /******** Reordering the array moonlets ********/
-      if (how_many_moonlets < 9*largest_id/10 && largest_id > 50){
+      if (how_many_moonlets < 9*largest_id/10){ //I push the bodies to the left of the array if there are too many holes
             tidy_up(moonlets);
             if ((mutual_bool || collision_bool) && (falcON_bool || standard_tree_bool) && !brute_force_bool && !force_naive_bool){
                   IndexPeanoHilbertOrder = largest_id + 1;
@@ -386,24 +386,17 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   CM.x  -= mf*X/M;      CM.y -= mf*Y/M;      CM.z -= mf*Z/M;      CM.vx -= mf*vX/M;     CM.vy -= mf*vY/M;     CM.vz -= mf*vZ/M;
             }
       }
-
-      /******** Updating the position of the star or companion star ********/
-      if (Sun_bool){
-            * sun_vector      = star_semi_major*cos(time_elapsed*star_mean_motion);
-            *(sun_vector + 1) = star_semi_major*sin(time_elapsed*star_mean_motion)*cos(obliquity);
-            *(sun_vector + 2) = star_semi_major*sin(time_elapsed*star_mean_motion)*sin(obliquity);
-      }
       
       /******** Updating the J2 and the position of the evection resonance ********/
-      if (central_tides_bool && J2_bool){
-            if (J2_value == 0.0){
-                  J2 = 0.5*SideralOmega*SideralOmega*R_unit*R_unit*R_unit/(G*M_unit);
+      if (J2_bool){
+            if (J2_value == 0.){
+                  J2 = 0.5*SideralOmega*SideralOmega*R_unit*R_unit*R_unit/(G*CM.mass);
             }
             else{
-                  J2 = J2_value*SideralOmega*SideralOmega*Tearth*Tearth/(4.0*M_PI*M_PI);
+                  J2 = J2_value*SideralOmega*SideralOmega*Tearth*Tearth/(4.*M_PI*M_PI);
             }
-            if (Sun_bool){
-                  evection_resonance = pow(1.5*sqrt(M_unit/star_mass)*J2, 2.0/7.0)*pow(star_semi_major/R_unit, 3.0/7.0)*R_unit;
+            if (pert_mass > 0.){
+                  evection_resonance = pow(1.5*sqrt(CM.mass/pert_mass)*J2, 2./7.)*pow(pert_sma/R_unit, 3./7.)*R_unit;
             }
       }
       
@@ -430,10 +423,10 @@ void integration_tree(typ t){
       }
       
       /******** Numerical integration ********/
-      int error = 0;
-      bigint iter = 0;
-      int progressed = 0;
-      typ progress = 0.0;
+      int error             = 0;
+      bigint iter           = 0;
+      int progressed        = 0;
+      typ progress          = 0.0;
       typ previous_progress = 0.0;
       int j;
       struct boxdot * root = NULL;
@@ -585,6 +578,7 @@ void integration_tree(typ t){
       }
       if (resume_simulation_bool){
             resume(moonlets);
+            resumeFile();
       }
       
       /******** Displaying the number of timesteps performed ********/
@@ -753,6 +747,7 @@ void integration_mesh(typ t){
       }
       if (resume_simulation_bool){
             resume(moonlets);
+            resumeFile();
       }           
       if (!force_naive_bool && t > 0.0){
             for (j = 0; j < how_many_modified; j ++){
@@ -878,6 +873,7 @@ void integration_brute_force_SABA1(typ t){
       }
       if (resume_simulation_bool){
             resume(moonlets);
+            resumeFile();
       }
       
       /******** Displaying the number of timesteps performed ********/

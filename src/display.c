@@ -284,7 +284,7 @@ void display(struct moonlet * moonlets){
       typ a1, a2, l1, l2, K1, K2, H1, H2, Q1, Q2, P1, P2; //Orbital elements of the two most massive bodies
       int i1, i2;                                         //Indexes          of the two most massive bodies
       M1 = 0.; M2 = 0.; i1 = 0; i2 = 0;
-      mu = central_mass_bool ? CM.mass : M_unit;  mu += inner_fluid_disk_bool ? fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : 0.;  mu *= G;
+      mu = central_mass_bool ? CM_buffer.mass : M_unit;  mu += inner_fluid_disk_bool ? fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : 0.;  mu *= G;
       
       if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
             if (write_cartesian_bool){
@@ -438,7 +438,6 @@ void readme(){
 
       /******** Creates a readme.txt file giving some indications about the content of the files ********/
       
-      
       char file_path[800];
       FILE * file;
       
@@ -478,9 +477,10 @@ void readme(){
       fprintf(file, "used for this file are consistent with your choice of G, M_unit and R_unit. Similarly, if you set random_initial_bool to 1, make sure that the bounds you\n");
       fprintf(file, "set in the parameter file to draw the initial conditions at given in the right units.\n");
       fprintf(file, "\n");
-      fprintf(file, "If you set the boolean resume_simulation_bool to 1, then you will find a file init.txt, or the one that was already here has been modified.\n");
+      fprintf(file, "If you set the boolean resume_simulation_bool to 1, then you will find a file init.txt, or the one that was already here has been overwritten.\n");
       fprintf(file, "You can use it to restart the simulation where it stopped. Just set random_initial_bool to 0 and initial_cartesian_bool to 1. You will also need to\n");
-      fprintf(file, "update some parameters like N_0, to restart the simulation exactly like it was left. Refer to the last line of stat.txt.\n");
+      fprintf(file, "update some parameters in order to restart the simulation exactly like it was left. You will find a file resume.txt indicating the parameters to be updated.\n");
+      fprintf(file, "Due to the chaotic nature of N-body problems, the resumed simulation could significantly differ from what it would have been if not stopped in the first place.\n");
       fprintf(file, "\n");
       fprintf(file, "If you set viscoelastic_bool to 1 and resume_simulation_bool to 1, then you will have two files named init.txt and connections.txt that you can use to restart\n");
       fprintf(file, "your simulation. This way, you can run a first simulation with pert_mass to 0.0 and random_initial_bool to 1 to generate a viscoelastic body and let it rest,\n");
@@ -498,6 +498,64 @@ void readme(){
       fprintf(file, "Time, impactor mass, target mass, impactor radius, target radius, Delta V, impact angle, mass of the largest remnant.\n");
       fprintf(file, "The time of collision is found assuming that the bodies were moving on a staight line between two timesteps. It can be between two timesteps and smaller than\n");
       fprintf(file, "the initial time if bodies were overlapping at the beginning of the simulation.");
+      fclose(file);
+}
+
+
+void resumeFile(){
+
+      /******** Creates a file resume.txt that can be used to update parameters in parameters.h ********/
+      /******** in order to resume a simulation. Called only if resume_simulation_bool is 1     ********/
+
+      char file_path[800];
+      FILE * file;
+      
+      strcpy(file_path, pth);
+      strcat(file_path, "resume.txt");
+      file = fopen(file_path, "w");
+      if (file == NULL){
+            fprintf(stderr, "Error : Cannot create or open file resume.txt.\n");
+            abort();
+      }
+
+      fprintf(file, "Update parameters.h like so in order to restart your simulation.\n");
+      if (!random_initial_bool){
+            if (viscoelastic_bool){
+                  fprintf(file, "Files init.txt and connections.txt have been overwritten to the final state of the previous simulation.\n");
+            }
+            else{
+                  fprintf(file, "File init.txt has been overwritten to the final state of the previous simulation.\n");
+            }
+      }
+      fprintf(file, "The parameters to be updated before resuming the simulation are:\n\n");
+      if (random_initial_bool){
+            fprintf(file, "random_initial_bool = 0\n");
+      }
+      if (!initial_cartesian_bool){
+            fprintf(file, "initial_cartesian_bool = 1\n");
+      }
+      if (!viscoelastic_bool){
+            if (CM.mass != M_unit && central_mass_bool){
+                  fprintf(file, "M_unit = %.20lf\n", CM.mass);
+            }
+            if (CM.radius != R_unit && central_mass_bool){
+                  fprintf(file, "R_unit = %.20lf\n", CM.radius);
+            }
+            if (central_tides_bool || (J2_bool && J2_value == 0.)){
+                  fprintf(file, "Tearth = %.20lf\n", 2.*M_PI/SideralOmega);
+            }
+            if (J2_bool && J2_value != 0.){
+                  fprintf(file, "J2_value = %.20lf\n", J2);
+            }
+            if (inner_fluid_disk_bool){
+                  fprintf(file, "inner_mass = %.20lf\n", fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit));
+                  fprintf(file, "R_roche    = %.20lf\n", Rout);
+            }
+      }
+      if (how_many_moonlets != N_0){
+            fprintf(file, "N_0 = %d\n", how_many_moonlets);
+      }
+      fprintf(file, "t_init = %.20lf\n", t_init + time_elapsed);
       fclose(file);
 }
 
@@ -567,12 +625,12 @@ void resume(struct moonlet * moonlets){
       }
       
       /******** Getting the central body's coordinates ********/
-      XX  = (central_mass_bool ? CM.x  : 0.);
-      YY  = (central_mass_bool ? CM.y  : 0.);
-      ZZ  = (central_mass_bool ? CM.z  : 0.);
-      vXX = (central_mass_bool ? CM.vx : 0.);
-      vYY = (central_mass_bool ? CM.vy : 0.);
-      vZZ = (central_mass_bool ? CM.vz : 0.);
+      XX  = (central_mass_bool ? CM_buffer.x  : 0.);
+      YY  = (central_mass_bool ? CM_buffer.y  : 0.);
+      ZZ  = (central_mass_bool ? CM_buffer.z  : 0.);
+      vXX = (central_mass_bool ? CM_buffer.vx : 0.);
+      vYY = (central_mass_bool ? CM_buffer.vy : 0.);
+      vZZ = (central_mass_bool ? CM_buffer.vz : 0.);
       
       for (j = 0; j <= largest_id; j ++){
             if (*(exists + j)){
@@ -584,7 +642,7 @@ void resume(struct moonlet * moonlets){
                   vZ = (moonlets + j) -> vz - vZZ;
                   m  = (moonlets + j) -> mass;
                   R  = (moonlets + j) -> radius;                  
-                  fprintf(init_file, "%.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf\n", X, Y, Z, vX, vY, vZ, m, R);
+                  fprintf(init_file, "%.20lf %.20lf %.20lf %.20lf %.20lf %.20lf %.20lf %.20lf\n", X, Y, Z, vX, vY, vZ, m, R);
             }
       }     
       fclose(init_file);
@@ -605,7 +663,7 @@ void resume(struct moonlet * moonlets){
                   rest_length = (connections + j) -> rest_length;
                   a           = (connections + j) -> Pair.fst;
                   b           = (connections + j) -> Pair.snd;
-                  fprintf(connection_file, "%.1lf %.1lf %.15lf\n", (typ) a, (typ) b, rest_length);
+                  fprintf(connection_file, "%.1lf %.1lf %.20lf\n", (typ) a, (typ) b, rest_length);
             }
             fclose(connection_file);
       #endif

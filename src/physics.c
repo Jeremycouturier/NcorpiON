@@ -119,7 +119,7 @@ void vector_field(struct moonlet * moonlets){
                         aX = 0.;  aY = 0.;  aZ = 0.;
                   }                  
                   
-                  /******** Contribution from the Earth symmetrical equatorial bulge ********/
+                  /******** Contribution from the Earth symmetrical equatorial bulge (quadrupole only) ********/
                   if (J2_bool){
                         r2 = rk*rk;
                         r5 = r3*r2;
@@ -134,13 +134,19 @@ void vector_field(struct moonlet * moonlets){
                   }
                   
                   
-                  /******** Contribution from the star or companion star ********/
-                  if (Sun_bool){
-                        X_sun      = * sun_vector;
-                        Y_sun      = *(sun_vector + 1);
-                        Z_sun      = *(sun_vector + 2);
-                        K          = G*star_mass/(star_semi_major*star_semi_major*star_semi_major);
-                        KK         = 3.0*(X*X_sun + Y*Y_sun + Z*Z_sun)/(star_semi_major*star_semi_major);
+                  /******** Contribution from a distant point-mass perturbator (quadrupole only) ********/
+                  if (pert_mass > 0.){
+                        //need_to_reduce_COM_bool = 1;
+                        typ cart[6];
+                        typ nu = get_perturbing_true_anomaly(time_elapsed + t_init);              //Retrieving the true anomaly of the perturbing body
+                        mu = G*(pert_mass + M_unit);
+                        ell2cart(pert_sma, pert_ecc, pert_inc, nu, pert_aop, pert_lan, mu, cart); //Retrieving the coordinates  of the perturbing body
+                        mu = G*pert_mass;
+                        X_sun      = cart[0] + 0.5*timestep*cart[3];
+                        Y_sun      = cart[1] + 0.5*timestep*cart[4];
+                        Z_sun      = cart[2] + 0.5*timestep*cart[5];
+                        K          = fabs(G*pert_mass/(pert_sma*pert_sma*pert_sma));
+                        KK         = 3.0*(X*X_sun + Y*Y_sun + Z*Z_sun)/(pert_sma*pert_sma);
                         /******** Updating the acceleration of body k ********/
                         aX -= K*(X - KK*X_sun);
                         aY -= K*(Y - KK*Y_sun);
@@ -395,13 +401,10 @@ void vector_field(struct moonlet * moonlets){
                   typ nu = get_perturbing_true_anomaly(time_elapsed + t_init);              //Retrieving the true anomaly of the perturbing body
                   mu = G*(pert_mass + M_unit);
                   ell2cart(pert_sma, pert_ecc, pert_inc, nu, pert_aop, pert_lan, mu, cart); //Retrieving the coordinates  of the perturbing body
-                  if (openGL_bool || (viscoelastic_bool && pert_mass > 0.)){                //For visualization in webGL or writing to files
-                        CM.x  = cart[0] + 0.5*timestep*cart[3];  CM.y  = cart[1] + 0.5*timestep*cart[4];  CM.z  = cart[2] + 0.5*timestep*cart[5];
-                        CM.vx = cart[3];                         CM.vy = cart[4];                         CM.vz = cart[5];
-                        
-                  }
+                  CM.x  = cart[0] + 0.5*timestep*cart[3];  CM.y  = cart[1] + 0.5*timestep*cart[4];  CM.z  = cart[2] + 0.5*timestep*cart[5];
+                  CM.vx = cart[3];                         CM.vy = cart[4];                         CM.vz = cart[5];
                   mu = G*pert_mass;
-                  XX = cart[0] + 0.5*timestep*cart[3];  YY = cart[1] + 0.5*timestep*cart[4];  ZZ = cart[2] + 0.5*timestep*cart[5];
+                  XX = CM.x;  YY = CM.y;  ZZ = CM.z;
                   Rk = sqrt(XX*XX + YY*YY + ZZ*ZZ);
                   aX = mu*XX/(Rk*Rk*Rk);  aY = mu*YY/(Rk*Rk*Rk);  aZ = mu*ZZ/(Rk*Rk*Rk); //Acceleration at the center of mass
                   for (j = 0; j <= largest_id; j ++){

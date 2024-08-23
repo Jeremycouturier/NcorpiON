@@ -60,6 +60,9 @@ void display(struct moonlet * moonlets);
 void readme();
 
 
+void resumeFile();
+
+
 void rebound(struct moonlet * moonlets);
 
 

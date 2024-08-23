@@ -47,7 +47,6 @@ extern typ fluid_disk_Sigma;         //The mass of the inner fluid disk per unit
 extern typ flowed_since_last_spawn;  //Mass that flowed out of the inner fluid disk by its outer edge since the last time a body spawned
 extern typ Rout;                     //Outer edge of the inner fluid disk
 extern typ SideralOmega;             //The sideral rotation frequency of the central body
-extern typ star_mean_motion;         //The mean motion of the central body around its star or companion star
 extern typ evection_resonance;       //The position of the evection resonance. To be fed to python for image production
 extern int need_to_reduce_COM_bool;  //A boolean value to indicate if the center of mass needs to be reduced (e.g. after a super-catastrophic disruption or a dumping from the simulation)
 
@@ -134,9 +133,6 @@ extern int merger_count;                //Number of collisions having resulted i
 extern int collision_count;             //Number of collisions so far
 extern int * did_collide;               //The k^th cell contains 1 if body k did collide during that timestep, and 0 otherwise
 
-
-/******** array relative to pertubations from the star or companion star ********/
-extern typ * sun_vector;                //The position of the star in the geocentric reference frame. Unused if Sun_bool is 0
 
 
 /******** Global array of output files ********/

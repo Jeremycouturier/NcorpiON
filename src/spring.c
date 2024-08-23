@@ -580,6 +580,9 @@ void make_rotate(struct moonlet * viscoelastic){
       if (OmegaX == 0. && OmegaY == 0. && OmegaZ == 0.){ //No rotation in this case
             return;
       }
+      if (!random_initial_bool){
+            return;
+      }
 
       int j;
       typ X, Y, Z;
@@ -603,6 +606,9 @@ void point_angular_momentum(struct moonlet * viscoelastic){
       /******** the whole viscoelastic body to make it match the desired direction in the inertial frame   ********/
 
       if (OmegaX == 0. && OmegaY == 0. && OmegaZ == 0.){ //No rotation in this case
+            return;
+      }
+      if (!random_initial_bool){
             return;
       }
 

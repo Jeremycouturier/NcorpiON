@@ -183,7 +183,7 @@ int main(int argc, char ** argv){
             else{
                   sprintf(J2_bl, "%d", 0);
             }
-            if (Sun_bool){ //The user's decision on taking into account perturbations from the sun is passed to the python script
+            if (pert_mass > 0.){ //The user's decision on taking into account perturbations from a point-mass perturbator is passed to the python script
                   sprintf(Sun_bl, "%d", 1);
             }
             else{

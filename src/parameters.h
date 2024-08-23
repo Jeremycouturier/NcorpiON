@@ -79,11 +79,10 @@
                                      //sphere of radius R_unit will be taken. If random_initial_bool is 0, the body is retrieved from the files init.txt and connections.txt that can have
                                      //been created by a previous simulation where resume_simulation_bool was set to 1.
 
-/******** Booleans relative to interactions with the central mass or a distant object. Set to 0 if central_mass_bool is 0 ********/
-#define J2_bool                  0   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
-#define Sun_bool                 0   //Determines if the perturbations from a distant object that the system orbits (or is orbited by) are taken into account in the simulation
-#define central_tides_bool       0   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
-#define inner_fluid_disk_bool    0   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which bodies spawn). See Salmon & Canup 2012
+/******** Booleans relative to interactions with the central mass. Set all to 0 if central_mass_bool is 0 ********/
+#define J2_bool                  1   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
+#define central_tides_bool       1   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
+#define inner_fluid_disk_bool    1   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which bodies spawn). See Salmon & Canup 2012
                                      //If set to 1, its mass is added to that of the central body when computing gravitational interactions and when preserving the total momemtum
 
 /******** Booleans relative to mutual interactions between the bodies ********/
@@ -121,23 +120,30 @@
                                      //Regardless of central_mass_bool and viscoelastic_bool, you have to define G as the value of the gravitational constant in your system of units.
 
 /******** Physical constants relative to interactions with the central body (J2, inner disk, central tides) or a distant object. Unimportant if central_mass_bool is 0 ********/
-#define Tearth 3.55672180902775      //Central body's sideral period in units of the surface orbital period. Must be > 1.
+#define Tearth 3.70911350914616777530//Central body's sideral period in units of the surface orbital period. Must be > 1.
                                      //In case of tides, the sideral period changes and this is the value at initial time.
 #define J2_value 0.                  //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body) where Omega is the
                                      //sideral frequency and Omega_crit = sqrt(G*M_unit/R_unit^3). In that case, J2 is variable throughout the simulation.
 #define k2 1.5                       //Second Love number of the central body. Here the value is for a fluid body (zero shear modulus). The constant timelag model is used
 #define Delta_t 0.0015807652484567779//The timelag between tidal stress and response. In simulation's units
 #define dimensionless_moi 0.3307     //The moment of inertia of the central body, in simulation units (in units of its mass times its radius squared).
-#define star_semi_major 23481.066    //The semi-major axis of the orbit of the system around the distant object in simulation units.
-#define star_mass 332946.0434581987  //The mass of the distant object in simulation units.
-#define obliquity 0.                 //The angle between the simulation's reference plane and the orbit of the distant object.
 #define inner_mass 0.                //Mass of the inner fluid disk at initial time.
 #define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
 #define f_tilde 0.3                  //A parameter controlling the mass of bodies spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
 #define R_roche 2.9                  //The initial outer radius of the inner fluid disk where bodies spawn (in simulation's units). Must be larger than disruption_threshold and R_unit.
-#define disruption_threshold 1.      //Threshold (in simulation's units) below which bodies are tidally disrupted by the central mass. If inner_fluid_disk_bool is 0, then the mass of
+#define disruption_threshold 1.8     //Threshold (in simulation's units) below which bodies are tidally disrupted by the central mass. If inner_fluid_disk_bool is 0, then the mass of
                                      //the dumped body is added to the central body. Otherwise, the mass of the dumped body is added to the inner fluid disk if the body's periapsis is
                                      //above the surface or if it will cross the xy plane before hitting the surface, and to the central mass else.
+                                     
+/******** Orbit of a point-mass perturbator, in an inertial reference frame. Set pert_mass to 0.0 if you do not want a perturbator ********/
+#define pert_sma -11690.1474151781531//The perturbator is on a Keplerian trajectory defined by the six elements (semi-major axis, eccentricity, inclination, true anomaly, argument of
+#define pert_ecc 4.2399307249518     //periapsis, longitude of ascending node), given by these six parameters (in radians and simulation's units). The gravitational parameter used to
+#define pert_inc 2.8418842771365     //convert these elliptic elements into cartesian coordinates is mu = G*(pert_mass + M_unit). The Keplerian orbit can be hyperbolic
+#define pert_tra -0.0000000092695    //(pert_ecc can exceed 1), but then, the semi-major axis pert_sma must be negative and the true anomaly must verify |tra| < acos(-1/e).
+#define pert_aop -2.5680969201791    //The eccentricity pert_ecc cannot be exactly equal to 1. The true anomaly is given at the time t = 0, not at the initial time t_init. This means
+#define pert_lan 2.6575357407213     //that if you set pert_tra to 0., then the periapsis happens at time t = 0.
+#define pert_mass 0.//97904401542201.//Mass of the perturbator (in simulation's units).
+#define pert_radius 6371.0           //Radius of the perturbator (for visualization purposes only. Does not matter if openGL_bool is 0)
 
 
 
@@ -168,7 +174,7 @@
 #define eccentricity_min 0.          //Minimal eccentricity             of a body at initial time
 #define eccentricity_max 0.2         //Maximal eccentricity             of a body at initial time
 #define sma_min 2.9                  //Minimal semi-major axis          of a body at initial time
-#define sma_max 14.                  //Maximal semi-major axis          of a body at initial time
+#define sma_max 21.                  //Maximal semi-major axis          of a body at initial time
 #define inclination_min 0.           //Minimal inclination (in radians) of a body at initial time
 #define inclination_max 0.174533     //Maximal inclination (in radians) of a body at initial time
                                      //The true longitude, argument of pericenter and longitude of the ascending node are drawn uniformly at random between 0 and 2*M_PI
@@ -202,16 +208,6 @@
 #define nodes_radius 0.25            //Nodes' radii in units of the minimal initial distance. Can be used to check the structural integrity. In the resting simulation, if collision_bool
                                      //is set to 1 and this parameter is set to a small value (e.g. 0.1), then no collisions should occur if spring_modulus is large enough
 
-/******** Orbit of the point-mass perturbator, in an inertial reference frame. ********/
-#define pert_sma -11690.1474151781531//The perturbator is on a Keplerian trajectory defined by the six elements (semi-major axis, eccentricity, inclination, true anomaly, argument of
-#define pert_ecc 4.2399307249518     //periapsis, longitude of ascending node), given by these six parameters (in radians and simulation's units). The gravitational parameter used to
-#define pert_inc 2.8418842771365     //convert these elliptic elements into cartesian coordinates is mu = G*(pert_mass + M_unit). The Keplerian orbit can be hyperbolic
-#define pert_tra -0.0000000092695    //(pert_ecc can exceed 1), but then, the semi-major axis pert_sma must be negative and the true anomaly must verify |tra| < acos(-1/e).
-#define pert_aop -2.5680969201791    //The eccentricity pert_ecc cannot be exactly equal to 1. The true anomaly is given at the time t = 0, not at the initial time t_init. This means
-#define pert_lan 2.6575357407213     //that if you set pert_tra to 0., then the periapsis happens at time t = 0.
-#define pert_mass 0.//97904401542201.//Mass of the perturbator (in simulation's units). First set to 0.0 in order to remove tides on the viscoelastic body and let it rest
-#define pert_radius 6371.0           //Radius of the perturbator (for visualization purposes only. Does not matter if openGL_bool is 0)
-
 /******** Rotation of the viscoelastic body, in the fixed body frame (same reference frame as the shape model). Set all three to 0.0 for no rotation  ********/
 #define OmegaX 0.152752              //X-component of the rotation vector. The rotation vector is Omega = (OmegaX, OmegaY, OmegaZ)
 #define OmegaY 0.080406              //Y-component of the rotation vector. To be given in radians per unit of time of the simulation
@@ -232,7 +228,7 @@
 
 #define expansion_order 3            //The order p of the multipole expansions. NcorpiON allows up to p = 8. Minimum is 1 as order 0 yields no acceleration
 #define theta_min 0.45               //Minimal value of the opening angle theta. Must be strictly less than 1. Advised values are 0.25 < theta_min < 0.75
-                                     //Larger expansion orders or smaller theta_min yield a better precision on the gravity computation. See Table 
+                                     //Larger expansion orders p or smaller opening angles theta_min yield a better precision on the gravity computation.
                                      //The precision (and computational time) of the mutual gravity computed by Ncorpion increases with increasing p and decreasing theta_min.
 #define subdivision_threshold 17     //A cubic cell is not divided as long as it contains at most that many bodies. Called s in Dehnen (2002). Must be > 0. The precision does not depend
                                      //on this threshold, but the computational time does. Suggested values are s = (10, 10, 15, 30, 50, 50, 75, 110) for p = (1, 2, 3, 4, 5, 6, 7, 8)
