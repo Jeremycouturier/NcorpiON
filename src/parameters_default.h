@@ -40,7 +40,7 @@
 /******** init.txt used to resume a simulation is written when resume_simulation_bool is 1  ********/
 /***************************************************************************************************/
 
-#define pth "/home/jeremy/Documents/NcorpiON_simulation/TwoStageMoon/Aug20/75/short/" //The path must be absolute, end with / and already exist
+#define pth "/path/towards/input/output/location/" //The path must be absolute, end with / and already exist
 
 
 
@@ -49,7 +49,7 @@
 /**************************************************************************/
 
 /******** General booleans relative to the simulation ********/
-#define write_to_files_bool      1   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
+#define write_to_files_bool      0   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
                                      //You can also set this boolean to 0 if you only want to 3D visualize the simulation in your browser.
 #define make_animation_bool      0   //Determines if animations of the simulation are produced. write_to_files_bool and write_elliptic_bool must both be set to 1
 #define write_cartesian_bool     0   //Determines if the cartesian elements x, y, z, vx, vy, vz   should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
@@ -61,7 +61,7 @@
 #define reduce_to_COM_bool       1   //Determines if the position and speed of the center of mass of the system are cancelled by a translation before simulating. If 0, then the center
                                      //of mass will drift linearly with time, which could be a problem due to the limit of floating-point representation. Setting to 1 is recommended.
                                      //Note that the position and speed of the central body (if any) will slightly deviate from 0 after the reduction of the center of mass.
-#define random_initial_bool      0   //Determines if the initial conditions are drawn randomly between bounds defined below. If 0, the initial conditions are read from the file init.txt
+#define random_initial_bool      1   //Determines if the initial conditions are drawn randomly between bounds defined below. If 0, the initial conditions are read from the file init.txt
                                      //located at the path defined above, with one line per body and 8 columns, the first six for the initial conditions and the last two for mass and
                                      //radius (in simulation unit). If central_mass_bool is 1 and random_initial_bool is 0, do not include the central body in init.txt.
 #define initial_cartesian_bool   1   //Determines if the initial conditions are given in cartesian coordinates (X,Y,Z,vX,vY,vZ). If 0, then the initial conditions are (semi-major axis,
@@ -71,7 +71,7 @@
 #define one_collision_only_bool  0   //Determines if bodies are only allowed to collide once per timestep. If 0, there is no restriction on the number of collisions a body can experience
                                      //during a timestep. Setting first to 1 and then to 0 is a good way to know if the timestep is adapted to the bodies' mean free path.
 #define openGL_bool              0   //MATCH TO THE SAME VALUE IN THE MAKEFILE. Determines if a 3D real-time visualization of the simulation with WebGL is enabled.
-#define resume_simulation_bool   1   //Determines if, at the end of the simulation, NcorpiON generates a file named init.txt that can be used to resume the simulation. The file init.txt
+#define resume_simulation_bool   0   //Determines if, at the end of the simulation, NcorpiON generates a file named init.txt that can be used to resume the simulation. The file init.txt
                                      //is stored at the path indicated above. To resume the simulation, you need to set random_initial_bool to 0, initial_cartesian_bool to 1, and N_0 to
                                      //the number of lines of init.txt. If init.txt already exists in path pth, it will be overwritten. Simulation's variables should be updated.
 #define viscoelastic_bool        0   //Determines if NcorpiON is used to simulate a viscoelastic body. The body is discretized by N_0 points linked by Kelvin-Voigt models. If random_
@@ -80,9 +80,9 @@
                                      //been created by a previous simulation where resume_simulation_bool was set to 1.
 
 /******** Booleans relative to interactions with the central mass. Set all to 0 if central_mass_bool is 0 ********/
-#define J2_bool                  1   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
-#define central_tides_bool       1   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
-#define inner_fluid_disk_bool    1   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which bodies spawn). See Salmon & Canup 2012
+#define J2_bool                  0   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
+#define central_tides_bool       0   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
+#define inner_fluid_disk_bool    0   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which bodies spawn). See Salmon & Canup 2012
                                      //If set to 1, its mass is added to that of the central body when computing gravitational interactions and when preserving the total momemtum
 
 /******** Booleans relative to mutual interactions between the bodies ********/
@@ -110,7 +110,7 @@
 
 /******** Defining a system of units for the simulation. If random_initial_bool is 0, then the units in the file init.txt must be the simulation's units ********/
 #define R_unit 1.                    //If central_mass_bool is 1, then radius of the central body. If viscoelastic_bool is 1, then radius of the viscoelastic body
-#define M_unit 0.998952881356407     //If central_mass_bool is 1, then   mass of the central body. If viscoelastic_bool is 1, then mass   of the viscoelastic body
+#define M_unit 1.                    //If central_mass_bool is 1, then   mass of the central body. If viscoelastic_bool is 1, then mass   of the viscoelastic body
 #define G 39.47841760435743447533796 //The gravitational constant. If you set it to 4*pi^2, then a particle of semi-major axis 1 orbiting a mass 1 has a period 1.
                                      //If viscoelastic_bool is 1, M_unit and R_unit are the mass and mean radius of the viscoelastic body to be simulated.
                                      //Note that R_unit and M_unit do not necessarily have to be 1, they should just be equal to the mass and radius of the central body or viscoelastic
@@ -120,7 +120,7 @@
                                      //Regardless of central_mass_bool and viscoelastic_bool, you have to define G as the value of the gravitational constant in your system of units.
 
 /******** Physical constants relative to interactions with the central body (J2, inner disk, central tides) or a distant object. Unimportant if central_mass_bool is 0 ********/
-#define Tearth 3.6094629440035333    //Central body's sideral period in units of the surface orbital period. Must be > 1.
+#define Tearth 3.70911350914616777530//Central body's sideral period in units of the surface orbital period. Must be > 1.
                                      //In case of tides, the sideral period changes and this is the value at initial time.
 #define J2_value 0.                  //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body) where Omega is the
                                      //sideral frequency and Omega_crit = sqrt(G*M_unit/R_unit^3). In that case, J2 is variable throughout the simulation.
@@ -131,7 +131,7 @@
 #define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
 #define f_tilde 0.3                  //A parameter controlling the mass of bodies spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
 #define R_roche 2.9                  //The initial outer radius of the inner fluid disk where bodies spawn (in simulation's units). Must be larger than disruption_threshold and R_unit.
-#define disruption_threshold 1.8     //Threshold (in simulation's units) below which bodies are tidally disrupted by the central mass. If inner_fluid_disk_bool is 0, then the mass of
+#define disruption_threshold 1.2     //Threshold (in simulation's units) below which bodies are tidally disrupted by the central mass. If inner_fluid_disk_bool is 0, then the mass of
                                      //the dumped body is added to the central body. Otherwise, the mass of the dumped body is added to the inner fluid disk if the body's periapsis is
                                      //above the surface or if it will cross the xy plane before hitting the surface, and to the central mass else.
                                      
@@ -152,10 +152,10 @@
 /*******************************************************/
 
 /******** General parameters ********/
-#define N_max 49000                  //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
-#define N_0 17743                    //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
-#define t_init 28.453774472222       //Time at the beginning of the simulation (in simulation's units)
-#define t_end 68592.1226045          //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
+#define N_max 5000                   //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
+#define N_0 1000                     //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
+#define t_init 0.                    //Time at the beginning of the simulation (in simulation's units)
+#define t_end 512.                   //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
 #define time_step 0.015625           //Timestep of the simulation (in simulation's units)
 #define output_step 32               //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define high_dumping_threshold 230.95//Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
