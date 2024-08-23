@@ -136,7 +136,7 @@ void vector_field(struct moonlet * moonlets){
                   
                   /******** Contribution from a distant point-mass perturbator (quadrupole only) ********/
                   if (pert_mass > 0.){
-                        //need_to_reduce_COM_bool = 1;
+                        need_to_reduce_COM_bool = 1;
                         typ cart[6];
                         typ nu = get_perturbing_true_anomaly(time_elapsed + t_init);              //Retrieving the true anomaly of the perturbing body
                         mu = G*(pert_mass + M_unit);

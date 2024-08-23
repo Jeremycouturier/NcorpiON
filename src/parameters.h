@@ -80,9 +80,9 @@
                                      //been created by a previous simulation where resume_simulation_bool was set to 1.
 
 /******** Booleans relative to interactions with the central mass. Set all to 0 if central_mass_bool is 0 ********/
-#define J2_bool                  1   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
-#define central_tides_bool       1   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
-#define inner_fluid_disk_bool    1   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which bodies spawn). See Salmon & Canup 2012
+#define J2_bool                  0   //Determines if the contribution from the J2 is taken into account in the simulation. The (x,y) plane of the simulation must be the equatorial plane
+#define central_tides_bool       0   //Determines if orbiting bodies raise tides on the central body. The tidal model used by NcorpiON is the constant timelag model
+#define inner_fluid_disk_bool    0   //Determines if there is an inner fluid disk (disk of liquid material below the Roche radius from which bodies spawn). See Salmon & Canup 2012
                                      //If set to 1, its mass is added to that of the central body when computing gravitational interactions and when preserving the total momemtum
 
 /******** Booleans relative to mutual interactions between the bodies ********/
@@ -131,7 +131,7 @@
 #define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
 #define f_tilde 0.3                  //A parameter controlling the mass of bodies spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
 #define R_roche 2.9                  //The initial outer radius of the inner fluid disk where bodies spawn (in simulation's units). Must be larger than disruption_threshold and R_unit.
-#define disruption_threshold 1.8     //Threshold (in simulation's units) below which bodies are tidally disrupted by the central mass. If inner_fluid_disk_bool is 0, then the mass of
+#define disruption_threshold 1.2     //Threshold (in simulation's units) below which bodies are tidally disrupted by the central mass. If inner_fluid_disk_bool is 0, then the mass of
                                      //the dumped body is added to the central body. Otherwise, the mass of the dumped body is added to the inner fluid disk if the body's periapsis is
                                      //above the surface or if it will cross the xy plane before hitting the surface, and to the central mass else.
                                      
@@ -152,10 +152,10 @@
 /*******************************************************/
 
 /******** General parameters ********/
-#define N_max 9000                   //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
+#define N_max 5000                   //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
 #define N_0 1000                     //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
 #define t_init 0.                    //Time at the beginning of the simulation (in simulation's units)
-#define t_end 256.                   //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
+#define t_end 512.                   //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
 #define time_step 0.015625           //Timestep of the simulation (in simulation's units)
 #define output_step 32               //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define high_dumping_threshold 230.95//Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)

@@ -130,9 +130,9 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       /******** Removing from the simulation the bodies that need to be removed ********/
       how_many_moonlets   = 0;
       typ total_mass      = 0.0;
-      typ M1, M2, R1, R2;         //Masses and radii of the two most massive bodies
-      typ a1, a2, e1, e2, I1, I2; //Orbital elements of the two most massive bodies
-      int i1, i2;                 //Indexes          of the two most massive bodies
+      typ M1, M2, R1, R2;                                 //Masses and radii of the two most massive bodies
+      typ a1, a2, e1, e2, I1, I2, l1, l2, o1, o2, O1, O2; //Orbital elements of the two most massive bodies
+      int i1, i2;                                         //Indexes          of the two most massive bodies
       M1 = 0.; M2 = 0.; i1 = 0; i2 = 0;
       int losing_that_one = 0;
       XX                  = (central_mass_bool ? CM.x : 0.);
@@ -220,7 +220,8 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                         typ spc = 100.0*((typ) super_catastrophic_count)/cll;
                         typ hfr = 100.0*((typ) half_fragmentation_count)/cll;
                         typ ffr = 100.0*((typ) full_fragmentation_count)/cll;
-                        printf("                  Merger = %.2lf %% | Super-catastrophic = %.2lf %% | Partially fragmented = %.2lf %% | Fully fragmented = %.2lf %%\n", mrg, spc, hfr, ffr);
+                        printf("                  Merger = %.2lf %% | Super-catastrophic = %.2lf %% | Partially fragmented = %.2lf %% | Fully fragmented = %.2lf %%\n",
+                        mrg, spc, hfr, ffr);
                   }
                   if (inner_fluid_disk_bool){
                         typ disk_mass = M_PI*(Rout*Rout - R_unit*R_unit)*fluid_disk_Sigma;
@@ -237,19 +238,30 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   }
                   typ mu = central_mass_bool ? CM.mass : M_unit;  mu += inner_fluid_disk_bool ? fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : 0.;  mu *= G;
                   if (how_many_moonlets > 1){
-                        R1 = (moonlets + i1) -> radius;  R2 = (moonlets + i2) -> radius;
+                        typ vp1, vp2;
+                        R1  = (moonlets + i1) -> radius;  R2 = (moonlets + i2) -> radius;
                         cart2ell(moonlets, i1, alkhqp, mu + G*M1);
-                        a1 = *alkhqp; e1 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I1 = 360.0*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
+                        a1  = *alkhqp; e1 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I1 = 360.*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
+                        vp1 = 180.*atan2(alkhqp[3], alkhqp[2])/M_PI;
+                        l1  = 180.*alkhqp[1]/M_PI - vp1; O1 = 180.*atan2(alkhqp[5], alkhqp[4])/M_PI; o1 = vp1 - O1;
                         cart2ell(moonlets, i2, alkhqp, mu + G*M2);
-                        a2 = *alkhqp; e2 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I2 = 360.0*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
-                        printf("                  Most massive body   : (M, R, a, e, i) = (%.8lf, %.8lf, %.8lf, %.8lf, %.8lf°)\n", M1, R1, a1, e1, I1);
-                        printf("                  Second most massive : (M, R, a, e, i) = (%.8lf, %.8lf, %.8lf, %.8lf, %.8lf°)\n", M2, R2, a2, e2, I2);
+                        a2  = *alkhqp; e2 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I2 = 360.*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
+                        vp2 = 180.*atan2(alkhqp[3], alkhqp[2])/M_PI;
+                        l2  = 180.*alkhqp[1]/M_PI - vp2; O2 = 180.*atan2(alkhqp[5], alkhqp[4])/M_PI; o2 = vp2 - O2;
+                        printf("                  Most massive : (m, R; a, e, i; M, o, O) = (%.7lf, %.4lf; %.3lf, %.3lf, %.3lf°; %.2lf°, %.2lf°, %.2lf°)\n",
+                        M1, R1, a1, e1, I1, l1, o1, O1);
+                        printf("                  Second most  : (m, R; a, e, i; M, o, O) = (%.7lf, %.4lf; %.3lf, %.3lf, %.3lf°; %.2lf°, %.2lf°, %.2lf°)\n",
+                        M2, R2, a2, e2, I2, l2, o2, O2);
                   }
                   else if (how_many_moonlets == 1){
+                        typ vp1;
                         R1 = (moonlets + i1) -> radius;
                         cart2ell(moonlets, i1, alkhqp, mu + G*M1);
-                        a1 = *alkhqp; e1 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I1 = 360.0*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
-                        printf("                  Most massive body   : (M, R, a, e, i) = (%.8lf, %.8lf, %.8lf, %.8lf, %.8lf°)\n", M1, R1, a1, e1, I1);
+                        a1 = *alkhqp; e1 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I1 = 360.*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
+                        vp1 = 180.*atan2(alkhqp[3], alkhqp[2])/M_PI;
+                        l1  = 180.*alkhqp[1]/M_PI - vp1; O1 = 180.*atan2(alkhqp[5], alkhqp[4])/M_PI; o1 = vp1 - O1;
+                        printf("                  Most massive : (m, R; a, e, i; M, o, O) = (%.7lf, %.4lf; %.3lf, %.3lf, %.3lf°; %.2lf°, %.2lf°, %.2lf°)\n",
+                        M1, R1, a1, e1, I1, l1, o1, O1);
                   }
                   if (central_tides_bool && inner_fluid_disk_bool){
                         printf("                  Sideral rotation = %.13lf,  Inner fluid disk outer edge = %.13lf\n", SideralOmega, Rout);
