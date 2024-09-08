@@ -450,7 +450,7 @@ void readme(){
       }
       
       fprintf(file, "Depending on the value that you chose for write_cartesian_bool and write_elliptic_bool in the parameter file, you should find a variable number of files here.\n");
-      fprintf(file, "The two files named mass.txt and radius.txt contain the masses and radii of the bodies\n");
+      fprintf(file, "If either write_cartesian_bool or write_elliptic_bool is 1, then files mass.txt and radius.txt containing the masses and radii of the bodies are present.\n");
       fprintf(file, "Files x.txt, y.txt, z.txt, vx.txt, vy.txt, vz.txt contain the cartesians coordinates of the bodies.\n");
       fprintf(file, "Files a.txt, lambda.txt, k.txt, h.txt, q.txt, p.txt contain the elliptic coordinates of the bodies, where a is the semi-major axis and lambda the mean longitude.\n");
       fprintf(file, "The elements k, h, q and p are defined as (see Laskar & Robutel, 1995) k + ih = e*exp(i*varpi) and q + ip = sin(I/2)*exp(i*Omega),\n");
@@ -543,9 +543,6 @@ void resumeFile(){
             }
             if (central_tides_bool || (J2_bool && J2_value == 0.)){
                   fprintf(file, "Tearth = %.20lf\n", 2.*M_PI/SideralOmega);
-            }
-            if (J2_bool && J2_value != 0.){
-                  fprintf(file, "J2_value = %.20lf\n", J2);
             }
             if (inner_fluid_disk_bool){
                   fprintf(file, "inner_mass = %.20lf\n", fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit));

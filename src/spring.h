@@ -89,6 +89,9 @@ struct connection make_connection(struct moonlet * viscoelastic, int a, int b);
 typ get_perturbing_true_anomaly(typ time);
 
 
+void get_pert_coordinates(typ time, typ * x, typ * y, typ * z);
+
+
 void quaternion_norm(struct quaternion * q);
 
 

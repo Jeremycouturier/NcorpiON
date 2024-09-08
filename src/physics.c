@@ -54,11 +54,11 @@ void vector_field(struct moonlet * moonlets){
       typ X, Y, Z, XX, YY, ZZ, K, M;
       typ mu, mk;
       typ Xp, Yp, Zp, mp, DX, DY, DZ, D, D3, softening, Rk, Rp;
-      typ X_sun, Y_sun, Z_sun, KK;
+      typ X_sun, Y_sun, Z_sun, r_sun, KK, KKK;
       typ aX, aY, aZ;
       
+      XX = central_mass_bool ? CM.x : 0.;  YY = central_mass_bool ? CM.y : 0.;  ZZ = central_mass_bool ? CM.z : 0.;
       if (central_mass_bool){
-            XX        = CM.x;  YY = CM.y;  ZZ = CM.z;
             M         = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : CM.mass);
             CM_acc[0] = 0.;  CM_acc[1] = 0.;  CM_acc[2] = 0.;
       }
@@ -90,6 +90,15 @@ void vector_field(struct moonlet * moonlets){
             }
       }
       #endif
+      
+      /******** Getting the cartesian coordinates of the point-mass perturbator ********/
+      if (pert_mass > 0.){
+            need_to_reduce_COM_bool = 1;
+            get_pert_coordinates(t_init + time_elapsed + 0.5*timestep, &X_sun, &Y_sun, &Z_sun);
+            X_sun -= XX;  Y_sun -= YY;  Z_sun -= ZZ;
+            r_sun = sqrt(X_sun*X_sun + Y_sun*Y_sun + Z_sun*Z_sun);
+            KKK   = G*pert_mass/(r_sun*r_sun*r_sun);
+      }
       
       for (k = 0; k <= largest_id; k ++){
             if (*(exists + k)){ //Checking whether or not there is a body in the kth cell of the body array
@@ -136,21 +145,11 @@ void vector_field(struct moonlet * moonlets){
                   
                   /******** Contribution from a distant point-mass perturbator (quadrupole only) ********/
                   if (pert_mass > 0.){
-                        need_to_reduce_COM_bool = 1;
-                        typ cart[6];
-                        typ nu = get_perturbing_true_anomaly(time_elapsed + t_init);              //Retrieving the true anomaly of the perturbing body
-                        mu = G*(pert_mass + M_unit);
-                        ell2cart(pert_sma, pert_ecc, pert_inc, nu, pert_aop, pert_lan, mu, cart); //Retrieving the coordinates  of the perturbing body
-                        mu = G*pert_mass;
-                        X_sun      = cart[0] + 0.5*timestep*cart[3];
-                        Y_sun      = cart[1] + 0.5*timestep*cart[4];
-                        Z_sun      = cart[2] + 0.5*timestep*cart[5];
-                        K          = fabs(G*pert_mass/(pert_sma*pert_sma*pert_sma));
-                        KK         = 3.0*(X*X_sun + Y*Y_sun + Z*Z_sun)/(pert_sma*pert_sma);
+                        KK = 3.*(DX*X_sun + DY*Y_sun + DZ*Z_sun)/(r_sun*r_sun);
                         /******** Updating the acceleration of body k ********/
-                        aX -= K*(X - KK*X_sun);
-                        aY -= K*(Y - KK*Y_sun);
-                        aZ -= K*(Z - KK*Z_sun);
+                        aX -= KKK*(DX - KK*X_sun);
+                        aY -= KKK*(DY - KK*Y_sun);
+                        aZ -= KKK*(DZ - KK*Z_sun);
                   }
                   
                   
@@ -490,15 +489,16 @@ void tides(struct moonlet * bodies){
       typ R5 = R_unit*R_unit*R_unit*R_unit*R_unit;
       typ A  = 3.0*k2*G*R5;
       typ M  = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : CM.mass);
+      typ CMaccX = CM_acc[0];  typ CMaccY = CM_acc[1];  typ CMaccZ = CM_acc[2];
       
       for (j = 0; j <= largest_id; j ++){ //Looping over all bodies
             if (*(exists + j)){
                   X       = (bodies + j) -> x  - CM.x;
                   Y       = (bodies + j) -> y  - CM.y;
                   Z       = (bodies + j) -> z  - CM.z;
-                  vX      = (bodies + j) -> vx - CM.vx + 0.5*timestep*((xx + j) -> vx - CM_acc[0]);
-                  vY      = (bodies + j) -> vy - CM.vy + 0.5*timestep*((xx + j) -> vy - CM_acc[1]);
-                  vZ      = (bodies + j) -> vz - CM.vz + 0.5*timestep*((xx + j) -> vz - CM_acc[2]);
+                  vX      = (bodies + j) -> vx - CM.vx + 0.5*timestep*((xx + j) -> vx - CMaccX);
+                  vY      = (bodies + j) -> vy - CM.vy + 0.5*timestep*((xx + j) -> vy - CMaccY);
+                  vZ      = (bodies + j) -> vz - CM.vz + 0.5*timestep*((xx + j) -> vz - CMaccZ);
                   m       = (bodies + j) -> mass;
                   r2      = X*X + Y*Y + Z*Z;
                   r10     = r2*r2*r2*r2*r2;

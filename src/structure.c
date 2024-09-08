@@ -94,6 +94,8 @@ typ SideralOmega;
 typ star_mean_motion;
 typ evection_resonance;
 int need_to_reduce_COM_bool;
+typ previous_tra;
+typ pert_M;
 
 
 void ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ mu, typ * cart){
@@ -112,21 +114,21 @@ void ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ mu, typ * c
       typ sinnu    = sin(nu);
       typ cosvarpi = cos(omega + Omega);
       typ sinvarpi = sin(omega + Omega);
-      typ q        = sin(i/2.0)*cos(Omega);
-      typ p        = sin(i/2.0)*sin(Omega);
-      typ chi      = cos(i/2.0);
-      typ pp       = 1.0 - 2.0*p*p;
-      typ qq       = 1.0 - 2.0*q*q;
-      typ dpq      = 2.0*p*q;
+      typ q        = sin(i/2.)*cos(Omega);
+      typ p        = sin(i/2.)*sin(Omega);
+      typ chi      = cos(i/2.);
+      typ pp       = 1. - 2.*p*p;
+      typ qq       = 1. - 2.*q*q;
+      typ dpq      = 2.*p*q;
 
       /******** In the orbital plane (see e.g. Laskar & Robutel 1995) ********/
-      r = a*(1.0 - e*e)/(1.0 + e*cosnu);
+      r = a*(1. - e*e)/(1. + e*cosnu);
       if (J2_bool && central_mass_bool){ //Using the geometric elliptical elements instead of the osculating ones in case of an oblate Earth (See Greenberg, 1981)
-            mu = mu*(1.0 + 1.5*J2*R_unit*R_unit/(a*a));
+            mu = mu*(1. + 1.5*J2*R_unit*R_unit/(a*a));
       }
-      g       = sqrt(mu*a*(1.0 - e*e));
+      g       = sqrt(mu*a*(1. - e*e));
       dnudt   = g/(r*r);
-      drdt    = a*e*dnudt*sinnu*(1.0 - e*e)/((1.0 + e*cosnu)*(1.0 + e*cosnu));
+      drdt    = a*e*dnudt*sinnu*(1. - e*e)/((1. + e*cosnu)*(1. + e*cosnu));
       X_buff  = r*cosnu;
       Y_buff  = r*sinnu;
       vX_buff = drdt*cosnu - r*dnudt*sinnu;
@@ -137,8 +139,8 @@ void ell2cart(typ a, typ e, typ i, typ nu, typ omega, typ Omega, typ mu, typ * c
       vX = vX_buff*(pp*cosvarpi + dpq*sinvarpi) + vY_buff*(dpq*cosvarpi - pp*sinvarpi);
       Y  =  X_buff*(qq*sinvarpi + dpq*cosvarpi) +  Y_buff*(qq*cosvarpi  - dpq*sinvarpi);
       vY = vX_buff*(qq*sinvarpi + dpq*cosvarpi) + vY_buff*(qq*cosvarpi  - dpq*sinvarpi);
-      Z  =  X_buff*(2.0*q*chi*sinvarpi - 2.0*p*chi*cosvarpi) +  Y_buff*(2.0*p*chi*sinvarpi + 2.0*q*chi*cosvarpi);
-      vZ = vX_buff*(2.0*q*chi*sinvarpi - 2.0*p*chi*cosvarpi) + vY_buff*(2.0*p*chi*sinvarpi + 2.0*q*chi*cosvarpi);
+      Z  =  X_buff*(2.*q*chi*sinvarpi - 2.*p*chi*cosvarpi) +  Y_buff*(2.*p*chi*sinvarpi + 2.*q*chi*cosvarpi);
+      vZ = vX_buff*(2.*q*chi*sinvarpi - 2.*p*chi*cosvarpi) + vY_buff*(2.*p*chi*sinvarpi + 2.*q*chi*cosvarpi);
       
       /******** Writing the cartesian coordinates ********/
       * cart      = X;
@@ -488,6 +490,7 @@ void variable_initialization(){
       J2                      = J2_value == 0. ? 0.5*SideralOmega*SideralOmega*R_unit*R_unit*R_unit/(G*CM.mass) : J2_value;
       evection_resonance      = pow(1.5*sqrt(M_unit/pert_mass)*J2, 2./7.)*pow(pert_sma/R_unit, 3./7.)*R_unit;
       need_to_reduce_COM_bool = 0;
+      previous_tra            = pert_tra;
       indexCollision          = 0;
       Rout                    = R_roche;
       fluid_disk_Sigma        = inner_mass/(M_PI*(Rout*Rout - R_unit*R_unit));
@@ -514,6 +517,18 @@ void variable_initialization(){
             half_fragmentation_count = 0;
             full_fragmentation_count = 0;
             merger_count             = 0;
+      }
+      /******** Obtaining the mean anomaly of the point-mass perturbator at time t=0 ********/
+      if (pert_ecc > 1.e-9){
+            typ cart[6];
+            typ alkhqp[6];
+            ell2cart(pert_sma, pert_ecc, pert_inc, pert_tra, pert_aop, pert_lan, 1., cart);
+            struct moonlet mlt = {cart[0], cart[1], cart[2], cart[3], cart[4], cart[5], 1., 1.};
+            cart2ell(&mlt, 0, alkhqp, 1.);
+            pert_M = alkhqp[1] - atan2(alkhqp[3], alkhqp[2]);
+      }
+      else{
+            pert_M = pert_tra;
       }
 }
 

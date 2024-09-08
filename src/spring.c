@@ -976,42 +976,91 @@ typ get_perturbing_true_anomaly(typ time){
 
       int j, N_step;
       typ K1, K2, K3, K4;
-      typ period, t, dt, n_step, partial_tra, previous_tra, num;
+      typ period, t, dt, n_step, partial_tra, num;
       typ denom = sqrt(pert_sma*(1.0 - pert_ecc*pert_ecc)); denom *= denom*denom;
       typ sq_mu = sqrt(G*(pert_mass + M_unit));
 
       /******** Establishing the integration time and the timestep to be used ********/
-      period  = 2.0*M_PI/sq_mu*sqrt(pert_sma*pert_sma*pert_sma);
-      t       = pert_ecc < 1. ? fmod(time, period) : time;
-      n_step  = pert_ecc < 1. ? floor(256.0*t/period) + 1.0 : 256.0;
-      dt      = t/n_step;
-      n_step *= pert_ecc < 1. && pert_ecc > 0.8 ? 4. : 1.; //Decreasing the timestep in case of highly eccentric elliptic trajectory
-      dt     /= pert_ecc < 1. && pert_ecc > 0.8 ? 4. : 1.;
-      N_step  = (int) n_step;
-      if (fabs(t - n_step*dt) > 1.0e-13){
-            fprintf(stderr, "Error : Wrong computation of the integration time in function get_perturbing_true_anomaly");
-            abort();
+      if (previous_tra == pert_tra || previous_tra >= 2.*M_PI){
+            previous_tra = fmod(previous_tra, 2.*M_PI);
+            period       = 2.*M_PI/sq_mu*sqrt(pert_sma*pert_sma*pert_sma);
+            t            = pert_ecc < 1. ? fmod(time, period) : time;
+            n_step       = pert_ecc < 1. ? floor(256.*fabs(t)/period) + 1. : 256.;
+            dt           = t/n_step;
+            n_step      *= pert_ecc < 1. && pert_ecc > 0.8 ? 4. : 1.; //Decreasing the timestep in case of highly eccentric elliptic trajectory
+            dt          /= pert_ecc < 1. && pert_ecc > 0.8 ? 4. : 1.;
+            N_step       = (int) n_step;
+            if (fabs(t - n_step*dt) > 1.e-12){
+                  fprintf(stderr, "Error : Wrong computation of the integration time in function get_perturbing_true_anomaly.\n");
+                  abort();
+            }
+      }
+      else{
+            dt     = timestep;
+            N_step = 1;
       }
       
       /******** Integrating ********/
-      previous_tra = pert_tra;
       for (j = 0; j < N_step; j ++){
             partial_tra   = previous_tra;
-            num           = 1.0 + pert_ecc * cos(partial_tra);
+            num           = 1. + pert_ecc * cos(partial_tra);
             K1            = sq_mu*num*num/denom;
             partial_tra   = previous_tra + 0.5*K1*dt;
-            num           = 1.0 + pert_ecc * cos(partial_tra);
+            num           = 1. + pert_ecc * cos(partial_tra);
             K2            = sq_mu*num*num/denom;
             partial_tra   = previous_tra + 0.5*K2*dt;
-            num           = 1.0 + pert_ecc * cos(partial_tra);
+            num           = 1. + pert_ecc * cos(partial_tra);
             K3            = sq_mu*num*num/denom;
             partial_tra   = previous_tra + K3*dt;
-            num           = 1.0 + pert_ecc * cos(partial_tra);
+            num           = 1. + pert_ecc * cos(partial_tra);
             K4            = sq_mu*num*num/denom;
-            previous_tra += dt*(K1 + 2.0*K2 + 2.0*K3 + K4)/6.0;
+            previous_tra += dt*(K1 + 2.*K2 + 2.*K3 + K4)/6.;
       }
       
       return previous_tra;
+}
+
+
+void get_pert_coordinates(typ time, typ * x, typ * y, typ * z){
+
+      /******** Gets the cartesian coordinates of the point-mass perturbator ********/
+
+      typ X, Y, n, M, coM, siM, r, nu;
+      n = sqrt(G*(pert_mass + M_unit)/(pert_sma*pert_sma*pert_sma));
+      M = n*time + pert_M; coM = cos(M); siM = sin(M);
+
+      /******** In the orbital plane with X towards the periapsis ********/
+      if (pert_ecc == 0.){         //Zeroth order in eccentricity
+            X = pert_sma*coM;
+            Y = pert_sma*siM;
+      }
+      else if (pert_ecc < 0.02){   //First order in eccentricity
+            X = pert_sma*(coM + 0.5*pert_ecc*(cos(2.*M) - 3.));
+            Y = pert_sma*(siM + 0.5*pert_ecc* sin(2.*M));
+      }
+      else if (pert_ecc < 0.085){  //Second order in eccentricity
+            X = pert_sma*(coM + 0.5*pert_ecc*(cos(2.*M) - 3.) - pert_ecc*pert_ecc*(0.375*coM - 0.375*cos(3.*M)));
+            Y = pert_sma*(siM + 0.5*pert_ecc* sin(2.*M)       - pert_ecc*pert_ecc*(0.625*siM - 0.375*sin(3.*M)));
+      }
+      else{                        //No expansion
+            nu = get_perturbing_true_anomaly(time);
+            r  = pert_sma*(1. - pert_ecc*pert_ecc)/(1. + pert_ecc*cos(nu));
+            X  = r*cos(nu);
+            Y  = r*sin(nu);
+      }
+      
+      /******** Rotations to convert to reference plane ********/
+      typ cosvarpi = cos(pert_aop + pert_lan);
+      typ sinvarpi = sin(pert_aop + pert_lan);
+      typ q        = sin(pert_inc/2.)*cos(pert_lan);
+      typ p        = sin(pert_inc/2.)*sin(pert_lan);
+      typ chi      = cos(pert_inc/2.);
+      typ pp       = 1. - 2.*p*p;
+      typ qq       = 1. - 2.*q*q;
+      typ dpq      = 2.*p*q;
+      *x           = X*(pp*cosvarpi + dpq*sinvarpi)            + Y*(dpq*cosvarpi - pp*sinvarpi);
+      *y           = X*(qq*sinvarpi + dpq*cosvarpi)            + Y*(qq*cosvarpi  - dpq*sinvarpi);
+      *z           = X*(2.*q*chi*sinvarpi - 2.*p*chi*cosvarpi) + Y*(2.*p*chi*sinvarpi + 2.*q*chi*cosvarpi);
 }
 
 
@@ -1069,8 +1118,8 @@ void three_closest_nodes(struct moonlet * viscoelastic, int k, int * indexes){
       typ Xk, Yk, Zk, dX, dY, dZ, d1, d2, d3, dist;
       int i1, i2, i3, j;
 
-      d1 = 1.0e300;  d2 = 1.0e300;  d3 = 1.0e300;
-      i1 = 0;        i2 = 0;        i3 = 0;
+      d1 = 1.e300;  d2 = 1.e300;  d3 = 1.e300;
+      i1 = 0;       i2 = 0;       i3 = 0;
       Xk = (viscoelastic + k) -> x;
       Yk = (viscoelastic + k) -> y;
       Zk = (viscoelastic + k) -> z;

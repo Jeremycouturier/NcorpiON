@@ -120,7 +120,7 @@
                                      //Regardless of central_mass_bool and viscoelastic_bool, you have to define G as the value of the gravitational constant in your system of units.
 
 /******** Physical constants relative to interactions with the central body (J2, inner disk, central tides) or a distant object. Unimportant if central_mass_bool is 0 ********/
-#define Tearth 3.70911350914616777530//Central body's sideral period in units of the surface orbital period. Must be > 1.
+#define Tearth 3.556721809           //Central body's sideral period in units of the surface orbital period. Must be > 1.
                                      //In case of tides, the sideral period changes and this is the value at initial time.
 #define J2_value 0.                  //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body) where Omega is the
                                      //sideral frequency and Omega_crit = sqrt(G*M_unit/R_unit^3). In that case, J2 is variable throughout the simulation.
@@ -131,7 +131,7 @@
 #define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
 #define f_tilde 0.3                  //A parameter controlling the mass of bodies spawned from the inner fluid disk. Must be < 1. Salmon & Canup (2012) choose 0.3
 #define R_roche 2.9                  //The initial outer radius of the inner fluid disk where bodies spawn (in simulation's units). Must be larger than disruption_threshold and R_unit.
-#define disruption_threshold 1.2     //Threshold (in simulation's units) below which bodies are tidally disrupted by the central mass. If inner_fluid_disk_bool is 0, then the mass of
+#define disruption_threshold 1.8     //Threshold (in simulation's units) below which bodies are tidally disrupted by the central mass. If inner_fluid_disk_bool is 0, then the mass of
                                      //the dumped body is added to the central body. Otherwise, the mass of the dumped body is added to the inner fluid disk if the body's periapsis is
                                      //above the surface or if it will cross the xy plane before hitting the surface, and to the central mass else.
                                      
@@ -164,7 +164,7 @@
 #define max_ids_per_node 173         //The maximum number of ids in each node of the unrolled linked lists (chains). Choose such that sizeof(struct chain) be a multiple of the cache line
 #define softening_parameter 0.       //The softening parameter for mutual gravitational interations, in units of the sum of the radii.
 #define seed 129425373               //The seed used for random number generation. Unimportant if seed_bool is 0.
-#define switch_to_brute_force 256    //Threshold for N below which NcorpiON switches to the brute-force method for mutual interactions. Unimportant if brute_force_bool is already 1
+#define switch_to_brute_force 110    //Threshold for N below which NcorpiON switches to the brute-force method for mutual interactions. Unimportant if brute_force_bool is already 1
 
 /******** Bounds for initial conditions. Unimportant if random_initial_bool is 0. The initial conditions are drawn uniformly at random between these bounds ********/
 #define radius_min 0.004             //Minimal radius                   of a body at initial time

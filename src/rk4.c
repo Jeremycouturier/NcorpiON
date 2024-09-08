@@ -206,6 +206,14 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       
       /******** If the simulation progressed by at least 0.1%, I display useful informations ********/
       if (progressed){
+            
+            /******** Drifting backward half a timestep before displaying. To be adapted to mesh at some point ********/
+            if (central_mass_bool){
+                  CM_buffer = CM;
+                  CM_buffer.x -= 0.5*timestep*CM_buffer.vx;  CM_buffer.y -= 0.5*timestep*CM_buffer.vy;  CM_buffer.z -= 0.5*timestep*CM_buffer.vz;
+            }
+            
+            /******** Displaying ********/
             if (collision_bool){
                   printf("                  N = %d  |  Collisions = %d  |  t = %.13lf   (largest id in the body array = %d)\n",
                   how_many_moonlets, collision_count, t_init + time_elapsed, largest_id);
@@ -239,12 +247,16 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   typ mu = central_mass_bool ? CM.mass : M_unit;  mu += inner_fluid_disk_bool ? fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : 0.;  mu *= G;
                   if (how_many_moonlets > 1){
                         typ vp1, vp2;
+                        struct moonlet mlt1 = {(moonlets + i1)->x, (moonlets + i1)->y, (moonlets + i1)->z, (moonlets + i1)->vx, (moonlets + i1)->vy, (moonlets + i1)->vz, 0., 0.};
+                        struct moonlet mlt2 = {(moonlets + i2)->x, (moonlets + i2)->y, (moonlets + i2)->z, (moonlets + i2)->vx, (moonlets + i2)->vy, (moonlets + i2)->vz, 0., 0.};
+                        mlt1.x -= 0.5*timestep*mlt1.vx;  mlt1.y -= 0.5*timestep*mlt1.vy;  mlt1.z -= 0.5*timestep*mlt1.vz;
+                        mlt2.x -= 0.5*timestep*mlt2.vx;  mlt2.y -= 0.5*timestep*mlt2.vy;  mlt2.z -= 0.5*timestep*mlt2.vz;
                         R1  = (moonlets + i1) -> radius;  R2 = (moonlets + i2) -> radius;
-                        cart2ell(moonlets, i1, alkhqp, mu + G*M1);
+                        cart2ell(&mlt1, 0, alkhqp, mu + G*M1);
                         a1  = *alkhqp; e1 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I1 = 360.*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
                         vp1 = 180.*atan2(alkhqp[3], alkhqp[2])/M_PI;
                         l1  = 180.*alkhqp[1]/M_PI - vp1; O1 = 180.*atan2(alkhqp[5], alkhqp[4])/M_PI; o1 = vp1 - O1;
-                        cart2ell(moonlets, i2, alkhqp, mu + G*M2);
+                        cart2ell(&mlt2, 0, alkhqp, mu + G*M2);
                         a2  = *alkhqp; e2 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I2 = 360.*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
                         vp2 = 180.*atan2(alkhqp[3], alkhqp[2])/M_PI;
                         l2  = 180.*alkhqp[1]/M_PI - vp2; O2 = 180.*atan2(alkhqp[5], alkhqp[4])/M_PI; o2 = vp2 - O2;
@@ -255,8 +267,10 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   }
                   else if (how_many_moonlets == 1){
                         typ vp1;
+                        struct moonlet mlt1 = {(moonlets + i1)->x, (moonlets + i1)->y, (moonlets + i1)->z, (moonlets + i1)->vx, (moonlets + i1)->vy, (moonlets + i1)->vz, 0., 0.};
+                        mlt1.x -= 0.5*timestep*mlt1.vx;  mlt1.y -= 0.5*timestep*mlt1.vy;  mlt1.z -= 0.5*timestep*mlt1.vz;
                         R1 = (moonlets + i1) -> radius;
-                        cart2ell(moonlets, i1, alkhqp, mu + G*M1);
+                        cart2ell(&mlt1, 0, alkhqp, mu + G*M1);
                         a1 = *alkhqp; e1 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I1 = 360.*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
                         vp1 = 180.*atan2(alkhqp[3], alkhqp[2])/M_PI;
                         l1  = 180.*alkhqp[1]/M_PI - vp1; O1 = 180.*atan2(alkhqp[5], alkhqp[4])/M_PI; o1 = vp1 - O1;
@@ -403,9 +417,6 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
       if (J2_bool){
             if (J2_value == 0.){
                   J2 = 0.5*SideralOmega*SideralOmega*R_unit*R_unit*R_unit/(G*CM.mass);
-            }
-            else{
-                  J2 = J2_value*SideralOmega*SideralOmega*Tearth*Tearth/(4.*M_PI*M_PI);
             }
             if (pert_mass > 0.){
                   evection_resonance = pow(1.5*sqrt(CM.mass/pert_mass)*J2, 2./7.)*pow(pert_sma/R_unit, 3./7.)*R_unit;

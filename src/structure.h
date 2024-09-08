@@ -49,6 +49,8 @@ extern typ Rout;                     //Outer edge of the inner fluid disk
 extern typ SideralOmega;             //The sideral rotation frequency of the central body
 extern typ evection_resonance;       //The position of the evection resonance. To be fed to python for image production
 extern int need_to_reduce_COM_bool;  //A boolean value to indicate if the center of mass needs to be reduced (e.g. after a super-catastrophic disruption or a dumping from the simulation)
+extern typ previous_tra;             //True anomaly of the point-mass perturbator at the previous timestep
+extern typ pert_M;                   //Mean anomaly of the point-mass perturbator at t=0
 
 
 /******** Defining the body structure. This is the structure holding the data of body ********/
