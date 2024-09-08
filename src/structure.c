@@ -620,7 +620,8 @@ void array_initialization(){
             CM.x = cart[0];  CM.y = cart[1];  CM.z = cart[2];  CM.vx = cart[3];  CM.vy = cart[4];  CM.vz = cart[5];  CM.radius = pert_radius;
       }
       if (collision_bool && write_to_files_bool && write_collisions_bool){
-            collisionDatas = (struct collisionData *)malloc(output_step*N_max*sizeof(struct collisionData));
+            int size = output_step*N_max/5 + 10;
+            collisionDatas = (struct collisionData *)malloc(size*sizeof(struct collisionData));
             if (collisionDatas == NULL){
                   fprintf(stderr, "Error: Cannot allocate array collisionDatas in function array_initialization.\n");
                   abort();
