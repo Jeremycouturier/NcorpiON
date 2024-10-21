@@ -54,7 +54,7 @@ void vector_field(struct moonlet * moonlets){
       typ X, Y, Z, XX, YY, ZZ, K, M;
       typ mu, mk;
       typ Xp, Yp, Zp, mp, DX, DY, DZ, D, D3, softening, Rk, Rp;
-      typ X_sun, Y_sun, Z_sun, r_sun, KK, KKK;
+      typ X_sun, Y_sun, Z_sun, r_sun, KK, KKK, aX_sun, aY_sun, aZ_sun;
       typ aX, aY, aZ;
       
       XX = central_mass_bool ? CM.x : 0.;  YY = central_mass_bool ? CM.y : 0.;  ZZ = central_mass_bool ? CM.z : 0.;
@@ -95,9 +95,9 @@ void vector_field(struct moonlet * moonlets){
       if (pert_mass > 0.){
             need_to_reduce_COM_bool = 1;
             get_pert_coordinates(t_init + time_elapsed + 0.5*timestep, &X_sun, &Y_sun, &Z_sun);
-            X_sun -= XX;  Y_sun -= YY;  Z_sun -= ZZ;
-            r_sun = sqrt(X_sun*X_sun + Y_sun*Y_sun + Z_sun*Z_sun);
-            KKK   = G*pert_mass/(r_sun*r_sun*r_sun);
+            r_sun  = sqrt(X_sun*X_sun + Y_sun*Y_sun + Z_sun*Z_sun);
+            KKK    = G*pert_mass/(r_sun*r_sun*r_sun);
+            aX_sun = KKK*X_sun;  aY_sun = KKK*Y_sun;  aZ_sun = KKK*Z_sun;
       }
       
       for (k = 0; k <= largest_id; k ++){
@@ -140,18 +140,18 @@ void vector_field(struct moonlet * moonlets){
                         CM_acc[0] += K*( 1.5*DX - 7.5/r2*DZ*DZ*DX)*mk/M;
                         CM_acc[1] += K*( 1.5*DY - 7.5/r2*DZ*DZ*DY)*mk/M;
                         CM_acc[2] += K*( 4.5*DZ - 7.5/r2*DZ*DZ*DZ)*mk/M;
-                  }
+                  }                 
                   
-                  
-                  /******** Contribution from a distant point-mass perturbator (quadrupole only) ********/
+                  /******** Contribution from a distant point-mass perturbator ********/
                   if (pert_mass > 0.){
-                        KK = 3.*(DX*X_sun + DY*Y_sun + DZ*Z_sun)/(r_sun*r_sun);
+                        Xp = X_sun - X;  Yp = Y_sun - Y;  Zp = Z_sun - Z;
+                        Rp = sqrt(Xp*Xp + Yp*Yp + Zp*Zp);
+                        KK = G*pert_mass/(Rp*Rp*Rp);
                         /******** Updating the acceleration of body k ********/
-                        aX -= KKK*(DX - KK*X_sun);
-                        aY -= KKK*(DY - KK*Y_sun);
-                        aZ -= KKK*(DZ - KK*Z_sun);
-                  }
-                  
+                        aX += KK*Xp - aX_sun;
+                        aY += KK*Yp - aY_sun;
+                        aZ += KK*Zp - aZ_sun;
+                  }                  
                   
                   /******** Mutual gravitational interactions with the brute-force O(N^2) algorithm ********/
                   if (mutual_bool && (brute_force_bool || force_naive_bool)){

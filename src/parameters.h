@@ -1,4 +1,4 @@
-/**************************************************************************************/
+/**************************************************************************************/                                                                                                      
 /**************************************************************************************/
 /**************************************************************************************/
 /******** @file    parameters.h                                                ********/
@@ -40,7 +40,7 @@
 /******** init.txt used to resume a simulation is written when resume_simulation_bool is 1  ********/
 /***************************************************************************************************/
 
-#define pth "/home/jeremy/Documents/NcorpiON_simulation/test/" //The path must be absolute, end with / and already exist
+#define pth "/path/towards/input/output/location/" //The path must be absolute, end with / and already exist
 
 
 
@@ -49,12 +49,12 @@
 /**************************************************************************/
 
 /******** General booleans relative to the simulation ********/
-#define write_to_files_bool      1   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
+#define write_to_files_bool      0   //Determines if the simulation writes to output files. Set to 0 to run speed tests, or if you are satisfied with what is displayed in the terminal
                                      //You can also set this boolean to 0 if you only want to 3D visualize the simulation in your browser.
 #define make_animation_bool      0   //Determines if animations of the simulation are produced. write_to_files_bool and write_elliptic_bool must both be set to 1
 #define write_cartesian_bool     0   //Determines if the cartesian elements x, y, z, vx, vy, vz   should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
 #define write_elliptic_bool      0   //Determines if the elliptic  elements a, lambda, k, h, q, p should be output. Unimportant if write_to_files_bool is 0. Output in simulation's units
-#define write_collisions_bool    0   //Determines if statistics regarding the collisions are output. Unimportant if not both write_to_files_bool and collision_bool are 1
+#define write_collisions_bool    1   //Determines if statistics regarding the collisions are output. Unimportant if not both write_to_files_bool and collision_bool are 1
 #define central_mass_bool        1   //Determines if there is a central mass. If 0, none of the bodies in the simulation play any particular role. If 1, the central body is initially
                                      //at (x,y,z,vx,vy,vz) = {0.0} and treated independently. Should be set to 1 if one body is very massive and if brute_force_bool is 0, so gravity
                                      //with that body is computed directly and not from a tree or a mesh. If 1, some physical effects can be considered as well(see below).
@@ -71,7 +71,7 @@
 #define one_collision_only_bool  0   //Determines if bodies are only allowed to collide once per timestep. If 0, there is no restriction on the number of collisions a body can experience
                                      //during a timestep. Setting first to 1 and then to 0 is a good way to know if the timestep is adapted to the bodies' mean free path.
 #define openGL_bool              0   //MATCH TO THE SAME VALUE IN THE MAKEFILE. Determines if a 3D real-time visualization of the simulation with WebGL is enabled.
-#define resume_simulation_bool   1   //Determines if, at the end of the simulation, NcorpiON generates a file named init.txt that can be used to resume the simulation. The file init.txt
+#define resume_simulation_bool   0   //Determines if, at the end of the simulation, NcorpiON generates a file named init.txt that can be used to resume the simulation. The file init.txt
                                      //is stored at the path indicated above. To resume the simulation, you need to set random_initial_bool to 0, initial_cartesian_bool to 1, and N_0 to
                                      //the number of lines of init.txt. If init.txt already exists in path pth, it will be overwritten. Simulation's variables should be updated.
 #define viscoelastic_bool        0   //Determines if NcorpiON is used to simulate a viscoelastic body. The body is discretized by N_0 points linked by Kelvin-Voigt models. If random_
@@ -86,20 +86,20 @@
                                      //If set to 1, its mass is added to that of the central body when computing gravitational interactions and when preserving the total momemtum
 
 /******** Booleans relative to mutual interactions between the bodies ********/
-#define collision_bool           0   //Determines if the bodies are able to collide. If 0, the bodies pass through each other and you should set a non-zero value for softening_parameter
+#define collision_bool           1   //Determines if the bodies are able to collide. If 0, the bodies pass through each other and you should set a non-zero value for softening_parameter
 #define mutual_bool              1   //Determines if there is mutual gravity between the bodies. If central_mass_bool is 1, the bodies interact with the central mass even if set to 0.
 
 /******** Booleans relative to the treatment of mutual interactions (collisions and self-gravity). Exactly one of them must be 1. Unimportant if mutual_bool is 0 ********/
-#define brute_force_bool         1   //Determines if a brute-force method should be used for mutual interactions.
-#define falcON_bool              0   //Determines if falcON algorithm     should be used for mutual interactions. (Best speed/accuracy compromise for large N + preserve total momentum)
+#define brute_force_bool         0   //Determines if a brute-force method should be used for mutual interactions.
+#define falcON_bool              1   //Determines if falcON algorithm     should be used for mutual interactions. (Best speed/accuracy compromise for large N + preserve total momentum)
 #define standard_tree_bool       0   //Determines if a standard tree code should be used for mutual interactions. (Much slower than falcON for the same accuracy, momentum not preserved).
 #define mesh_bool                0   //Determines if the  mesh algorithm  should be used for mutual interactions. (Fastest but gravity with neighbours and three largest bodies only).
 
 /******** Booleans relative to collision resolution. Exactly one of them must be 1. Unimportant if collision_bool is 0 ********/
-#define elastic_collision_bool   1   //Determines if the collisions are all elastic.
+#define elastic_collision_bool   0   //Determines if the collisions are all elastic.
 #define inelastic_collision_bool 0   //Determines if the collisions are all inelastic with inelasticity parameter collision_parameter.
 #define instant_merger_bool      0   //Determines if the collisions all result in a merger.
-#define fragmentation_bool       0   //Determines if the outcome of the collision should be either a merge, a partial fragmentation, a full fragmentation, or a catastrophic disruption,
+#define fragmentation_bool       1   //Determines if the outcome of the collision should be either a merge, a partial fragmentation, a full fragmentation, or a catastrophic disruption,
                                      //depending on the relative velocity. Set to 1 to use the fragmentation model of NcorpiON.
 
 
@@ -120,12 +120,12 @@
                                      //Regardless of central_mass_bool and viscoelastic_bool, you have to define G as the value of the gravitational constant in your system of units.
 
 /******** Physical constants relative to interactions with the central body (J2, inner disk, central tides) or a distant object. Unimportant if central_mass_bool is 0 ********/
-#define Tearth 17.07                 //Central body's sideral period in units of the surface orbital period. Must be > 1.
+#define Tearth 3.556721809           //Central body's sideral period in units of the surface orbital period. Must be > 1.
                                      //In case of tides, the sideral period changes and this is the value at initial time.
 #define J2_value 0.                  //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body) where Omega is the
                                      //sideral frequency and Omega_crit = sqrt(G*M_unit/R_unit^3). In that case, J2 is variable throughout the simulation.
-#define k2 4.5                       //Second Love number of the central body. Here the value is for a fluid body (zero shear modulus). The constant timelag model is used
-#define Delta_t 1.422643746//0.11855 //The timelag between tidal stress and response. In simulation's units
+#define k2 1.5                       //Second Love number of the central body. Here the value is for a fluid body (zero shear modulus). The constant timelag model is used
+#define Delta_t 0.0015807652484567779//The timelag between tidal stress and response. In simulation's units
 #define dimensionless_moi 0.3307     //The moment of inertia of the central body, in simulation units (in units of its mass times its radius squared).
 #define inner_mass 0.                //Mass of the inner fluid disk at initial time.
 #define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
@@ -136,14 +136,14 @@
                                      //above the surface or if it will cross the xy plane before hitting the surface, and to the central mass else.
                                      
 /******** Orbit of a point-mass perturbator, in an inertial reference frame. Set pert_mass to 0.0 if you do not want a perturbator ********/
-#define pert_sma 23481.0897818238895 //The perturbator is on a Keplerian trajectory defined by the six elements (semi-major axis, eccentricity, inclination, true anomaly, argument of
-#define pert_ecc 0.                  //periapsis, longitude of ascending node), given by these six parameters (in radians and simulation's units). The gravitational parameter used to
-#define pert_inc 0.                  //convert these elliptic elements into cartesian coordinates is mu = G*(pert_mass + M_unit). The Keplerian orbit can be hyperbolic
-#define pert_tra 0.                  //(pert_ecc can exceed 1), but then, the semi-major axis pert_sma must be negative and the true anomaly must verify |tra| < acos(-1/e).
-#define pert_aop 0.                  //The eccentricity pert_ecc cannot be exactly equal to 1. The true anomaly is given at the time t = 0, not at the initial time t_init. This means
-#define pert_lan 0.                  //that if you set pert_tra to 0., then the periapsis happens at time t = 0.
-#define pert_mass 332946.04346//97904401542201.//Mass of the perturbator (in simulation's units).
-#define pert_radius 109.1979         //Radius of the perturbator (for visualization purposes only. Does not matter if openGL_bool is 0)
+#define pert_sma -11690.1474151781531//The perturbator is on a Keplerian trajectory defined by the six elements (semi-major axis, eccentricity, inclination, true anomaly, argument of
+#define pert_ecc 4.2399307249518     //periapsis, longitude of ascending node), given by these six parameters (in radians and simulation's units). The gravitational parameter used to
+#define pert_inc 2.8418842771365     //convert these elliptic elements into cartesian coordinates is mu = G*(pert_mass + M_unit). The Keplerian orbit can be hyperbolic
+#define pert_tra -0.0000000092695    //(pert_ecc can exceed 1), but then, the semi-major axis pert_sma must be negative and the true anomaly must verify |tra| < acos(-1/e).
+#define pert_aop -2.5680969201791    //The eccentricity pert_ecc cannot be exactly equal to 1. The true anomaly is given at the time t = 0, not at the initial time t_init. This means
+#define pert_lan 2.6575357407213     //that if you set pert_tra to 0., then the periapsis happens at time t = 0.
+#define pert_mass 0.//97904401542201.//Mass of the perturbator (in simulation's units).
+#define pert_radius 6371.0           //Radius of the perturbator (for visualization purposes only. Does not matter if openGL_bool is 0)
 
 
 
@@ -152,12 +152,12 @@
 /*******************************************************/
 
 /******** General parameters ********/
-#define N_max 1                      //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
-#define N_0 1                        //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
+#define N_max 5000                   //Maximum number of bodies that the simulation can handle. The simulation will stop if the number of bodies ever exceeds N_max.
+#define N_0 1000                     //Initial number of bodies, central body excluded (if any). Must be less than N_max. If random_initial_bool is 0, number of lines of init.txt
 #define t_init 0.                    //Time at the beginning of the simulation (in simulation's units)
-#define t_end 10000000000.           //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
-#define time_step 0.0625             //Timestep of the simulation (in simulation's units)
-#define output_step 524288           //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
+#define t_end 512.                   //Time at the end       of the simulation (in simulation's units). The actual final time will be larger if (t_end - t_init)/time_step is not integer
+#define time_step 0.015625           //Timestep of the simulation (in simulation's units)
+#define output_step 32               //Output occurs every output_step timestep. Unimportant if write_to_files_bool is 0
 #define high_dumping_threshold 230.95//Threshold (in simulation's units) beyond which bodies are dumped from the simulation (assumed unbounded)
 
 /******** Specific parameters ********/
@@ -167,22 +167,22 @@
 #define switch_to_brute_force 110    //Threshold for N below which NcorpiON switches to the brute-force method for mutual interactions. Unimportant if brute_force_bool is already 1
 
 /******** Bounds for initial conditions. Unimportant if random_initial_bool is 0. The initial conditions are drawn uniformly at random between these bounds ********/
-#define radius_min 0.2727            //Minimal radius                   of a body at initial time
-#define radius_max 0.2727            //Maximal radius                   of a body at initial time
-#define density_min 0.1448           //Minimal density                  of a body at initial time
-#define density_max 0.1448           //Maximal density                  of a body at initial time
+#define radius_min 0.004             //Minimal radius                   of a body at initial time
+#define radius_max 0.05              //Maximal radius                   of a body at initial time
+#define density_min 0.1048           //Minimal density                  of a body at initial time
+#define density_max 0.1848           //Maximal density                  of a body at initial time
 #define eccentricity_min 0.          //Minimal eccentricity             of a body at initial time
-#define eccentricity_max 0.          //Maximal eccentricity             of a body at initial time
-#define sma_min 60.3                 //Minimal semi-major axis          of a body at initial time
-#define sma_max 60.3                 //Maximal semi-major axis          of a body at initial time
+#define eccentricity_max 0.2         //Maximal eccentricity             of a body at initial time
+#define sma_min 2.9                  //Minimal semi-major axis          of a body at initial time
+#define sma_max 21.                  //Maximal semi-major axis          of a body at initial time
 #define inclination_min 0.           //Minimal inclination (in radians) of a body at initial time
-#define inclination_max 0.           //Maximal inclination (in radians) of a body at initial time
+#define inclination_max 0.174533     //Maximal inclination (in radians) of a body at initial time
                                      //The true longitude, argument of pericenter and longitude of the ascending node are drawn uniformly at random between 0 and 2*M_PI
                                      //These bounds must be defined in the simulation's units
 
 /******** Parameters relative to 3D visualization with REBOUND. Unimportant if openGL_bool is 0 ********/
 #define browser_port 1234            //The http port where your browser will communicate with REBOUND. You can visualize several simulations at the same time if you change the port
-#define radius_blow_up_factor 6.0    //All the bodies, except the central mass (if any), are displayed with a radius that much larger than their true radius. Can enhance visualization
+#define radius_blow_up_factor 4.0    //All the bodies, except the central mass (if any), are displayed with a radius that much larger than their true radius. Can enhance visualization
 
 
 
