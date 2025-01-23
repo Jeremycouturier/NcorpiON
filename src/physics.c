@@ -1173,12 +1173,10 @@ void innerFluidDiskAngularMomentum(typ m, typ a, typ e, typ cosi, typ g1, typ m1
             dX        = -fX/dfX;
             X        += dX;
             precision = fabs(dX/X);
-            
             /******** If the method gets lost, I try to put it back on track ********/
             if (X < 0. || X != X){
                   X = rdm(0., 50.*sqrt(R_unit));
             }
-            
             /******** Checking the convergence of the Newton-Raphson method. To be removed when the code is robust ********/
             if (n_steps >= 150){
                   printf("Warning : The Newton-Raphson method to find the inner fluid disk's outer edge does not converge.\n");
@@ -1190,4 +1188,50 @@ void innerFluidDiskAngularMomentum(typ m, typ a, typ e, typ cosi, typ g1, typ m1
       Rout = X*X;
       Rout = Rout < R_roche ? R_roche : Rout;
       fluid_disk_Sigma = (m + m1)/(M_PI*(Rout*Rout - R_unit*R_unit));
+}
+
+
+int evectionResonance(typ * X, int inner){
+
+      /******** Updates X = (n/n0)^(1/3) at the inner evection resonance if  ********/
+      /******** inner is 1 and at the outer evection resonance if inner is 0 ********/
+      /******** Returns 1 if the Newton-Raphson method converged, and 0 else ********/
+
+      typ K, alp, M, X0, eps, fX, dfX, dX, X02, X03, X09, X010;
+      int iter = 0;
+      M    = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : CM.mass);
+      K    = pert_sma*pow(1./(1. + pert_mass/M), 1./3.);
+      alp  = 0.4*J2*R_unit*R_unit/(K*K);
+      
+      /******** Newton-Raphson method ********/
+      eps = 1.;
+      X0  = inner ? 100. : pow(9./2., 1./3.);
+      while (eps > 1.e-10){
+            iter ++;
+            X02  = X0*X0;
+            X03  = X02*X0;
+            X09  = X03*X03*X03;
+            X010 = X09*X0;
+            fX   = inner ? 4./15.*X03 + 0.8 - alp*X010 : 4./15.*X03 - 1.2 - alp*X010;
+            dfX  = 0.8*X02 - 10.*alp*X09;
+            dX   = -fX/dfX;
+            X0  += dX;
+            eps  = fabs(dX/X0);
+            /******** If the method gets lost, I try to put it back on track ********/
+            if (X0 < 0. || X0 != X0){
+                  X0 = rdm(0., 100.);
+            }
+            /******** Checking the convergence ********/
+            if (iter > 200){
+                  if (eps < 1.e-6){
+                        *X = X0;
+                        return 1;
+                  }
+                  else{
+                        return 0;
+                  }
+            }
+      }
+      *X = X0;
+      return 1;
 }

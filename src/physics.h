@@ -64,4 +64,7 @@ int willMergeWithDisk(struct moonlet * bodies, int id);
 
 void innerFluidDiskAngularMomentum(typ m, typ a, typ e, typ cosi, typ g1, typ m1);
 
+
+int evectionResonance(typ * X, int inner);
+
 #endif

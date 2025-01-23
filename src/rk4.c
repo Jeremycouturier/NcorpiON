@@ -269,9 +269,9 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                         typ vp1;
                         struct moonlet mlt1 = {(moonlets + i1)->x, (moonlets + i1)->y, (moonlets + i1)->z, (moonlets + i1)->vx, (moonlets + i1)->vy, (moonlets + i1)->vz, 0., 0.};
                         mlt1.x -= 0.5*timestep*mlt1.vx;  mlt1.y -= 0.5*timestep*mlt1.vy;  mlt1.z -= 0.5*timestep*mlt1.vz;
-                        R1 = (moonlets + i1) -> radius;
+                        R1  = (moonlets + i1) -> radius;
                         cart2ell(&mlt1, 0, alkhqp, mu + G*M1);
-                        a1 = *alkhqp; e1 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I1 = 360.*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
+                        a1  = *alkhqp; e1 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I1 = 360.*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
                         vp1 = 180.*atan2(alkhqp[3], alkhqp[2])/M_PI;
                         l1  = 180.*alkhqp[1]/M_PI - vp1; O1 = 180.*atan2(alkhqp[5], alkhqp[4])/M_PI; o1 = vp1 - O1;
                         printf("                  Most massive : (m, R; a, e, i; M, o, O) = (%.7lf, %.4lf; %.3lf, %.3lf, %.3lf°; %.2lf°, %.2lf°, %.2lf°)\n",
@@ -285,6 +285,32 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   }
                   else if (inner_fluid_disk_bool){
                         printf("                  Inner fluid disk outer edge = %.13lf\n", Rout);
+                  }
+                  if (pert_mass != 0. && central_mass_bool && pert_ecc <= 0.2){ //Getting the position of the evection resonance
+                        typ Xin, Xout, MM, K;
+                        int convergedIn, convergedOut;
+                        MM   = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : CM.mass);
+                        K    = pert_sma*pow(1./(1. + pert_mass/MM), 1./3.);
+                        Xout = pow(9./2., 1./3.);
+                        if (J2_bool){
+                              convergedIn  = evectionResonance(&Xin,  1);
+                              convergedOut = evectionResonance(&Xout, 0);
+                              if (convergedIn && convergedOut){
+                                    printf("                  Inner evection resonance at a = %.3lf  |  Outer evection resonance at a = %.1lf\n", K/(Xin*Xin), K/(Xout*Xout));
+                              }
+                              else if (convergedIn && !convergedOut){
+                                    printf("                  Inner evection resonance at a = %.3lf  |  Cannot find outer evection resonance\n", K/(Xin*Xin));
+                              }
+                              else if (!convergedIn && convergedOut){
+                                    printf("                  Cannot find inner evection resonance   |  Outer evection resonance at a = %.1lf\n", K/(Xout*Xout));
+                              }
+                              else{
+                                    printf("                  Cannot find inner evection resonance   |  Cannot find outer evection resonance\n");
+                              }
+                        }
+                        else{
+                              printf("                  Outer evection resonance at a = %.2lf\n", K/(Xout*Xout));
+                        }
                   }
             }
             printf("                  COM = (%.9lf, %.9lf,  %.9lf,  %.9lf,  %.9lf,  %.9lf)\n", com[0], com[1], com[2], com[3], com[4], com[5]);

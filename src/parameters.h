@@ -1,4 +1,4 @@
-/**************************************************************************************/                                                                                                      
+/**************************************************************************************/
 /**************************************************************************************/
 /**************************************************************************************/
 /******** @file    parameters.h                                                ********/
@@ -70,7 +70,7 @@
 #define seed_bool                1   //Determines if the seed for random number generation is chosen by the user. If seed_bool is 0, the seed is the number of seconds since 01/01/1970
 #define one_collision_only_bool  0   //Determines if bodies are only allowed to collide once per timestep. If 0, there is no restriction on the number of collisions a body can experience
                                      //during a timestep. Setting first to 1 and then to 0 is a good way to know if the timestep is adapted to the bodies' mean free path.
-#define openGL_bool              0   //MATCH TO THE SAME VALUE IN THE MAKEFILE. Determines if a 3D real-time visualization of the simulation with WebGL is enabled.
+#define openGL_bool              0   //MATCH TO THE SAME VALUE IN THE MAKEFILE. Determines if a 3D real-time visualization of the simulation with WebGL in REBOUND is enabled.
 #define resume_simulation_bool   0   //Determines if, at the end of the simulation, NcorpiON generates a file named init.txt that can be used to resume the simulation. The file init.txt
                                      //is stored at the path indicated above. To resume the simulation, you need to set random_initial_bool to 0, initial_cartesian_bool to 1, and N_0 to
                                      //the number of lines of init.txt. If init.txt already exists in path pth, it will be overwritten. Simulation's variables should be updated.
@@ -125,7 +125,7 @@
 #define J2_value 0.                  //The J2 of the central body. If you choose J2_value = 0.0, then J2 is obtained from J2 = 1/2*Omega^2/Omega_crit^2 (fluid body) where Omega is the
                                      //sideral frequency and Omega_crit = sqrt(G*M_unit/R_unit^3). In that case, J2 is variable throughout the simulation.
 #define k2 1.5                       //Second Love number of the central body. Here the value is for a fluid body (zero shear modulus). The constant timelag model is used
-#define Delta_t 0.0015807652484567779//The timelag between tidal stress and response. In simulation's units
+#define Delta_t 0.0015807            //The timelag between tidal stress and response. In simulation's units
 #define dimensionless_moi 0.3307     //The moment of inertia of the central body, in simulation units (in units of its mass times its radius squared).
 #define inner_mass 0.                //Mass of the inner fluid disk at initial time.
 #define spawned_density 0.1448       //Density of the bodies that spawn from the inner fluid disk, in simulation's units.
@@ -136,14 +136,14 @@
                                      //above the surface or if it will cross the xy plane before hitting the surface, and to the central mass else.
                                      
 /******** Orbit of a point-mass perturbator, in an inertial reference frame. Set pert_mass to 0.0 if you do not want a perturbator ********/
-#define pert_sma -11690.1474151781531//The perturbator is on a Keplerian trajectory defined by the six elements (semi-major axis, eccentricity, inclination, true anomaly, argument of
-#define pert_ecc 4.2399307249518     //periapsis, longitude of ascending node), given by these six parameters (in radians and simulation's units). The gravitational parameter used to
-#define pert_inc 2.8418842771365     //convert these elliptic elements into cartesian coordinates is mu = G*(pert_mass + M_unit). The Keplerian orbit can be hyperbolic
-#define pert_tra -0.0000000092695    //(pert_ecc can exceed 1), but then, the semi-major axis pert_sma must be negative and the true anomaly must verify |tra| < acos(-1/e).
-#define pert_aop -2.5680969201791    //The eccentricity pert_ecc cannot be exactly equal to 1. The true anomaly is given at the time t = 0, not at the initial time t_init. This means
-#define pert_lan 2.6575357407213     //that if you set pert_tra to 0., then the periapsis happens at time t = 0.
-#define pert_mass 0.//97904401542201.//Mass of the perturbator (in simulation's units).
-#define pert_radius 6371.0           //Radius of the perturbator (for visualization purposes only. Does not matter if openGL_bool is 0)
+#define pert_sma 23481.0897818238895 //The perturbator is on a Keplerian trajectory defined by the six elements (semi-major axis, eccentricity, inclination, true anomaly, argument of
+#define pert_ecc 0.                  //periapsis, longitude of ascending node), given by these six parameters (in radians and simulation's units). The gravitational parameter used to
+#define pert_inc 0.                  //convert these elliptic elements into cartesian coordinates is mu = G*(pert_mass + M_unit). The Keplerian orbit can be hyperbolic
+#define pert_tra 0.                  //(pert_ecc can exceed 1), but then, the semi-major axis pert_sma must be negative and the true anomaly must verify |pert_tra| < acos(-1/e).
+#define pert_aop 0.                  //The eccentricity pert_ecc cannot be exactly equal to 1. The true anomaly is given at the time t = 0, not at the initial time t_init. This means
+#define pert_lan 0.                  //that if you set pert_tra to 0., then the periapsis happens at time t = 0.
+#define pert_mass 0.//332946.04346   //Mass of the perturbator (in simulation's units).
+#define pert_radius 109.1979         //Radius of the perturbator (for visualization purposes only. Does not matter if openGL_bool is 0)
 
 
 
