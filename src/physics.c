@@ -485,7 +485,7 @@ void tides(struct moonlet * bodies){
       
       
       int j;
-      typ X, Y, Z, vX, vY, vZ, m, K, r2, r10, rv, r_x_OmX, r_x_OmY, aX, aY, aZ;
+      typ X, Y, Z, vX, vY, vZ, m, K, r2, r10, rv, r_x_OmX, r_x_OmY, aX, aY, aZ, S;
       typ R5 = R_unit*R_unit*R_unit*R_unit*R_unit;
       typ A  = 3.0*k2*G*R5;
       typ M  = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : CM.mass);
@@ -506,9 +506,10 @@ void tides(struct moonlet * bodies){
                   r_x_OmX =  Y*SideralOmega; //r_cross_Omega
                   r_x_OmY = -X*SideralOmega;
                   K       = A*m/r10;
-                  aX      = K*(r2*X + Delta_t*(2.0*rv*X + r2*(vX + r_x_OmX)));
-                  aY      = K*(r2*Y + Delta_t*(2.0*rv*Y + r2*(vY + r_x_OmY)));
-                  aZ      = K*(r2*Z + Delta_t*(2.0*rv*Z + r2*vZ));
+                  S       = 1./(1. + m/M);
+                  aX      = S*K*(r2*X + Delta_t*(2.0*rv*X + r2*(vX + r_x_OmX)));
+                  aY      = S*K*(r2*Y + Delta_t*(2.0*rv*Y + r2*(vY + r_x_OmY)));
+                  aZ      = S*K*(r2*Z + Delta_t*(2.0*rv*Z + r2*vZ));
                   /******** Updating the acceleration of body n° j ********/
                   (xx + j) -> vx -= aX;
                   (xx + j) -> vy -= aY;
@@ -518,7 +519,7 @@ void tides(struct moonlet * bodies){
                   CM_acc[1] += aY*m/M;
                   CM_acc[2] += aZ*m/M;
                   /******** Updating the sideral rotation of the central body (to conserve angular momentum along Z) ********/
-                  SideralOmega += timestep*m/(dimensionless_moi*M*R_unit*R_unit)*(X*aY - Y*aX);
+                  SideralOmega += timestep*m/(dimensionless_moi*M*R_unit*R_unit)*(X*aY - Y*aX)/S;
             }
       }
 }
