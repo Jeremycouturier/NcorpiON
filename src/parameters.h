@@ -1,3 +1,22 @@
+/*
+       NNNNNNNN        NNNNNNNN        CCCCCCCCCCCCC     OOOOOOOOO     RRRRRRRRRRRRRRRRR   PPPPPPPPPPPPPPPPP   IIIIIIIIII     OOOOOOOOO     NNNNNNNN        NNNNNNNN
+       N:::::::N       N::::::N     CCC::::::::::::C   OO:::::::::OO   R::::::::::::::::R  P::::::::::::::::P  I::::::::I   OO:::::::::OO   N:::::::N       N::::::N
+       N::::::::N      N::::::N   CC:::::::::::::::C OO:::::::::::::OO R::::::RRRRRR:::::R P::::::PPPPPP:::::P I::::::::I OO:::::::::::::OO N::::::::N      N::::::N
+       N:::::::::N     N::::::N  C:::::CCCCCCCC::::CO:::::::OOO:::::::ORR:::::R     R:::::RPP:::::P     P:::::PII::::::IIO:::::::OOO:::::::ON:::::::::N     N::::::N
+       N::::::::::N    N::::::N C:::::C       CCCCCCO::::::O   O::::::O  R::::R     R:::::R  P::::P     P:::::P  I::::I  O::::::O   O::::::ON::::::::::N    N::::::N
+       N:::::::::::N   N::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P     P:::::P  I::::I  O:::::O     O:::::ON:::::::::::N   N::::::N
+       N:::::::N::::N  N::::::NC:::::C              O:::::O     O:::::O  R::::RRRRRR:::::R   P::::PPPPPP:::::P   I::::I  O:::::O     O:::::ON:::::::N::::N  N::::::N
+       N::::::N N::::N N::::::NC:::::C              O:::::O     O:::::O  R:::::::::::::RR    P:::::::::::::PP    I::::I  O:::::O     O:::::ON::::::N N::::N N::::::N
+       N::::::N  N::::N:::::::NC:::::C              O:::::O     O:::::O  R::::RRRRRR:::::R   P::::PPPPPPPPP      I::::I  O:::::O     O:::::ON::::::N  N::::N:::::::N
+       N::::::N   N:::::::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P              I::::I  O:::::O     O:::::ON::::::N   N:::::::::::N
+       N::::::N    N::::::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P              I::::I  O:::::O     O:::::ON::::::N    N::::::::::N
+       N::::::N     N:::::::::N C:::::C       CCCCCCO::::::O   O::::::O  R::::R     R:::::R  P::::P              I::::I  O::::::O   O::::::ON::::::N     N:::::::::N
+       N::::::N      N::::::::N  C:::::CCCCCCCC::::CO:::::::OOO:::::::ORR:::::R     R:::::RPP::::::PP          II::::::IIO:::::::OOO:::::::ON::::::N      N::::::::N
+       N::::::N       N:::::::N   CC:::::::::::::::C OO:::::::::::::OO R::::::R     R:::::RP::::::::P          I::::::::I OO:::::::::::::OO N::::::N       N:::::::N
+       N::::::N        N::::::N     CCC::::::::::::C   OO:::::::::OO   R::::::R     R:::::RP::::::::P          I::::::::I   OO:::::::::OO   N::::::N        N::::::N
+       NNNNNNNN         NNNNNNN        CCCCCCCCCCCCC     OOOOOOOOO     RRRRRRRR     RRRRRRRPPPPPPPPPP          IIIIIIIIII     OOOOOOOOO     NNNNNNNN         NNNNNNN
+*/
+
 /**************************************************************************************/
 /**************************************************************************************/
 /**************************************************************************************/
@@ -6,10 +25,8 @@
 /********          shall only modify this file                                 ********/
 /******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
 /********                                                                      ********/
-/******** @section 	LICENSE                                                ********/
+/******** @section 	LICENSE                                                    ********/
 /******** Copyright (c) 2023 Jérémy COUTURIER                                  ********/
-/********                                                                      ********/
-/******** This file is part of NcorpiON                                        ********/
 /********                                                                      ********/
 /******** NcorpiON is free software. You can redistribute it and/or modify     ********/
 /******** it under the terms of the GNU General Public License as published by ********/
@@ -27,10 +44,8 @@
 /**************************************************************************************/
 /**************************************************************************************/
 
-
 #ifndef _PARAMETERS_H_
 #define _PARAMETERS_H_
-
 
 
 /***************************************************************************************************/
@@ -71,6 +86,7 @@
 #define one_collision_only_bool  0   //Determines if bodies are only allowed to collide once per timestep. If 0, there is no restriction on the number of collisions a body can experience
                                      //during a timestep. Setting first to 1 and then to 0 is a good way to know if the timestep is adapted to the bodies' mean free path.
 #define openGL_bool              0   //MATCH TO THE SAME VALUE IN THE MAKEFILE. Determines if a 3D real-time visualization of the simulation with WebGL in REBOUND is enabled.
+                                     //Go to http://localhost:1234/ on your web browser. Make sure that the simulation is long enough for you to have time to visualize it.
 #define resume_simulation_bool   0   //Determines if, at the end of the simulation, NcorpiON generates a file named init.txt that can be used to resume the simulation. The file init.txt
                                      //is stored at the path indicated above. To resume the simulation, you need to set random_initial_bool to 0, initial_cartesian_bool to 1, and N_0 to
                                      //the number of lines of init.txt. If init.txt already exists in path pth, it will be overwritten. Simulation's variables should be updated.

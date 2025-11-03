@@ -11,7 +11,7 @@ all: 3D.c librebound
 	@echo "Compiling $< ..."
 	$(CCPROBLEM)
 	@echo ""
-	@echo "Compilation successful. To run REBOUND, execute the file '$(EXEREBOUND)'."
+	@echo "Compilation of REBOUND successful."
 	@echo ""
 
 librebound:

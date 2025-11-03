@@ -1,3 +1,22 @@
+/*
+       NNNNNNNN        NNNNNNNN        CCCCCCCCCCCCC     OOOOOOOOO     RRRRRRRRRRRRRRRRR   PPPPPPPPPPPPPPPPP   IIIIIIIIII     OOOOOOOOO     NNNNNNNN        NNNNNNNN
+       N:::::::N       N::::::N     CCC::::::::::::C   OO:::::::::OO   R::::::::::::::::R  P::::::::::::::::P  I::::::::I   OO:::::::::OO   N:::::::N       N::::::N
+       N::::::::N      N::::::N   CC:::::::::::::::C OO:::::::::::::OO R::::::RRRRRR:::::R P::::::PPPPPP:::::P I::::::::I OO:::::::::::::OO N::::::::N      N::::::N
+       N:::::::::N     N::::::N  C:::::CCCCCCCC::::CO:::::::OOO:::::::ORR:::::R     R:::::RPP:::::P     P:::::PII::::::IIO:::::::OOO:::::::ON:::::::::N     N::::::N
+       N::::::::::N    N::::::N C:::::C       CCCCCCO::::::O   O::::::O  R::::R     R:::::R  P::::P     P:::::P  I::::I  O::::::O   O::::::ON::::::::::N    N::::::N
+       N:::::::::::N   N::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P     P:::::P  I::::I  O:::::O     O:::::ON:::::::::::N   N::::::N
+       N:::::::N::::N  N::::::NC:::::C              O:::::O     O:::::O  R::::RRRRRR:::::R   P::::PPPPPP:::::P   I::::I  O:::::O     O:::::ON:::::::N::::N  N::::::N
+       N::::::N N::::N N::::::NC:::::C              O:::::O     O:::::O  R:::::::::::::RR    P:::::::::::::PP    I::::I  O:::::O     O:::::ON::::::N N::::N N::::::N
+       N::::::N  N::::N:::::::NC:::::C              O:::::O     O:::::O  R::::RRRRRR:::::R   P::::PPPPPPPPP      I::::I  O:::::O     O:::::ON::::::N  N::::N:::::::N
+       N::::::N   N:::::::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P              I::::I  O:::::O     O:::::ON::::::N   N:::::::::::N
+       N::::::N    N::::::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P              I::::I  O:::::O     O:::::ON::::::N    N::::::::::N
+       N::::::N     N:::::::::N C:::::C       CCCCCCO::::::O   O::::::O  R::::R     R:::::R  P::::P              I::::I  O::::::O   O::::::ON::::::N     N:::::::::N
+       N::::::N      N::::::::N  C:::::CCCCCCCC::::CO:::::::OOO:::::::ORR:::::R     R:::::RPP::::::PP          II::::::IIO:::::::OOO:::::::ON::::::N      N::::::::N
+       N::::::N       N:::::::N   CC:::::::::::::::C OO:::::::::::::OO R::::::R     R:::::RP::::::::P          I::::::::I OO:::::::::::::OO N::::::N       N:::::::N
+       N::::::N        N::::::N     CCC::::::::::::C   OO:::::::::OO   R::::::R     R:::::RP::::::::P          I::::::::I   OO:::::::::OO   N::::::N        N::::::N
+       NNNNNNNN         NNNNNNN        CCCCCCCCCCCCC     OOOOOOOOO     RRRRRRRR     RRRRRRRPPPPPPPPPP          IIIIIIIIII     OOOOOOOOO     NNNNNNNN         NNNNNNN
+*/
+
 /**************************************************************************************/
 /**************************************************************************************/
 /**************************************************************************************/
@@ -5,10 +24,8 @@
 /******** @brief   This file computes the vector field and resolves collisions ********/
 /******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
 /********                                                                      ********/
-/******** @section 	LICENSE                                                ********/
+/******** @section 	LICENSE                                                    ********/
 /******** Copyright (c) 2023 Jérémy COUTURIER                                  ********/
-/********                                                                      ********/
-/******** This file is part of NcorpiON                                        ********/
 /********                                                                      ********/
 /******** NcorpiON is free software. You can redistribute it and/or modify     ********/
 /******** it under the terms of the GNU General Public License as published by ********/
@@ -487,7 +504,7 @@ void tides(struct moonlet * bodies){
       int j;
       typ X, Y, Z, vX, vY, vZ, m, K, r2, r10, rv, r_x_OmX, r_x_OmY, aX, aY, aZ, S;
       typ R5 = R_unit*R_unit*R_unit*R_unit*R_unit;
-      typ A  = 3.0*k2*G*R5;
+      typ A  = 3.*k2*G*R5;
       typ M  = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : CM.mass);
       typ CMaccX = CM_acc[0];  typ CMaccY = CM_acc[1];  typ CMaccZ = CM_acc[2];
       
@@ -507,9 +524,9 @@ void tides(struct moonlet * bodies){
                   r_x_OmY = -X*SideralOmega;
                   K       = A*m/r10;
                   S       = 1./(1. + m/M);
-                  aX      = S*K*(r2*X + Delta_t*(2.0*rv*X + r2*(vX + r_x_OmX)));
-                  aY      = S*K*(r2*Y + Delta_t*(2.0*rv*Y + r2*(vY + r_x_OmY)));
-                  aZ      = S*K*(r2*Z + Delta_t*(2.0*rv*Z + r2*vZ));
+                  aX      = S*K*(r2*X + Delta_t*(2.*rv*X + r2*(vX + r_x_OmX)));
+                  aY      = S*K*(r2*Y + Delta_t*(2.*rv*Y + r2*(vY + r_x_OmY)));
+                  aZ      = S*K*(r2*Z + Delta_t*(2.*rv*Z + r2*vZ));
                   /******** Updating the acceleration of body n° j ********/
                   (xx + j) -> vx -= aX;
                   (xx + j) -> vy -= aY;
@@ -619,8 +636,8 @@ void merger(struct moonlet * moonlets, int a, int b){
       typ m_b = (moonlets + b) -> mass;           
       typ R_a = (moonlets + a) -> radius;         //The bodies's radii
       typ R_b = (moonlets + b) -> radius;
-      typ rho_a = 3.0*m_a/(4.0*M_PI*R_a*R_a*R_a); //Density of body a
-      typ rho_b = 3.0*m_b/(4.0*M_PI*R_b*R_b*R_b); //Density of body b
+      typ rho_a = 3.*m_a/(4.*M_PI*R_a*R_a*R_a);   //Density of body a
+      typ rho_b = 3.*m_b/(4.*M_PI*R_b*R_b*R_b);   //Density of body b
       typ m = m_a + m_b;                          //Sum of the masses
       typ r_tilde[3]; //Position of the merger
       typ v_tilde[3]; //Speed of the merger
@@ -694,7 +711,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
 
       /******** Treats the fragmentation due to the collision between bodies a and b ********/
       
-      typ stigma = (3.0*mu_parameter-1.0)/(3.0*mu_parameter);
+      typ stigma = (3.*mu_parameter - 1.)/(3.*mu_parameter);
       typ vx_a, vy_a, vz_a, vx_b, vy_b, vz_b;                  //Cartesian speeds of the bodies.
       typ xa, ya, za, xb, yb, zb;                              //Cartesian positions at the collision
       typ dx, dy, dz, dvx, dvy, dvz;                           //dx is xa-xb, and so on.
@@ -704,11 +721,11 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       typ m_2 = (moonlets + a) -> mass;                        //The bodies's masses
       typ m_1 = (moonlets + b) -> mass;
       typ M   = m_1 + m_2;                                     //Sum of the masses
-      typ rho_1 = 3.0*m_1/(4.0*M_PI*R_1*R_1*R_1);              //Densities
-      typ rho_2 = 3.0*m_2/(4.0*M_PI*R_2*R_2*R_2);
+      typ rho_1 = 3.*m_1/(4.*M_PI*R_1*R_1*R_1);                //Densities
+      typ rho_2 = 3.*m_2/(4.*M_PI*R_2*R_2*R_2);
       typ average_density = (m_1*rho_1 + m_2*rho_2)/M;         //The average density of the moonlets, weighted by mass
       typ rho_12 = rho_1/rho_2;
-      typ rho_12_3nu = pow(rho_12, 3.0*nu_parameter);          //Ratio between the density of the impactor and that of the target at the power 3*nu           
+      typ rho_12_3nu = pow(rho_12, 3.*nu_parameter);           //Ratio between the density of the impactor and that of the target at the power 3*nu           
       
       /******** Getting the speeds at the impact ********/
       vx_a = (moonlets + a) -> vx;
@@ -737,11 +754,11 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
       typ dr_dot_dv   = dx*dvx + dy*dvy + dz*dvz;                          //  (r_1 - r_2).(v_1 - v_2)
       typ dv_norm     = sqrt(dvx*dvx + dvy*dvy + dvz*dvz);                 //  ||v_1 - v_2||
       typ costheta    = -dr_dot_dv/(R*dv_norm);                            //Cosine of impact angle;
-      typ costheta3mu = pow(costheta, 3.0*mu_parameter);                   //Cosine of impact angle at the power 3*mu;
-      typ R_eq        = pow(3.0*M/(4.0*M_PI*average_density), 1.0/3.0);    //Hypothetical radius if the impactor were to merge on the target
-      typ vesc        = sqrt(2.0*G*M/R_eq);                                //Escape velocity at the surface if the impactor were to merge on the target
-      typ K           = 3.0*k_parameter*m_1/(4.0*M_PI)/rho_12*costheta3mu;
-      typ m_check     = K*(pow(C1_parameter*dv_norm/vesc, 3.0*mu_parameter)*rho_12_3nu - 1.0); //Mass of the tail : Ejected mass
+      typ costheta3mu = pow(costheta, 3.*mu_parameter);                    //Cosine of impact angle at the power 3*mu;
+      typ R_eq        = pow(3.*M/(4.*M_PI*average_density), 1./3.);        //Hypothetical radius if the impactor were to merge on the target
+      typ vesc        = sqrt(2.*G*M/R_eq);                                 //Escape velocity at the surface if the impactor were to merge on the target
+      typ K           = 3.*k_parameter*m_1/(4.*M_PI)/rho_12*costheta3mu;
+      typ m_check     = K*(pow(C1_parameter*dv_norm/vesc, 3.*mu_parameter)*rho_12_3nu - 1.); //Mass of the tail : Ejected mass
       typ m_tilde     = M - m_check;                                       //Mass of the largest fragment
       typ m_tilde_2   = m_check / (typ) N_tilde;                           //Mass of the tail's fragments
            
@@ -793,7 +810,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             (moonlets + a) -> z  = r_cm[2] - time_until_collision*v_cm[2];
             /******** Actualizing its mass and radius ********/
             (moonlets + a) -> mass   = m_tilde;
-            (moonlets + a) -> radius = pow(3.0*m_tilde/(4.0*M_PI*average_density), 1.0/3.0);
+            (moonlets + a) -> radius = pow(3.*m_tilde/(4.*M_PI*average_density), 1./3.);
             /******** Reducing the center of mass to compensate for the lost momentum ********/
             need_to_reduce_COM_bool = 1;
             lose_moonlet(b);
@@ -801,7 +818,7 @@ void fragmentation(struct moonlet * moonlets, int a, int b){
             super_catastrophic_count ++;
             /******** The discarded mass is put in the inner fluid disk to prevent mass from just vanishing, or in the central body ********/
             typ discarded_mass = M - m_tilde;
-            if (m_tilde < fragment_threshold/4.0){ //Body a is discarded as well
+            if (m_tilde < fragment_threshold/4.){ //Body a is discarded as well. Otherwise tiny particles are kept when very catastrophic collisions occur
                   lose_moonlet(a);
                   discarded_mass = M;
             }

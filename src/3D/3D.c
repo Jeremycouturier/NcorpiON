@@ -1,3 +1,22 @@
+/*
+       NNNNNNNN        NNNNNNNN        CCCCCCCCCCCCC     OOOOOOOOO     RRRRRRRRRRRRRRRRR   PPPPPPPPPPPPPPPPP   IIIIIIIIII     OOOOOOOOO     NNNNNNNN        NNNNNNNN
+       N:::::::N       N::::::N     CCC::::::::::::C   OO:::::::::OO   R::::::::::::::::R  P::::::::::::::::P  I::::::::I   OO:::::::::OO   N:::::::N       N::::::N
+       N::::::::N      N::::::N   CC:::::::::::::::C OO:::::::::::::OO R::::::RRRRRR:::::R P::::::PPPPPP:::::P I::::::::I OO:::::::::::::OO N::::::::N      N::::::N
+       N:::::::::N     N::::::N  C:::::CCCCCCCC::::CO:::::::OOO:::::::ORR:::::R     R:::::RPP:::::P     P:::::PII::::::IIO:::::::OOO:::::::ON:::::::::N     N::::::N
+       N::::::::::N    N::::::N C:::::C       CCCCCCO::::::O   O::::::O  R::::R     R:::::R  P::::P     P:::::P  I::::I  O::::::O   O::::::ON::::::::::N    N::::::N
+       N:::::::::::N   N::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P     P:::::P  I::::I  O:::::O     O:::::ON:::::::::::N   N::::::N
+       N:::::::N::::N  N::::::NC:::::C              O:::::O     O:::::O  R::::RRRRRR:::::R   P::::PPPPPP:::::P   I::::I  O:::::O     O:::::ON:::::::N::::N  N::::::N
+       N::::::N N::::N N::::::NC:::::C              O:::::O     O:::::O  R:::::::::::::RR    P:::::::::::::PP    I::::I  O:::::O     O:::::ON::::::N N::::N N::::::N
+       N::::::N  N::::N:::::::NC:::::C              O:::::O     O:::::O  R::::RRRRRR:::::R   P::::PPPPPPPPP      I::::I  O:::::O     O:::::ON::::::N  N::::N:::::::N
+       N::::::N   N:::::::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P              I::::I  O:::::O     O:::::ON::::::N   N:::::::::::N
+       N::::::N    N::::::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P              I::::I  O:::::O     O:::::ON::::::N    N::::::::::N
+       N::::::N     N:::::::::N C:::::C       CCCCCCO::::::O   O::::::O  R::::R     R:::::R  P::::P              I::::I  O::::::O   O::::::ON::::::N     N:::::::::N
+       N::::::N      N::::::::N  C:::::CCCCCCCC::::CO:::::::OOO:::::::ORR:::::R     R:::::RPP::::::PP          II::::::IIO:::::::OOO:::::::ON::::::N      N::::::::N
+       N::::::N       N:::::::N   CC:::::::::::::::C OO:::::::::::::OO R::::::R     R:::::RP::::::::P          I::::::::I OO:::::::::::::OO N::::::N       N:::::::N
+       N::::::N        N::::::N     CCC::::::::::::C   OO:::::::::OO   R::::::R     R:::::RP::::::::P          I::::::::I   OO:::::::::OO   N::::::N        N::::::N
+       NNNNNNNN         NNNNNNN        CCCCCCCCCCCCC     OOOOOOOOO     RRRRRRRR     RRRRRRRPPPPPPPPPP          IIIIIIIIII     OOOOOOOOO     NNNNNNNN         NNNNNNN
+*/
+
 /**************************************************************************************/
 /**************************************************************************************/
 /**************************************************************************************/
@@ -5,10 +24,8 @@
 /******** @brief   3D visualization of NcorpiON simulations using REBOUND      ********/
 /******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
 /********                                                                      ********/
-/******** @section 	LICENSE                                                ********/
+/******** @section 	LICENSE                                                    ********/
 /******** Copyright (c) 2023 Jérémy COUTURIER                                  ********/
-/********                                                                      ********/
-/******** This file is part of NcorpiON                                        ********/
 /********                                                                      ********/
 /******** NcorpiON is free software. You can redistribute it and/or modify     ********/
 /******** it under the terms of the GNU General Public License as published by ********/
@@ -38,7 +55,8 @@
 /******** coordinates, masses and radii of the bodies and REBOUND updates the state of the system.  ********/
 /******** From REBOUND's point of view, it is as if it was actually integrating the system.         ********/
 /******** This unconventional approach allows me to enjoy the nice visualization tool of REBOUND in ********/
-/******** NcorpiON without having to go through the hassle of compute shaders.                      ********/
+/******** NcorpiON without having to go through the hassle of compute shaders. The downside is that ********/
+/******** the user of NcorpiON needs to install MPI to enjoy the 3D visualization.                  ********/
 /***********************************************************************************************************/
 /***********************************************************************************************************/
 
@@ -87,6 +105,7 @@ int main(int argc, char* argv[]){
 
       /******** Starting the fake integration, so the visualization can start ********/
       reb_simulation_start_server(r, browser_port);
+      printf("NcorpiON is communicating with REBOUND.\n");
       printf("The 3D visualization will start in 5 seconds.\n");
       usleep(5000000.);                     //Waiting 5 seconds to give the user enough time to open a web browser tab
       reb_simulation_integrate(r, until);   //Pseudo-integrating. Only what is done in the heartbeat function serves a purpose

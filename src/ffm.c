@@ -1,3 +1,22 @@
+/*
+       NNNNNNNN        NNNNNNNN        CCCCCCCCCCCCC     OOOOOOOOO     RRRRRRRRRRRRRRRRR   PPPPPPPPPPPPPPPPP   IIIIIIIIII     OOOOOOOOO     NNNNNNNN        NNNNNNNN
+       N:::::::N       N::::::N     CCC::::::::::::C   OO:::::::::OO   R::::::::::::::::R  P::::::::::::::::P  I::::::::I   OO:::::::::OO   N:::::::N       N::::::N
+       N::::::::N      N::::::N   CC:::::::::::::::C OO:::::::::::::OO R::::::RRRRRR:::::R P::::::PPPPPP:::::P I::::::::I OO:::::::::::::OO N::::::::N      N::::::N
+       N:::::::::N     N::::::N  C:::::CCCCCCCC::::CO:::::::OOO:::::::ORR:::::R     R:::::RPP:::::P     P:::::PII::::::IIO:::::::OOO:::::::ON:::::::::N     N::::::N
+       N::::::::::N    N::::::N C:::::C       CCCCCCO::::::O   O::::::O  R::::R     R:::::R  P::::P     P:::::P  I::::I  O::::::O   O::::::ON::::::::::N    N::::::N
+       N:::::::::::N   N::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P     P:::::P  I::::I  O:::::O     O:::::ON:::::::::::N   N::::::N
+       N:::::::N::::N  N::::::NC:::::C              O:::::O     O:::::O  R::::RRRRRR:::::R   P::::PPPPPP:::::P   I::::I  O:::::O     O:::::ON:::::::N::::N  N::::::N
+       N::::::N N::::N N::::::NC:::::C              O:::::O     O:::::O  R:::::::::::::RR    P:::::::::::::PP    I::::I  O:::::O     O:::::ON::::::N N::::N N::::::N
+       N::::::N  N::::N:::::::NC:::::C              O:::::O     O:::::O  R::::RRRRRR:::::R   P::::PPPPPPPPP      I::::I  O:::::O     O:::::ON::::::N  N::::N:::::::N
+       N::::::N   N:::::::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P              I::::I  O:::::O     O:::::ON::::::N   N:::::::::::N
+       N::::::N    N::::::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P              I::::I  O:::::O     O:::::ON::::::N    N::::::::::N
+       N::::::N     N:::::::::N C:::::C       CCCCCCO::::::O   O::::::O  R::::R     R:::::R  P::::P              I::::I  O::::::O   O::::::ON::::::N     N:::::::::N
+       N::::::N      N::::::::N  C:::::CCCCCCCC::::CO:::::::OOO:::::::ORR:::::R     R:::::RPP::::::PP          II::::::IIO:::::::OOO:::::::ON::::::N      N::::::::N
+       N::::::N       N:::::::N   CC:::::::::::::::C OO:::::::::::::OO R::::::R     R:::::RP::::::::P          I::::::::I OO:::::::::::::OO N::::::N       N:::::::N
+       N::::::N        N::::::N     CCC::::::::::::C   OO:::::::::OO   R::::::R     R:::::RP::::::::P          I::::::::I   OO:::::::::OO   N::::::N        N::::::N
+       NNNNNNNN         NNNNNNN        CCCCCCCCCCCCC     OOOOOOOOO     RRRRRRRR     RRRRRRRPPPPPPPPPP          IIIIIIIIII     OOOOOOOOO     NNNNNNNN         NNNNNNN
+*/
+
 /**************************************************************************************/
 /**************************************************************************************/
 /**************************************************************************************/
@@ -5,10 +24,8 @@
 /******** @brief   This file manages gravitation with falcON and Barnes & Hut  ********/
 /******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
 /********                                                                      ********/
-/******** @section 	LICENSE                                                ********/
+/******** @section 	LICENSE                                                    ********/
 /******** Copyright (c) 2023 Jérémy COUTURIER                                  ********/
-/********                                                                      ********/
-/******** This file is part of NcorpiON                                        ********/
 /********                                                                      ********/
 /******** NcorpiON is free software. You can redistribute it and/or modify     ********/
 /******** it under the terms of the GNU General Public License as published by ********/
@@ -1079,7 +1096,7 @@ void get_Mn(struct node * FlatTree, struct moonlet * moonlets, int a){
             #endif
       }
       
-      /******** Initializing the fields M2 to M5 of the FlatTree ********/
+      /******** Initializing the fields M2 to M7 of the FlatTree ********/
       #if expansion_order >= 3
             for (k = 0; k < 6; k ++){
                   ((FlatTree + a) -> M2)[k] = M2[k];
@@ -1953,7 +1970,7 @@ void gradR(typ * R, typ * grad){
 
 void inner_product(typ * T1, typ * T2, typ * T3, int p, int q, typ factor){
 
-      /******** Computes the inner product between the tensor T1 of order p + q (max 6) and the tensor T2 ********/
+      /******** Computes the inner product between the tensor T1 of order p + q (max 8) and the tensor T2 ********/
       /******** of order p. The result is accumulated into the tensor T3 of order q with a factor factor. ********/
       /******** T1, T2 and T3 are assumed to be arrays of respective sizes (p+q+1)(p+q+2)/2, (p+1)(p+2)/2 ********/
       /******** and (q+1)(q+2)/2. The tensor T3 is not overwritten, but accumulated instead               ********/
@@ -2445,10 +2462,10 @@ void Cm_flattree(struct node * FlatTree, struct moonlet * moonlets){
 #endif
 
 
-/***********************************************************************/
-/******** I now write functions relative two the third stage of ********/
-/******** Dehnen's algorithm, passing the C^(n) down the tree   ********/
-/***********************************************************************/
+/**********************************************************************/
+/******** I now write functions relative to the third stage of ********/
+/******** Dehnen's algorithm, passing the C^(n) down the tree  ********/
+/**********************************************************************/
 
 
 #if mutual_bool

@@ -1,3 +1,22 @@
+/*
+       NNNNNNNN        NNNNNNNN        CCCCCCCCCCCCC     OOOOOOOOO     RRRRRRRRRRRRRRRRR   PPPPPPPPPPPPPPPPP   IIIIIIIIII     OOOOOOOOO     NNNNNNNN        NNNNNNNN
+       N:::::::N       N::::::N     CCC::::::::::::C   OO:::::::::OO   R::::::::::::::::R  P::::::::::::::::P  I::::::::I   OO:::::::::OO   N:::::::N       N::::::N
+       N::::::::N      N::::::N   CC:::::::::::::::C OO:::::::::::::OO R::::::RRRRRR:::::R P::::::PPPPPP:::::P I::::::::I OO:::::::::::::OO N::::::::N      N::::::N
+       N:::::::::N     N::::::N  C:::::CCCCCCCC::::CO:::::::OOO:::::::ORR:::::R     R:::::RPP:::::P     P:::::PII::::::IIO:::::::OOO:::::::ON:::::::::N     N::::::N
+       N::::::::::N    N::::::N C:::::C       CCCCCCO::::::O   O::::::O  R::::R     R:::::R  P::::P     P:::::P  I::::I  O::::::O   O::::::ON::::::::::N    N::::::N
+       N:::::::::::N   N::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P     P:::::P  I::::I  O:::::O     O:::::ON:::::::::::N   N::::::N
+       N:::::::N::::N  N::::::NC:::::C              O:::::O     O:::::O  R::::RRRRRR:::::R   P::::PPPPPP:::::P   I::::I  O:::::O     O:::::ON:::::::N::::N  N::::::N
+       N::::::N N::::N N::::::NC:::::C              O:::::O     O:::::O  R:::::::::::::RR    P:::::::::::::PP    I::::I  O:::::O     O:::::ON::::::N N::::N N::::::N
+       N::::::N  N::::N:::::::NC:::::C              O:::::O     O:::::O  R::::RRRRRR:::::R   P::::PPPPPPPPP      I::::I  O:::::O     O:::::ON::::::N  N::::N:::::::N
+       N::::::N   N:::::::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P              I::::I  O:::::O     O:::::ON::::::N   N:::::::::::N
+       N::::::N    N::::::::::NC:::::C              O:::::O     O:::::O  R::::R     R:::::R  P::::P              I::::I  O:::::O     O:::::ON::::::N    N::::::::::N
+       N::::::N     N:::::::::N C:::::C       CCCCCCO::::::O   O::::::O  R::::R     R:::::R  P::::P              I::::I  O::::::O   O::::::ON::::::N     N:::::::::N
+       N::::::N      N::::::::N  C:::::CCCCCCCC::::CO:::::::OOO:::::::ORR:::::R     R:::::RPP::::::PP          II::::::IIO:::::::OOO:::::::ON::::::N      N::::::::N
+       N::::::N       N:::::::N   CC:::::::::::::::C OO:::::::::::::OO R::::::R     R:::::RP::::::::P          I::::::::I OO:::::::::::::OO N::::::N       N:::::::N
+       N::::::N        N::::::N     CCC::::::::::::C   OO:::::::::OO   R::::::R     R:::::RP::::::::P          I::::::::I   OO:::::::::OO   N::::::N        N::::::N
+       NNNNNNNN         NNNNNNN        CCCCCCCCCCCCC     OOOOOOOOO     RRRRRRRR     RRRRRRRPPPPPPPPPP          IIIIIIIIII     OOOOOOOOO     NNNNNNNN         NNNNNNN
+*/
+
 /**************************************************************************************/
 /**************************************************************************************/
 /**************************************************************************************/
@@ -5,10 +24,8 @@
 /******** @brief   Miscellaneous structural implementations                    ********/
 /******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
 /********                                                                      ********/
-/******** @section 	LICENSE                                                ********/
+/******** @section 	LICENSE                                                    ********/
 /******** Copyright (c) 2023 Jérémy COUTURIER                                  ********/
-/********                                                                      ********/
-/******** This file is part of NcorpiON                                        ********/
 /********                                                                      ********/
 /******** NcorpiON is free software. You can redistribute it and/or modify     ********/
 /******** it under the terms of the GNU General Public License as published by ********/
@@ -184,10 +201,10 @@ void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp, typ mu){
       /******** Computing the semi-major axis ********/
       R   = sqrt(X*X + Y*Y + Z*Z);
       V2  = vX*vX + vY*vY + vZ*vZ;
-      AA  = R*mu/(2.0*mu - R*V2); //Division by zero if the trajectory is perfectly parabolic.
-      if (J2_bool && AA > 0.0 && central_mass_bool){  //If the Earth is oblate and the trajectory is elliptic, correcting Kepler third law (See Greenberg, 1981)
-            mu *= 1.0 + 1.5*J2*R_unit*R_unit/(AA*AA);
-            AA  = R*mu/(2.0*mu - R*V2);
+      AA  = R*mu/(2.*mu - R*V2); //Division by zero if the trajectory is perfectly parabolic.
+      if (J2_bool && AA > 0. && central_mass_bool){  //If the Earth is oblate and the trajectory is elliptic, correcting Kepler third law (See Greenberg, 1981)
+            mu *= 1. + 1.*J2*R_unit*R_unit/(AA*AA);
+            AA  = R*mu/(2.*mu - R*V2);
       }
       *alkhqp = AA;
 
@@ -207,7 +224,7 @@ void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp, typ mu){
       DC = sqrt(CC);
 
       /******** Computing (q, p) ********/
-      aux0          = sqrt(2.0*(CC + DC*C3));
+      aux0          = sqrt(2.*(CC + DC*C3));
       *(alkhqp + 4) = (aux0 == 0. ? 0. : -C2/aux0);
       *(alkhqp + 5) = (aux0 == 0. ? 0. :  C1/aux0);
 
@@ -217,7 +234,7 @@ void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp, typ mu){
       }
       else{
             /******** Computing the matrix coefficients needed for (k, h) ********/
-            a11 = V2 - 1.0/R;
+            a11 = V2 - 1./R;
             a12 = RV/(R*DC);
             a21 = -RV;
             a22 = DC - R/DC;
@@ -233,7 +250,7 @@ void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp, typ mu){
             H1   = -c12 + FAC1*(Z*a12 + vZ*a22);
             H2   =  c21 - FAC2*(Z*a11 + vZ*a21); //Should be equal to H1
             K2   =  c22 - FAC2*(Z*a12 + vZ*a22); //Should be equal to K1
-            if (fabs(H1 - H2) + fabs(K1 - K2) > 1.0e-6){
+            if (fabs(H1 - H2) + fabs(K1 - K2) > 1.e-6){
                   printf("Warning : Bad computation of (k,h) in function cart2ell. (K1 - K2, H1 - H2) = (%.13lf, %.13lf)\n", K1 - K2, H1 - H2);
             }
             K    =  0.5*(K1 + K2);
@@ -247,19 +264,19 @@ void cart2ell(struct moonlet * moonlets, int id, typ * alkhqp, typ mu){
       }
       else{
             /******** Computing the mean longitude l = M + varpi ********/
-            USQA = sqrt(2.0/R - V2);
-            if ((USQA) >= 0.0){ //Elliptic case
+            USQA = sqrt(2./R - V2);
+            if ((USQA) >= 0.){ //Elliptic case
                   b12  = vX - FAC1*vZ;
                   b22  = vY - FAC2*vZ;
-                  aux1 = (R*V2 - 1.0)/(1.0 + DC*USQA);
+                  aux1 = (R*V2 - 1.)/(1. + DC*USQA);
                   sinF = -b12*R*USQA + H*aux1;
                   cosF =  b22*R*USQA + K*aux1;
                   F    =  atan2(sinF, cosF);
                   *(alkhqp + 1) = F - RV*USQA;
             }
             else{ //Hyperbolic case
-                  USQA  = sqrt(-(2.0/R - V2));
-                  typ E = atanh(RV*USQA/(R*V2 - 1.0));
+                  USQA  = sqrt(-(2./R - V2));
+                  typ E = atanh(RV*USQA/(R*V2 - 1.));
                   typ M = sqrt(K*K + H*H) * sinh(E) - E;
                   *(alkhqp + 1) = M + atan2(H, K);
             }
