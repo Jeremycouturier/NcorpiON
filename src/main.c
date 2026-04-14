@@ -24,7 +24,7 @@
 /******** @brief   The main file of NcorpiON                                   ********/
 /******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
 /********                                                                      ********/
-/******** @section 	LICENSE                                                    ********/
+/******** @section LICENSE                                                     ********/
 /******** Copyright (c) 2023 Jérémy COUTURIER                                  ********/
 /********                                                                      ********/
 /******** NcorpiON is free software. You can redistribute it and/or modify     ********/

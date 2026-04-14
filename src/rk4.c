@@ -24,7 +24,7 @@
 /******** @brief   Manages different aspects of the numerical integration      ********/
 /******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
 /********                                                                      ********/
-/******** @section 	LICENSE                                                    ********/
+/******** @section  LICENSE                                                    ********/
 /******** Copyright (c) 2023 Jérémy COUTURIER                                  ********/
 /********                                                                      ********/
 /******** NcorpiON is free software. You can redistribute it and/or modify     ********/
@@ -227,7 +227,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
             /******** Drifting backward half a timestep before displaying. To be adapted to mesh at some point ********/
             if (central_mass_bool){
                   CM_buffer = CM;
-                  CM_buffer.x -= 0.5*timestep*CM_buffer.vx;  CM_buffer.y -= 0.5*timestep*CM_buffer.vy;  CM_buffer.z -= 0.5*timestep*CM_buffer.vz;
+                  CM_buffer.x -= .5*timestep*CM_buffer.vx;  CM_buffer.y -= .5*timestep*CM_buffer.vy;  CM_buffer.z -= .5*timestep*CM_buffer.vz;
             }
             
             /******** Displaying ********/
@@ -241,10 +241,10 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
             if (!viscoelastic_bool){
                   if (collision_bool && fragmentation_bool && collision_count != 0){
                         typ cll = (typ) collision_count;
-                        typ mrg = 100.0*((typ) merger_count)/cll;
-                        typ spc = 100.0*((typ) super_catastrophic_count)/cll;
-                        typ hfr = 100.0*((typ) half_fragmentation_count)/cll;
-                        typ ffr = 100.0*((typ) full_fragmentation_count)/cll;
+                        typ mrg = 100.*((typ) merger_count)/cll;
+                        typ spc = 100.*((typ) super_catastrophic_count)/cll;
+                        typ hfr = 100.*((typ) half_fragmentation_count)/cll;
+                        typ ffr = 100.*((typ) full_fragmentation_count)/cll;
                         printf("                  Merger = %.2lf %% | Super-catastrophic = %.2lf %% | Partially fragmented = %.2lf %% | Fully fragmented = %.2lf %%\n",
                         mrg, spc, hfr, ffr);
                   }
@@ -266,8 +266,8 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                         typ vp1, vp2;
                         struct moonlet mlt1 = {(moonlets + i1)->x, (moonlets + i1)->y, (moonlets + i1)->z, (moonlets + i1)->vx, (moonlets + i1)->vy, (moonlets + i1)->vz, 0., 0.};
                         struct moonlet mlt2 = {(moonlets + i2)->x, (moonlets + i2)->y, (moonlets + i2)->z, (moonlets + i2)->vx, (moonlets + i2)->vy, (moonlets + i2)->vz, 0., 0.};
-                        mlt1.x -= 0.5*timestep*mlt1.vx;  mlt1.y -= 0.5*timestep*mlt1.vy;  mlt1.z -= 0.5*timestep*mlt1.vz;
-                        mlt2.x -= 0.5*timestep*mlt2.vx;  mlt2.y -= 0.5*timestep*mlt2.vy;  mlt2.z -= 0.5*timestep*mlt2.vz;
+                        mlt1.x -= .5*timestep*mlt1.vx;  mlt1.y -= .5*timestep*mlt1.vy;  mlt1.z -= .5*timestep*mlt1.vz;
+                        mlt2.x -= .5*timestep*mlt2.vx;  mlt2.y -= .5*timestep*mlt2.vy;  mlt2.z -= .5*timestep*mlt2.vz;
                         R1  = (moonlets + i1) -> radius;  R2 = (moonlets + i2) -> radius;
                         cart2ell(&mlt1, 0, alkhqp, mu + G*M1);
                         a1  = *alkhqp; e1 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I1 = 360.*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
@@ -285,7 +285,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   else if (how_many_moonlets == 1){
                         typ vp1;
                         struct moonlet mlt1 = {(moonlets + i1)->x, (moonlets + i1)->y, (moonlets + i1)->z, (moonlets + i1)->vx, (moonlets + i1)->vy, (moonlets + i1)->vz, 0., 0.};
-                        mlt1.x -= 0.5*timestep*mlt1.vx;  mlt1.y -= 0.5*timestep*mlt1.vy;  mlt1.z -= 0.5*timestep*mlt1.vz;
+                        mlt1.x -= .5*timestep*mlt1.vx;  mlt1.y -= .5*timestep*mlt1.vy;  mlt1.z -= .5*timestep*mlt1.vz;
                         R1  = (moonlets + i1) -> radius;
                         cart2ell(&mlt1, 0, alkhqp, mu + G*M1);
                         a1  = *alkhqp; e1 = sqrt(alkhqp[2]*alkhqp[2] + alkhqp[3]*alkhqp[3]); I1 = 360.*asin(sqrt(alkhqp[4]*alkhqp[4] + alkhqp[5]*alkhqp[5]))/M_PI;
@@ -303,7 +303,7 @@ void end_of_timestep(struct moonlet * moonlets, int progressed){
                   else if (inner_fluid_disk_bool){
                         printf("                  Inner fluid disk outer edge = %.13lf\n", Rout);
                   }
-                  if (pert_mass != 0. && central_mass_bool && pert_ecc <= 0.2){ //Getting the position of the evection resonance
+                  if (pert_mass != 0. && central_mass_bool && pert_ecc <= .2){ //Getting the position of the evection resonance
                         typ Xin, Xout, MM, K;
                         int convergedIn, convergedOut;
                         MM   = (inner_fluid_disk_bool ? CM.mass + fluid_disk_Sigma*M_PI*(Rout*Rout - R_unit*R_unit) : CM.mass);
@@ -904,35 +904,35 @@ void integration_brute_force_SABA1(typ t){
 
             /******** Integrator is SBAB1 ********/
             kick(moonlets, &CM, vector_field); //Performing a full kick            
-            time_elapsed += 0.5*timestep;            
+            time_elapsed += .5*timestep;            
             if (collision_bool){
                   brute_force(moonlets);  //Resolving collisions and going backward
             }           
             drift(moonlets, &CM);         //Performing a full drift
 
             iter ++;
-            time_elapsed += 0.5*timestep;
+            time_elapsed += .5*timestep;
             progress = time_elapsed/t;
             
             /******** Displaying informations in the terminal, and reinitializing what needs to be reinitialized after every timestep ********/
-            if (progress - previous_progress > 0.001){
+            if (progress - previous_progress > .001){
                   previous_progress = progress;
-                  printf("progress = %.1lf %%\n", 100.0*progress);
+                  printf("progress = %.1lf %%\n", 100.*progress);
                   progressed = 1;
             }
             
             /******** Taking care of the end of the timestep ********/
-            end_of_timestep(moonlets, progressed);      
+            end_of_timestep(moonlets, progressed);
       }
       
       /******** Last file saving ********/
       if (central_mass_bool || (viscoelastic_bool && pert_mass > 0.)){
             CM_buffer = CM;
       }
-      if (t > 0.0){
-            timestep /= -2.0;
+      if (t > 0.){
+            timestep /= -2.;
             drift(moonlets, &CM_buffer); //Performing half a backward drift
-            timestep *= -2.0;
+            timestep *= -2.;
       }
       if (write_to_files_bool){
             display(moonlets);

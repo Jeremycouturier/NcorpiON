@@ -24,7 +24,7 @@
 /******** @brief   Exports the simulation (to files or to REBOUND's 3D tool)   ********/
 /******** @author  Jérémy COUTURIER <jeremycouturier.com>                      ********/
 /********                                                                      ********/
-/******** @section 	LICENSE                                                    ********/
+/******** @section LICENSE                                                     ********/
 /******** Copyright (c) 2023 Jérémy COUTURIER                                  ********/
 /********                                                                      ********/
 /******** NcorpiON is free software. You can redistribute it and/or modify     ********/
@@ -487,7 +487,7 @@ void readme(){
       fprintf(file, "If you set central_mass_bool to 1, then the parameter used for conversion cartesian -> elliptic is mu = G*(central mass + inner fluid disk mass + body mass).\n");
       fprintf(file, "Otherwise, the parameter used for conversion cartesian -> elliptic is mu = G*M_unit.\n");
       fprintf(file, "All coordinates are displayed in the inertial reference frame, except elliptic coordinates when central_mass_bool is 1 which are in the frame of the central body.\n");
-      fprintf(file, "The elliptic elements, mass and radius of the central body or perturbing body are not displayed.\n");
+      fprintf(file, "The elliptic elements, mass and radius of the central body or perturbing body are not displayed. Its radius does not change and its mass is given in stat.txt.\n");
       fprintf(file, "\n");
       fprintf(file, "These files are given in the simulation's units, which you defined when you set the values of G, M_unit and R_unit in the parameter file. If you set\n");
       fprintf(file, "random_initial_bool to 0, then your simulation used initial conditions from the file init.txt that you put here, and you should make sure that the units you\n");
@@ -570,6 +570,9 @@ void resumeFile(){
             fprintf(file, "N_0 = %d\n", how_many_moonlets);
       }
       fprintf(file, "t_init = %.20lf\n", t_init + time_elapsed);
+      fprintf(file, "\nBecause of numerical errors, the initial conditions of the restarted simulation differ from the final conditions\n");
+      fprintf(file, "of the original simulation by 10^-16 to 10^-15. Due to the chaotic nature of N-body systems, the restarted simulation\n");
+      fprintf(file, "could therefore differ significantly from what the original simulation would have looked like if it had been longer.");
       fclose(file);
 }
 
