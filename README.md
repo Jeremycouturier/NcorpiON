@@ -158,6 +158,7 @@ The original paper of NcorpiON where the software specificities and capabilities
 - Two-stage formation of the Moon from accreting fragmentation and resonance captures
 
 NcorpiON is used to simulate the formation of the Moon from a giant impact. Fragmentation of the moonlets is taken into account in case of a violent collisions, and initial conditions are outputs of SPH simulations.
+Download at <https://jeremycouturier.com/img/Couturier_etal_2026.pdf>
 
 
 ## Contributors
