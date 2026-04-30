@@ -149,9 +149,20 @@ The official website of NcorpiON is available at <https://ncorpion.com>
 If you use this code in a scientific publication, please cite NcorpiON.
 
 
+## Papers
+
+- NcorpiON : A O(N) software for N-body integration in collisional and fragmenting systems
+
+The original paper of NcorpiON where the software specificities and capabilities are described. Download at <https://jeremycouturier.com/img/Couturier_etal_2024.pdf>
+
+- Two-stage formation of the Moon from accreting fragmentation and resonance captures
+
+NcorpiON is used to simulate the formation of the Moon from a giant impact. Fragmentation of the moonlets is taken into account in case of a violent collisions, and initial conditions are outputs of SPH simulations.
+
+
 ## Contributors
 
-- Jérémy Couturier, University of Rochester, <https://jeremycouturier.com>
+- Jérémy Couturier, University of Geneva, <https://jeremycouturier.com>
 
 NcorpiON is open source and you are encouraged to contribute to it 
 
